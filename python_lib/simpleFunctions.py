@@ -1,0 +1,2 @@
+def returnTrue():
+    return True

@@ -6,9 +6,11 @@ This project collects a large number of python tricks that have been used in var
 Currently Working On...
 -----------
 
-Man I don't even know if this is going to work or not.
+Basically everything. This is currently a minimal example.
 
 How to Implement HXJS in your course
 -----------
 
 Put `python_lib.zip` in your Files & Uploads. Do *not* unzip it first.
+
+You should be able to call functions from that library as demonstrated in the XML file.
