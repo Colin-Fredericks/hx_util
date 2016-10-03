@@ -75,3 +75,78 @@ def videoWatchGrader(ans, grading):
             {'ok': isOK, 'msg': msg, 'grade_decimal': grade},
         ]
     }
+
+
+def matchingAGrader(ans, right_answer, partial_credit, feedback):
+  
+  parsed = json.loads(ans)
+  answer = json.loads(parsed['answer'])
+  answer = answer['pairings']
+  
+  if partial_credit:
+  
+    currentpoints = []
+    wrong_answers = []
+    maxpoints = []
+    scores = []
+    answer_index = 0
+  
+    for right_answer_n in right_answer:
+
+      maxpoints.append(len(right_answer_n))
+      currentpoints.append(0)
+      wrong_answers.append(0)
+      
+      for item in answer:
+        does_match = False
+        for target in right_answer_n:
+          if item == target:
+            does_match = True
+            break
+        if does_match:
+          currentpoints[answer_index] += 1
+        else:
+          wrong_answers[answer_index] += 1
+          
+    
+      scores.append((float(currentpoints[answer_index] - wrong_answers[answer_index])) / float(maxpoints[answer_index]))
+      answer_index += 1
+  
+    final_grade = max(scores)
+    final_index = scores.index(final_grade)
+    final_grade = round(final_grade, 2)
+    final_grade = max(final_grade, 0)
+    message = str(currentpoints[final_index]) 
+    message += ' correct out of ' 
+    message += str(maxpoints[final_index]) 
+    message += ', ' 
+    message += str(wrong_answers[final_index]) 
+    message += ' wrong.'
+
+    is_right = False
+    if 0.1 < final_grade < 0.9: is_right = 'Partial'
+    elif final_grade >= 0.9: is_right = True
+    
+    if not feedback: message = ''
+    
+    return {
+      'input_list': [
+        { 'ok': is_right, 'msg': message, 'grade_decimal': final_grade},
+      ]
+    }
+  
+  else:
+    answer_sort = sorted(answer)
+  
+    is_right = False
+  
+    for right_answer_n in right_answer:
+      right_answer_sort = sorted(right_answer_n)
+  
+      if answer_sort == right_answer_sort:
+        is_right = True
+        break
+      else:
+        is_right = False
+        
+    return is_right

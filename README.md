@@ -29,6 +29,7 @@ Currently Available Graders
 ```
 HXGraders
   videoWatchGrader(ans, grading) - for video watch problems
+  matchingAGrader(ans, right_answer, partial_credit, feedback) - for accessible matching problems
 ```
 
 Currently Available Other Stuff
