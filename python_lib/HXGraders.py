@@ -1,5 +1,6 @@
 import json
 import math
+import random
 
 def videoWatchGrader(ans, grading):
 
@@ -150,3 +151,115 @@ def matchingAGrader(ans, right_answer, partial_credit, feedback):
         is_right = False
         
     return is_right
+
+
+def rangeGuessGrader(ans, options):
+    
+  # Get the student's answer.
+  parsed = json.loads(ans)
+  answer = json.loads(parsed['answer'])
+  guess_upper = answer['upperguess']
+  guess_lower = answer['lowerguess']
+  guess_upper_closed = answer['upperclosed']
+  guess_lower_closed = answer['lowerclosed']
+  
+  # Now begins the grading.
+  message = ''
+  final_grade = 0
+  
+  if options['problem_type'] == 'interval':
+    if guess_upper < options['correct_interval'][0]:
+      # No points if there's no overlap.
+      message = 'Answer not in selected range.'
+    elif guess_lower > options['correct_interval'][1]:
+      # Same here.
+      message = 'Answer not in selected range.'
+    else:
+      # Points based on percentage overlap.
+      endpoints = []
+      endpoints.append(options['correct_interval'][0])
+      endpoints.append(options['correct_interval'][1])
+      endpoints.append(guess_upper)
+      endpoints.append(guess_lower)
+      endpoints.sort()
+      
+      overlap = endpoints[2] - endpoints[1]
+      bigrange = max(options['correct_interval'][1] - options['correct_interval'][0], guess_upper - guess_lower)
+      final_grade = float(overlap) / float(bigrange)
+      
+      message = str(int(round(final_grade, 2) * 100)) + '% overlap with correct answer.'
+
+      if options['interval_tolerance'] == 'strict':
+        final_grade = final_grade * final_grade
+      elif options['interval_tolerance'] == 'generous':
+        final_grade = math.sqrt(final_grade)
+      
+      # Round up to the nearest tenth.
+      final_grade = math.ceil(final_grade*10.0) / 10.0
+      
+      if options['show_open_close']:
+        if(guess_lower_closed != True and options['interval_type'][0] == 'closed'):
+          final_grade = final_grade - options['type_penalty']
+          message += ' Lower endpoint is wrong.'
+        if(guess_lower_closed == True and options['interval_type'][0] != 'closed'):
+          final_grade = final_grade - options['type_penalty']
+          message += ' Lower endpoint is wrong.'
+        if(guess_upper_closed != True and options['interval_type'][1] == 'closed'):
+          final_grade = final_grade - options['type_penalty']
+          message += ' Upper endpoint is wrong.'
+        if(guess_upper_closed == True and options['interval_type'][1] != 'closed'):
+          final_grade = final_grade - options['type_penalty']
+          message += ' Upper endpoint is wrong.'
+      
+  else:
+    
+    farthest = max(abs(options['correct_number'] - guess_upper), abs(options['correct_number'] - guess_lower))
+    
+    if farthest < options['tolerance'][0]:
+      final_grade = options['brackets'][0]
+      message = 'Close enough! Actual answer: ' + str(options['correct_number'])
+    elif farthest < options['tolerance'][1]:
+      final_grade = options['brackets'][1]
+      message = 'Close. You are off by ' + str(farthest)
+    elif farthest < options['tolerance'][2]:
+      final_grade = options['brackets'][2]
+      message = 'Not very close. You are off by ' + str(farthest)
+    else:
+      final_grade = options['brackets'][3]
+      message = 'Your range is too large to get points.'
+    
+    if guess_upper > options['correct_number'] and guess_lower < options['correct_number']:
+      message += ' The answer is within your range.'
+    else:
+      message += ' The answer is outside your range.'
+    
+  if not options['feedback']:
+    message = ''
+
+  if final_grade > 0.95:
+    isOK = True
+  elif final_grade > 0.05:
+    isOK = "Partial"
+  else:
+    isOK = False
+  
+  return {
+    'input_list': [
+        { 'ok': isOK, 'msg': message, 'grade_decimal': final_grade},
+    ]
+  }
+
+
+def getRangeGuesserParams(options):
+
+  # Set the outer bounds for the slider
+  if options['problem_type'] == 'interval':
+    range = options['correct_interval'][1] - options['correct_interval'][0]
+    lowerlimit = options['correct_interval'][0] - 2 * range * (random.random() + 1)
+    upperlimit = options['correct_interval'][1] + 2 * range * (random.random() + 1)
+  else:
+    range = options['tolerance'][2]
+    lowerlimit = options['correct_number'] - 2 * range * (random.random() + 1)
+    upperlimit = options['correct_number'] + 2 * range * (random.random() + 1)
+
+  return {'upper': upperlimit, 'lower': lowerlimit}

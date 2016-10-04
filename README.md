@@ -6,7 +6,7 @@ This project collects a large number of python tricks that have been used in var
 Currently Working On...
 -----------
 
-Basically everything. This is currently a minimal example.
+Adding more graders
 
 
 How to Implement HXJS in your course
@@ -30,6 +30,8 @@ Currently Available Graders
 HXGraders
   videoWatchGrader(ans, grading) - for video watch problems
   matchingAGrader(ans, right_answer, partial_credit, feedback) - for accessible matching problems
+  rangeGuessGrader(ans, options) - for range guessing problems
+  getRangeGuesserParams(options) - also for range guessing problems, just not the grader
 ```
 
 Currently Available Other Stuff
