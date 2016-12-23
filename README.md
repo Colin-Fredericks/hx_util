@@ -40,4 +40,8 @@ Currently Available Other Stuff
 ```
 simpleFunctions
   returnTrue() - just to make sure things are working
+
+JSBridge
+  insertJavascript() - just to make sure things are working
+  JSAlert() - it console.logs whatever you put into it. Just a proof-of-concept.
 ```
