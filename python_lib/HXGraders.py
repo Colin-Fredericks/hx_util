@@ -36,7 +36,7 @@ def videoWatchGrader(ans, grading):
             break
 
         # If the next time is too far ahead, call this an end and push duration
-        elif next_time - this_time > 2:
+        elif next_time - this_time > 3:
             end_time = this_time
             durations.append(end_time - start_time)
             start_time = next_time
@@ -61,6 +61,7 @@ def videoWatchGrader(ans, grading):
 
     # Round up to the nearest tenth.
     grade = math.ceil(grade*10.0) / 10.0
+    grade = min(grade, 1.0)
 
     msg = "You watched about " + str(int(grade * 100)) + " percent of the video."
 
