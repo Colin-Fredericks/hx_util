@@ -2,6 +2,28 @@ import json
 import math
 import random
 
+def textResponseGrader(ans):
+
+    parsed = json.loads(ans)
+    answer = json.loads(parsed['answer'])['answer']
+    
+    answer = answer.strip('"')
+    answer = answer.strip('"')
+    answer = answer.strip()
+    
+    if len(answer) > 9:
+        return {
+            'input_list': [
+                {'ok': True, 'msg': 'Thank you for your response.', 'grade_decimal': 1},
+            ]
+        }
+    else:
+        return {
+            'input_list': [
+                {'ok': False, 'msg': 'Your response is too short. Please try again.', 'grade_decimal': 0},
+            ]
+        }
+
 def videoWatchGrader(ans, grading):
 
     # Get the student's answer.

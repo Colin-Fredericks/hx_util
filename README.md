@@ -28,6 +28,7 @@ Currently Available Graders
 
 ```
 HXGraders
+  textResponseGrader(ans) - for text-logging problems
   videoWatchGrader(ans, grading) - for video watch problems
   matchingAGrader(ans, right_answer, partial_credit, feedback) - for accessible matching problems
   rangeGuessGrader(ans, options) - for range guessing problems
