@@ -2,16 +2,27 @@ import json
 import math
 import random
 
-def textResponseGrader(ans):
+def textResponseGrader(ans, options = None):
 
     parsed = json.loads(ans)
     answer = json.loads(parsed['answer'])['answer']
     
+    # Remove quotes and whitespace from the ends.
     answer = answer.strip('"')
     answer = answer.strip('"')
     answer = answer.strip()
     
-    if len(answer) > 9:
+    # Check options, set defaults if needed.
+    if options is None or type(options) is not dict:
+        options = dict()
+
+    if type(options) is dict:
+        #   min_length: the minimum length of a response in characters.
+        if 'min_length' not in options:
+            options['min_length'] = 10
+    
+    
+    if len(answer) >= options['min_length']:
         return {
             'input_list': [
                 {'ok': True, 'msg': 'Thank you for your response.', 'grade_decimal': 1},
