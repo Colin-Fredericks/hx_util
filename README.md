@@ -3,10 +3,12 @@ HX-PY: HarvardX Standard Python
 
 This project collects a large number of python tricks that have been used in various HX courses and puts them all in one place so that they're easier to implement.
 
+This repo also has a few utility scripts for batch-work in course XML.
+
 Currently Working On...
 -----------
 
-Adding more graders
+Nothing at the moment.
 
 
 How to Implement HXJS in your course
@@ -35,7 +37,7 @@ HXGraders
   getRangeGuesserParams(options) - also for range guessing problems, just not the grader
 ```
 
-Currently Available Other Stuff
+Currently Available Other Function
 ---------
 
 ```
@@ -46,3 +48,11 @@ JSBridge
   insertJavascript() - just to make sure things are working
   JSAlert() - it console.logs whatever you put into it. Just a proof-of-concept.
 ```
+
+
+Currently Available Tools
+----------
+* `SetMaxAttempts.py`, which sets the number of attempts automatically in every problem in a course.
+* `SetShowAnswer.py`, which sets the showanswer value automatically (or removes it) in every problem in a course.
+
+You can run `python filename.py` to have each one show a set of instructions.
