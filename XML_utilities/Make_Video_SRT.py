@@ -15,23 +15,36 @@ location of each video, and the srt filename for that video.
 (TSV = tab-separated value. Open with Excel.)
 """
 
+# We need lists of container nodes and leaf nodes so we can tell
+# whether we have to do more recursion.
+leaf_nodes = ['html','problem','video','poll']
+branch_nodes = ['course','chapter','sequential','vertical','split_test']
+
 # Recursion function for outline-declared xml files
 # (doesn't actually recurse yet)
-def drillDown(folder,filename):
+def drillDown(folder, filename, depth):
     tempOD = collections.OrderedDict()
 
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
     for index, child in enumerate(root):
-        tempOD[folder][index] = collections.OrderedDict()
-        if 'display_name' in child.attrib:
-            tempOD[folder][index]['name'] = child.attrib['display_name']
-        else:
-            tempOD[folder][index]['name'] = folder + str(index)
+        tempOD[index] = collections.OrderedDict()
 
+        # get display_name or use placeholder
+        if 'display_name' in child.attrib:
+            tempOD[index]['name'] = child.attrib['display_name']
+        else:
+            tempOD[index]['name'] = folder + str(index)
+
+        # get url_name but there are no placeholders
         if 'url_name' in child.attrib:
-            tempOD[folder][index]['url'] = child.attrib['url_name']
+            tempOD[index]['url'] = child.attrib['url_name']
+        else:
+            tempOD[index]['url'] = None
+
+        if child.tag in leaf_nodes and depth < 2:
+            tempOD[index]['contents'] = drillDown(child.tag, tempOD[index]['url'], depth+1)
 
     return tempOD
 
@@ -47,11 +60,6 @@ except IndexError:
     # If run without argument, show instructions.
     sys.exit(instructions)
 
-# We need lists of container nodes and leaf nodes so we can tell
-# whether we have to do more recursion.
-leaf_nodes = ['html','problem','video','poll']
-branch_nodes = ['course','chapter','sequential','vertical','split_test']
-
 # This is the ordered dict where we're storing the course structure.
 # Later we'll dump it out to the tab-separated file.
 course_dict = collections.OrderedDict()
@@ -63,14 +71,9 @@ root_root = root_tree.getroot()
 
 course_dict['name'] = root_root.attrib['course']
 course_dict['url'] = root_root.attrib['url_name']
-course_dict['chapters'] = drillDown('course',course_dict['url'])
+course_dict['contents'] = drillDown('course',course_dict['url'], 0)
 
 print course_dict
-
-for chapter in course_dict['chapters']:
-    # Open the Chapter files
-    chapter_tree = ET.parse('chapter/' + chapter['url'] + '.xml')
-    chapter_root = chapter_tree.getroot()
 
 # Make the file's header row
 
