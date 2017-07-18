@@ -14,16 +14,31 @@ location of each video, and the srt filename for that video.
 (TSV = tab-separated value. Open with Excel.)
 """
 
-# Open course xml file
+# Get the filename
 try:
     coursefile = sys.argv[1]
 except IndexError:
     # If run without argument, show instructions.
     sys.exit(instructions)
 
+# Open course's root xml file
+with open (coursefile, 'rb') as courseroot:
+    # Get the current course run filename
+    # Open the course run file
+
+# Chapter file
+
+# Sequential file
+
+# Vertical file
+
+# Video file or inline video declaration in vertical
+
 # Make the file's header row
 
 # Walk the XML structure to get all the display names.
 
-# Make a row of the file:
+# For each video component display name, make a row of the file:
 # Section - Subsection - Unit - Video Component - SRT Filename
+
+# Save the file
