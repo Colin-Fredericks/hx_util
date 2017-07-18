@@ -35,7 +35,7 @@ def drillDown(folder, filename, depth):
         if 'display_name' in child.attrib:
             tempOD[index]['name'] = child.attrib['display_name']
         else:
-            tempOD[index]['name'] = folder + str(index)
+            tempOD[index]['name'] = child.tag + str(index)
 
         # get url_name but there are no placeholders
         if 'url_name' in child.attrib:
@@ -43,15 +43,22 @@ def drillDown(folder, filename, depth):
         else:
             tempOD[index]['url'] = None
 
-        if child.tag in leaf_nodes and depth < 2:
-            tempOD[index]['contents'] = drillDown(child.tag, tempOD[index]['url'], depth+1)
+        if child.tag in branch_nodes and depth < 1:
+            getDown = drillDown(child.tag, tempOD[index]['url'], depth+1)
+            tempOD[index]['contents'] = getDown['tree']
+            tempOD[index]['name'] = getDown['parent_name']
 
-    return tempOD
+        print tempOD[index]
+
+    return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
 
 
 # Recursion function for inline-declared XML.
 # This is a placeholder.
 
+#########
+# MAIN
+#########
 
 # Get the filename
 try:
@@ -73,11 +80,9 @@ course_dict['name'] = root_root.attrib['course']
 course_dict['url'] = root_root.attrib['url_name']
 course_dict['contents'] = drillDown('course',course_dict['url'], 0)
 
-print course_dict
+# Create a "csv" file with tabs as delimiters
 
 # Make the file's header row
-
-# Walk the XML structure to get all the display names.
 
 # For each video component display name, make a row of the file:
 # Section - Subsection - Unit - Video Component - SRT Filename
