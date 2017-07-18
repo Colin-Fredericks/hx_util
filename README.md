@@ -8,10 +8,10 @@ This repo also has a few utility scripts for batch-work in course XML.
 Currently Working On...
 -----------
 
-Nothing at the moment.
+A script that creates a spreadsheet showing which SRT file is for which video.
 
 
-How to Implement HXJS in your course
+How to Implement HXPY in your course
 -----------
 
 Put `python_lib.zip` in your Files & Uploads. Leave it zipped. Do *not* unzip it first.
@@ -54,5 +54,6 @@ Currently Available Tools
 ----------
 * `SetMaxAttempts.py`, which sets the number of attempts automatically in every problem in a course.
 * `SetShowAnswer.py`, which sets the showanswer value automatically (or removes it) in every problem in a course.
+* `Make_Video_SRT.py`, which creates a spreadsheet showing which SRT file is for which video. Currently under development.
 
 You can run `python filename.py` to have each one show a set of instructions.
