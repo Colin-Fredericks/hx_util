@@ -135,28 +135,35 @@ except IndexError:
 
 # Open course's root xml file
 # Get the current course run filename
-root_tree = ET.parse(coursefile)
-root_root = root_tree.getroot()
+course_tree = ET.parse(coursefile)
+course_root = course_tree.getroot()
 
 # This is the ordered dict where we're storing the course structure.
 # Later we'll dump it out to the tab-separated file.
-course_dict = {}
-course_dict['url'] = root_root.attrib['url_name']
+course_dict = {
+    'type': 'course',
+    'name': '',
+    'url': course_root.attrib['url_name'],
+    'contents': []
+}
 
 course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
 course_dict['contents'] = course_info['contents']
 
 
-print course_dict
+# print course_dict
 
 # Create a "csv" file with tabs as delimiters
 
 with open('videolinker.csv','wb') as outputfile:
-    fieldnames = ['type']
-    writer = csv.DictWriter(outputfile,fieldnames=fieldnames)
+    fieldnames = ['type','url']
+    writer = csv.DictWriter(outputfile,
+        delimiter='\t',
+        fieldnames=fieldnames,
+        extrasaction='ignore')
     writer.writeheader()
-    writer.writerow({'type':'bogus'})
+    writer.writerow(course_dict)
 
 # Make the file's header row
 
