@@ -60,36 +60,43 @@ def getComponentInfo(folder, filename, depth):
 # (doesn't actually recurse yet)
 def drillDown(folder, filename, depth):
     tempOD = collections.OrderedDict()
+    tempOD['contents'] = collections.OrderedDict()
 
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
     for index, child in enumerate(root):
-        tempOD[index] = collections.OrderedDict()
+
+        tempOD['index'] = index
+        tempOD['tag'] = child.tag
 
         # get display_name or use placeholder
         if 'display_name' in child.attrib:
-            tempOD[index]['name'] = child.attrib['display_name']
+            tempOD['name'] = child.attrib['display_name']
         else:
-            tempOD[index]['name'] = child.tag + str(index)
+            tempOD['name'] = child.tag + str(index)
+            tempOD['tempname'] = True
 
         # get url_name but there are no placeholders
         if 'url_name' in child.attrib:
-            tempOD[index]['url'] = child.attrib['url_name']
+            tempOD['url'] = child.attrib['url_name']
         else:
-            tempOD[index]['url'] = None
+            tempOD['url'] = None
 
         if child.tag in branch_nodes:
-            getDown = drillDown(child.tag, tempOD[index]['url'], depth+1)
+            child_info = drillDown(child.tag, tempOD['url'], depth+1)
         elif child.tag in leaf_nodes:
-            getDown = getComponentInfo(child.tag, tempOD[index]['url'], depth+1)
+            child_info = getComponentInfo(child.tag, tempOD['url'], depth+1)
         elif child.tag in skip_tags:
-            getDown = {'tree': collections.OrderedDict(), 'parent_name': child.tag}
+            child_info = {'tree': collections.OrderedDict(), 'parent_name': child.tag}
         else:
             sys.exit('New tag type found:' + child.tag)
 
-        tempOD[index]['contents'] = getDown['tree']
-        tempOD[index]['name'] = getDown['parent_name']
+        tempOD['contents'].update(child_info['tree'])
+        # If the display name was temporary, replace it.
+        if 'tempname' in tempOD:
+            tempOD['name'] = child_info['parent_name']
+            del tempOD['tempname']
 
     return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
 
@@ -117,9 +124,11 @@ course_dict = collections.OrderedDict()
 root_tree = ET.parse(coursefile)
 root_root = root_tree.getroot()
 
-course_dict['name'] = root_root.attrib['course']
 course_dict['url'] = root_root.attrib['url_name']
-course_dict['contents'] = drillDown('course',course_dict['url'], 0)
+course_info = drillDown('course',course_dict['url'], 0)
+course_dict['contents'] = course_info['tree']
+course_dict['name'] = course_info['parent_name']
+
 
 print course_dict
 
