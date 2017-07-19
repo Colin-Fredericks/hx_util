@@ -19,6 +19,42 @@ location of each video, and the srt filename for that video.
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video','poll']
 branch_nodes = ['course','chapter','sequential','vertical','split_test']
+skip_tags = ['wiki']
+
+# Always gets the display name.
+# For video files, gets other info too
+def getComponentInfo(folder, filename, depth):
+    tempOD = collections.OrderedDict()
+    tree = ET.parse(folder + '/' + filename + '.xml')
+    root = tree.getroot()
+
+    tempOD['type'] = root.tag
+
+    # get display_name or use placeholder
+    if 'display_name' in root.attrib:
+        tempOD['name'] = root.attrib['display_name']
+    else:
+        tempOD['name'] = root.tag
+
+    # get other video information
+    if root.tag == 'video':
+        if 'sub' in root.attrib:
+            tempOD['sub'] = root.attrib['sub']
+        else:
+            tempOD['sub'] = 'No sub found.'
+
+        if 'youtube_id_1_0' in root.attrib:
+            tempOD['youtube'] = root.attrib['youtube_id_1_0']
+        elif 'youtube' in root.attrib:
+            # slice to remove the '1.00:' from the start of the ID
+            tempOD['youtube'] = root.attrib['youtube'][5:]
+        else:
+            tempOD['youtube'] = 'No YouTube ID found.'
+
+        if 'edx_video_id' in root.attrib:
+            tempOD['edx_video_id'] = root.attrib['edx_video_id']
+
+    return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
 
 # Recursion function for outline-declared xml files
 # (doesn't actually recurse yet)
@@ -45,10 +81,15 @@ def drillDown(folder, filename, depth):
 
         if child.tag in branch_nodes:
             getDown = drillDown(child.tag, tempOD[index]['url'], depth+1)
-            tempOD[index]['contents'] = getDown['tree']
-            tempOD[index]['name'] = getDown['parent_name']
+        elif child.tag in leaf_nodes:
+            getDown = getComponentInfo(child.tag, tempOD[index]['url'], depth+1)
+        elif child.tag in skip_tags:
+            getDown = {'tree': collections.OrderedDict(), 'parent_name': child.tag}
+        else:
+            sys.exit('New tag type found:' + child.tag)
 
-        print tempOD[index]
+        tempOD[index]['contents'] = getDown['tree']
+        tempOD[index]['name'] = getDown['parent_name']
 
     return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
 
@@ -79,6 +120,8 @@ root_root = root_tree.getroot()
 course_dict['name'] = root_root.attrib['course']
 course_dict['url'] = root_root.attrib['url_name']
 course_dict['contents'] = drillDown('course',course_dict['url'], 0)
+
+print course_dict
 
 # Create a "csv" file with tabs as delimiters
 
