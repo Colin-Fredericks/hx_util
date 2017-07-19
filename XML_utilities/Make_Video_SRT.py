@@ -24,81 +24,91 @@ skip_tags = ['wiki']
 # Always gets the display name.
 # For video files, gets other info too
 def getComponentInfo(folder, filename, depth):
-    tempOD = collections.OrderedDict()
+    temp = {}
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
-    tempOD['type'] = root.tag
+    temp['type'] = root.tag
 
     # get display_name or use placeholder
     if 'display_name' in root.attrib:
-        tempOD['name'] = root.attrib['display_name']
+        temp['name'] = root.attrib['display_name']
     else:
-        tempOD['name'] = root.tag
+        temp['name'] = root.tag
 
     # get other video information
     if root.tag == 'video':
         if 'sub' in root.attrib:
-            tempOD['sub'] = root.attrib['sub']
+            temp['sub'] = root.attrib['sub']
         else:
-            tempOD['sub'] = 'No sub found.'
+            temp['sub'] = 'No sub found.'
 
         if 'youtube_id_1_0' in root.attrib:
-            tempOD['youtube'] = root.attrib['youtube_id_1_0']
+            temp['youtube'] = root.attrib['youtube_id_1_0']
         elif 'youtube' in root.attrib:
             # slice to remove the '1.00:' from the start of the ID
-            tempOD['youtube'] = root.attrib['youtube'][5:]
+            temp['youtube'] = root.attrib['youtube'][5:]
         else:
-            tempOD['youtube'] = 'No YouTube ID found.'
+            temp['youtube'] = 'No YouTube ID found.'
 
         if 'edx_video_id' in root.attrib:
-            tempOD['edx_video_id'] = root.attrib['edx_video_id']
+            temp['edx_video_id'] = root.attrib['edx_video_id']
 
-    return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
+    return {'tree': temp, 'parent_name': root.attrib['display_name']}
 
 # Recursion function for outline-declared xml files
 # (doesn't actually recurse yet)
 def drillDown(folder, filename, depth):
-    tempOD = collections.OrderedDict()
-    tempOD['contents'] = collections.OrderedDict()
+    contents = []
 
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
+    display_name = root.attrib['display_name']
 
     for index, child in enumerate(root):
-
-        tempOD['index'] = index
-        tempOD['tag'] = child.tag
+        temp = {
+            'index': index,
+            'tag': child.tag,
+            'name': '',
+            'url': '',
+            'contents': []
+        }
 
         # get display_name or use placeholder
         if 'display_name' in child.attrib:
-            tempOD['name'] = child.attrib['display_name']
+            temp['name'] = child.attrib['display_name']
         else:
-            tempOD['name'] = child.tag + str(index)
-            tempOD['tempname'] = True
+            temp['name'] = child.tag + str(index)
+            temp['tempname'] = True
 
         # get url_name but there are no placeholders
         if 'url_name' in child.attrib:
-            tempOD['url'] = child.attrib['url_name']
+            temp['url'] = child.attrib['url_name']
         else:
-            tempOD['url'] = None
+            temp['url'] = None
 
         if child.tag in branch_nodes:
-            child_info = drillDown(child.tag, tempOD['url'], depth+1)
+            child_info = drillDown(child.tag, temp['url'], depth+1)
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(child.tag, tempOD['url'], depth+1)
+            child_info = getComponentInfo(child.tag, temp['url'], depth+1)
         elif child.tag in skip_tags:
-            child_info = {'tree': collections.OrderedDict(), 'parent_name': child.tag}
+            child_info = {'contents': False, 'parent_name': child.tag}
         else:
-            sys.exit('New tag type found:' + child.tag)
+            sys.exit('New tag type found: ' + child.tag)
 
-        tempOD['contents'].update(child_info['tree'])
+        if 'contents' in child_info:
+            temp['contents'].append(child_info['contents'])
+
         # If the display name was temporary, replace it.
-        if 'tempname' in tempOD:
-            tempOD['name'] = child_info['parent_name']
-            del tempOD['tempname']
+        if 'tempname' in temp:
+            temp['name'] = child_info['parent_name']
+            del temp['tempname']
 
-    return {'tree': tempOD, 'parent_name': root.attrib['display_name']}
+        contents.append(temp)
+
+    print contents
+
+    return {'contents': contents, 'parent_name': display_name}
 
 
 # Recursion function for inline-declared XML.
@@ -115,19 +125,19 @@ except IndexError:
     # If run without argument, show instructions.
     sys.exit(instructions)
 
-# This is the ordered dict where we're storing the course structure.
-# Later we'll dump it out to the tab-separated file.
-course_dict = collections.OrderedDict()
-
 # Open course's root xml file
 # Get the current course run filename
 root_tree = ET.parse(coursefile)
 root_root = root_tree.getroot()
 
+# This is the ordered dict where we're storing the course structure.
+# Later we'll dump it out to the tab-separated file.
+course_dict = {}
 course_dict['url'] = root_root.attrib['url_name']
-course_info = drillDown('course',course_dict['url'], 0)
-course_dict['contents'] = course_info['tree']
+
+course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
+course_dict['contents'] = course_info['contents']
 
 
 print course_dict
