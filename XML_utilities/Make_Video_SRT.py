@@ -43,7 +43,7 @@ def drillDown(folder, filename, depth):
         else:
             tempOD[index]['url'] = None
 
-        if child.tag in branch_nodes and depth < 1:
+        if child.tag in branch_nodes:
             getDown = drillDown(child.tag, tempOD[index]['url'], depth+1)
             tempOD[index]['contents'] = getDown['tree']
             tempOD[index]['name'] = getDown['parent_name']
