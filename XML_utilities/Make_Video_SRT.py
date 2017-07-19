@@ -118,9 +118,51 @@ def drillDown(folder, filename, depth):
 
     return {'contents': contents, 'parent_name': display_name}
 
-
 # Recursion function for inline-declared XML.
-# This is a placeholder.
+# def drillDownInline(arguments, and, stuff):
+    # This is a placeholder.
+
+# Ensure that all dicts have the same entries, adding blanks if needed.
+def fillInRows(flat_course):
+
+    # Get a list of all dict keys and store it in a set.
+    key_set = set()
+    [[key_set.update(k) for k in row] for row in flat_course]
+
+    # Iterate through the list and add blank entries for any keys in the set that aren't present.
+    for row in flat_course:
+        for key in key_set:
+            if key not in row:
+                row[key]=''
+
+    return flat_course
+
+
+def courseFlattener(course_dict):
+
+    # Each component will be a dict in this list.
+    flat_course = []
+    current_row = {}
+
+    # Start at top level of dict. Add all the keys to the current row except contents.
+    for key in course_dict:
+        if key is not 'contents':
+            current_row[key] = course_dict[key]
+
+    # If the current structure has "contents", we're not at the bottom of the hierarchy.
+    if 'contents' in course_dict:
+        # A. Go down into "contents". until we're at the bottom, collecting dict entries from each parent.
+        for entry in course_dict['contents']:
+            courseFlattener(course_dict['contents'])
+
+
+    # Add that dict to the list.
+    # B. Go up a level and look for the next item in "contents".
+        # If there is no next item, go back to B.
+    # Go back to A, updating dict entries if they're new.
+        # Go back to B.
+
+    return flat_course
 
 #########
 # MAIN
@@ -154,20 +196,14 @@ course_dict['contents'] = course_info['contents']
 
 # print course_dict
 
-# Create a "csv" file with tabs as delimiters
 
+# Create a "csv" file with tabs as delimiters
 with open('videolinker.csv','wb') as outputfile:
-    fieldnames = ['type','url']
+    fieldnames = ['name','type','url']
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
         fieldnames=fieldnames,
         extrasaction='ignore')
     writer.writeheader()
-    writer.writerow(course_dict)
-
-# Make the file's header row
-
-# For each video component display name, make a row of the file:
-# Section - Subsection - Unit - Video Component - SRT Filename
-
-# Save the file
+    for row in fillInRows(courseFlattener(course_dict)):
+        writer.writerow(row)
