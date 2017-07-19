@@ -152,6 +152,12 @@ print course_dict
 
 # Create a "csv" file with tabs as delimiters
 
+with open('videolinker.csv','wb') as outputfile:
+    fieldnames = ['type']
+    writer = csv.DictWriter(outputfile,fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerow({'type':'bogus'})
+
 # Make the file's header row
 
 # For each video component display name, make a row of the file:
