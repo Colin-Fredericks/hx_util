@@ -24,11 +24,14 @@ skip_tags = ['wiki']
 # Always gets the display name.
 # For video files, gets other info too
 def getComponentInfo(folder, filename, depth):
-    temp = {}
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
-    temp['type'] = root.tag
+    temp = {
+        'type': root.tag,
+        'name': '',
+        # space for other info
+    }
 
     # get display_name or use placeholder
     if 'display_name' in root.attrib:
@@ -54,7 +57,13 @@ def getComponentInfo(folder, filename, depth):
         if 'edx_video_id' in root.attrib:
             temp['edx_video_id'] = root.attrib['edx_video_id']
 
-    return {'tree': temp, 'parent_name': root.attrib['display_name']}
+    if root.tag == 'problem':
+        if 'rerandomize' in root.attrib:
+            temp['rerandomize'] = root.attrib['rerandomize']
+        if 'show_reset_button' in root.attrib:
+            temp['show_reset_button'] = root.attrib['show_reset_button']
+
+    return {'contents': temp, 'parent_name': root.attrib['display_name']}
 
 # Recursion function for outline-declared xml files
 # (doesn't actually recurse yet)
@@ -68,7 +77,7 @@ def drillDown(folder, filename, depth):
     for index, child in enumerate(root):
         temp = {
             'index': index,
-            'tag': child.tag,
+            'type': child.tag,
             'name': '',
             'url': '',
             'contents': []
@@ -89,15 +98,16 @@ def drillDown(folder, filename, depth):
 
         if child.tag in branch_nodes:
             child_info = drillDown(child.tag, temp['url'], depth+1)
+            temp['contents']=child_info['contents']
         elif child.tag in leaf_nodes:
             child_info = getComponentInfo(child.tag, temp['url'], depth+1)
+            # For leaf nodes, add item info directly to the dict.
+            temp.update(child_info['contents'])
+            del temp['contents']
         elif child.tag in skip_tags:
             child_info = {'contents': False, 'parent_name': child.tag}
         else:
             sys.exit('New tag type found: ' + child.tag)
-
-        if 'contents' in child_info:
-            temp['contents'].append(child_info['contents'])
 
         # If the display name was temporary, replace it.
         if 'tempname' in temp:
@@ -105,8 +115,6 @@ def drillDown(folder, filename, depth):
             del temp['tempname']
 
         contents.append(temp)
-
-    print contents
 
     return {'contents': contents, 'parent_name': display_name}
 
