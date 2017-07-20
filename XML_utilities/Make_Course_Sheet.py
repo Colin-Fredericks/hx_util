@@ -205,9 +205,6 @@ if '-problems' in sys.argv or '--problems' in sys.argv:
     global_options = global_options + 'problems'
 if '-all' in sys.argv or '--all' in sys.argv:
     global_options = global_options + 'all'
-if '-video' in sys.argv or '--video' in sys.argv:
-    if 'video' not in global_options:
-        global_options = global_options + 'video'
 
 # Open course's root xml file
 # Get the current course run filename
@@ -231,10 +228,25 @@ course_dict['contents'] = course_info['contents']
 # Create a "csv" file with tabs as delimiters
 with open(course_dict['name'] + '.tsv','wb') as outputfile:
     fieldnames = ['chapter','sequential','vertical','component','type','url']
+
+    # Include the XML if we're dealing with problems
+    if 'problems' in global_options:
+            fieldnames = fieldnames + 'inner_xml'
+
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
         fieldnames=fieldnames,
         extrasaction='ignore')
     writer.writeheader()
-    for row in fillInRows(courseFlattener(course_dict)):
+
+    spreadsheet = fillInRows(courseFlattener(course_dict))
+
+    # Filter to just the rows we care about.
+    for row in spreadsheet
+        if 'problems' in global_options and row['type'] is not 'problem':
+            spreadsheet.remove(row)
+        if 'video'  in global_options and row['type'] is not 'video':
+            spreadsheet.remove(row)
+
+        # Write the rows.
         writer.writerow(row)
