@@ -177,19 +177,18 @@ def courseFlattener(course_dict, temp_row = {}):
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
     if 'contents' in course_dict:
-        # Go down into each item in "contents". until we're at the bottom, collecting dict entries from each parent.
+        # Go down into each item in "contents" and add its contents to the course.
         for entry in course_dict['contents']:
-            temp = courseFlattener(entry, temp_row = temp_row)
-            if 'leaf' in temp:
-                print temp['row']
-                flat_course.append(temp['row'])
-        return {'row': temp_row}
+            temp = courseFlattener(entry, temp_row)
+            print temp
+            if temp:
+                flat_course = flat_course + temp
 
     # If there are no contents, we're at the bottom.
     else:
-        # print temp_row
-        if 'component' in temp_row:
-            return {'row': temp_row, 'leaf': True}
+        # Don't include the wiki and certain other items.
+        if temp_row['type'] not in skip_tags:
+            return [temp_row]
 
     return flat_course
 
@@ -222,8 +221,6 @@ course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
 course_dict['contents'] = course_info['contents']
 
-
-# print course_dict
 courseFlattener(course_dict)
 
 
