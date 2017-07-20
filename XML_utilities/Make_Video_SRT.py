@@ -167,10 +167,11 @@ def fillInRows(flat_course):
     return flat_course
 
 
-def courseFlattener(course_dict, temp_row = {}):
+def courseFlattener(course_dict, new_row={}):
     flat_course = []
+    temp_row = new_row.copy()
 
-    # Start at top level of course_dict. Add all the keys to the current row except contents.
+    # Add all the data from the current level to the current row except 'contents'.
     for key in course_dict:
         if key is not 'contents':
             temp_row[key] = course_dict[key]
@@ -180,17 +181,16 @@ def courseFlattener(course_dict, temp_row = {}):
         # Go down into each item in "contents" and add its contents to the course.
         for entry in course_dict['contents']:
             temp = courseFlattener(entry, temp_row)
-            print temp
             if temp:
+                # print temp
                 flat_course = flat_course + temp
+        return flat_course
 
     # If there are no contents, we're at the bottom.
     else:
         # Don't include the wiki and certain other items.
         if temp_row['type'] not in skip_tags:
             return [temp_row]
-
-    return flat_course
 
 #########
 # MAIN
@@ -221,7 +221,7 @@ course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
 course_dict['contents'] = course_info['contents']
 
-courseFlattener(course_dict)
+print courseFlattener(course_dict)
 
 
 
