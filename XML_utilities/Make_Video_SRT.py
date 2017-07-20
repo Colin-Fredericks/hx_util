@@ -214,9 +214,6 @@ course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
 course_dict['contents'] = course_info['contents']
 
-print fillInRows(courseFlattener(course_dict))
-
-
 
 # Create a "csv" file with tabs as delimiters
 with open('videolinker.csv','wb') as outputfile:
@@ -226,6 +223,5 @@ with open('videolinker.csv','wb') as outputfile:
         fieldnames=fieldnames,
         extrasaction='ignore')
     writer.writeheader()
-    # for row in fillInRows(courseFlattener(course_dict)):
-        # print row
-        # writer.writerow(row)
+    for row in fillInRows(courseFlattener(course_dict)):
+        writer.writerow(row)
