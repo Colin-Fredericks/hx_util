@@ -13,6 +13,8 @@ You will get a coursename.tsv file that shows the
 location of each video, and the srt filename for that video.
 
 (TSV = tab-separated value. Open with Excel.)
+
+This script may fail on courses with empty sections, subsections, or units.
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -63,7 +65,10 @@ def getComponentInfo(folder, filename, depth):
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
 
-    return {'contents': temp, 'parent_name': root.attrib['display_name']}
+    # Label all of them as components regardless of type.
+    temp['component'] = temp['name']
+
+    return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
 # (doesn't actually recurse yet)
@@ -98,14 +103,16 @@ def drillDown(folder, filename, depth):
 
         if child.tag in branch_nodes:
             child_info = drillDown(child.tag, temp['url'], depth+1)
-            temp['contents']=child_info['contents']
+            temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
             child_info = getComponentInfo(child.tag, temp['url'], depth+1)
-            # For leaf nodes, add item info directly to the dict.
+            # For leaf nodes, add item info to the dict
+            # instead of adding a new contents entry
             temp.update(child_info['contents'])
             del temp['contents']
         elif child.tag in skip_tags:
             child_info = {'contents': False, 'parent_name': child.tag}
+            del temp['contents']
         else:
             sys.exit('New tag type found: ' + child.tag)
 
@@ -113,6 +120,9 @@ def drillDown(folder, filename, depth):
         if 'tempname' in temp:
             temp['name'] = child_info['parent_name']
             del temp['tempname']
+
+        # We need not only a name, but a custom key with that name.
+        temp[temp['type']] = temp['name']
 
         contents.append(temp)
 
@@ -122,12 +132,31 @@ def drillDown(folder, filename, depth):
 # def drillDownInline(arguments, and, stuff):
     # This is a placeholder.
 
+def getAllKeys(nested_thing, key_set=set()):
+
+    # Start at top level of dict. Add all the keys to the set except contents.
+    for key in nested_thing:
+        if key is not 'contents':
+            key_set.add(key)
+
+    # If the current structure has "contents", we're not at the bottom of the hierarchy.
+    if 'contents' in nested_thing:
+        # Go down into each item in "contents". until we're at the bottom, collecting dict entries from each parent.
+        for entry in nested_thing['contents']:
+            getAllKeys(entry, key_set=key_set)
+    # If there are no contents, we're at the bottom.
+    else:
+        for key in nested_thing:
+            key_set.add(key)
+        return key_set
+
+
+
 # Ensure that all dicts have the same entries, adding blanks if needed.
 def fillInRows(flat_course):
 
-    # Get a list of all dict keys and store it in a set.
-    key_set = set()
-    [[key_set.update(k) for k in row] for row in flat_course]
+    # Get a list of all dict keys from the entire nested structure and store it in a set.
+    key_set = getAllKeys(flat_course)
 
     # Iterate through the list and add blank entries for any keys in the set that aren't present.
     for row in flat_course:
@@ -138,29 +167,29 @@ def fillInRows(flat_course):
     return flat_course
 
 
-def courseFlattener(course_dict):
-
-    # Each component will be a dict in this list.
+def courseFlattener(course_dict, temp_row = {}):
     flat_course = []
-    current_row = {}
 
-    # Start at top level of dict. Add all the keys to the current row except contents.
+    # Start at top level of course_dict. Add all the keys to the current row except contents.
     for key in course_dict:
         if key is not 'contents':
-            current_row[key] = course_dict[key]
+            temp_row[key] = course_dict[key]
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
     if 'contents' in course_dict:
-        # A. Go down into "contents". until we're at the bottom, collecting dict entries from each parent.
+        # Go down into each item in "contents". until we're at the bottom, collecting dict entries from each parent.
         for entry in course_dict['contents']:
-            courseFlattener(course_dict['contents'])
+            temp = courseFlattener(entry, temp_row = temp_row)
+            if 'leaf' in temp:
+                print temp['row']
+                flat_course.append(temp['row'])
+        return {'row': temp_row}
 
-
-    # Add that dict to the list.
-    # B. Go up a level and look for the next item in "contents".
-        # If there is no next item, go back to B.
-    # Go back to A, updating dict entries if they're new.
-        # Go back to B.
+    # If there are no contents, we're at the bottom.
+    else:
+        # print temp_row
+        if 'component' in temp_row:
+            return {'row': temp_row, 'leaf': True}
 
     return flat_course
 
@@ -195,15 +224,18 @@ course_dict['contents'] = course_info['contents']
 
 
 # print course_dict
+courseFlattener(course_dict)
+
 
 
 # Create a "csv" file with tabs as delimiters
 with open('videolinker.csv','wb') as outputfile:
-    fieldnames = ['name','type','url']
+    fieldnames = ['chapter','sequential','vertical','type','url']
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
         fieldnames=fieldnames,
         extrasaction='ignore')
     writer.writeheader()
-    for row in fillInRows(courseFlattener(course_dict)):
-        writer.writerow(row)
+    # for row in fillInRows(courseFlattener(course_dict)):
+        # print row
+        # writer.writerow(row)
