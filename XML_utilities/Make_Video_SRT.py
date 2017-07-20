@@ -132,27 +132,19 @@ def drillDown(folder, filename, depth):
 # def drillDownInline(arguments, and, stuff):
     # This is a placeholder.
 
-def getAllKeys(nested_thing, key_set=set()):
+# Gets the full set of data headers for the course.
+# flat_course is a list of dictionaries.
+def getAllKeys(flat_course, key_set=set()):
 
-    # Start at top level of dict. Add all the keys to the set except contents.
-    for key in nested_thing:
-        if key is not 'contents':
+    for row in flat_course:
+        for key in row:
             key_set.add(key)
 
-    # If the current structure has "contents", we're not at the bottom of the hierarchy.
-    if 'contents' in nested_thing:
-        # Go down into each item in "contents". until we're at the bottom, collecting dict entries from each parent.
-        for entry in nested_thing['contents']:
-            getAllKeys(entry, key_set=key_set)
-    # If there are no contents, we're at the bottom.
-    else:
-        for key in nested_thing:
-            key_set.add(key)
-        return key_set
-
+    return key_set
 
 
 # Ensure that all dicts have the same entries, adding blanks if needed.
+# flat_course is a list of dictionaries.
 def fillInRows(flat_course):
 
     # Get a list of all dict keys from the entire nested structure and store it in a set.
@@ -166,7 +158,8 @@ def fillInRows(flat_course):
 
     return flat_course
 
-
+# Takes a nested structure of lists and dicts that represents the course
+# and returns a single list of dicts where each dict is a component
 def courseFlattener(course_dict, new_row={}):
     flat_course = []
     temp_row = new_row.copy()
@@ -221,7 +214,7 @@ course_info = drillDown('course', course_dict['url'], 0)
 course_dict['name'] = course_info['parent_name']
 course_dict['contents'] = course_info['contents']
 
-print courseFlattener(course_dict)
+print fillInRows(courseFlattener(course_dict))
 
 
 
