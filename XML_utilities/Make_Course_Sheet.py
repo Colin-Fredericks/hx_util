@@ -6,13 +6,15 @@ import os
 
 instructions = """
 To use:
-python Make_Video_SRT.py path/to/course.xml
+python Make_Course_Sheet.py path/to/course.xml (options)
 
 Run this on a course.xml file inside an edX course folder (from export).
-You will get a coursename.tsv file that shows the
-location of each video, and the srt filename for that video.
+You will get a TSV file (tab-separated value, open with Excel)
+that shows the location of each video, and the srt filename for that video.
 
-(TSV = tab-separated value. Open with Excel.)
+You can specify the following options:
+    -problems (includes problems and problem XML instead of videos)
+    -all (includes all components, but doesn't give XML)
 
 This script may fail on courses with empty sections, subsections, or units.
 """
@@ -22,6 +24,7 @@ This script may fail on courses with empty sections, subsections, or units.
 leaf_nodes = ['html','problem','video','poll']
 branch_nodes = ['course','chapter','sequential','vertical','split_test']
 skip_tags = ['wiki']
+global_options = ['video']
 
 # Always gets the display name.
 # For video files, gets other info too
@@ -42,7 +45,7 @@ def getComponentInfo(folder, filename, depth):
         temp['name'] = root.tag
 
     # get other video information
-    if root.tag == 'video':
+    if root.tag == 'video' and 'video' in global_options:
         if 'sub' in root.attrib:
             temp['sub'] = root.attrib['sub']
         else:
@@ -64,6 +67,7 @@ def getComponentInfo(folder, filename, depth):
             temp['rerandomize'] = root.attrib['rerandomize']
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
+        temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('string_escape')
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -189,12 +193,21 @@ def courseFlattener(course_dict, new_row={}):
 # MAIN
 #########
 
-# Get the filename
-try:
-    coursefile = sys.argv[1]
-except IndexError:
+if len(sys.arvg) = 1 or '-h' in sys.argv or '--h' in sys.argv:
     # If run without argument, show instructions.
     sys.exit(instructions)
+
+# Get the filename
+if len(sys.arvg) > 1:
+    coursefile = sys.argv[1]
+
+if '-problems' in sys.argv or '--problems' in sys.argv:
+    global_options = global_options + 'problems'
+if '-all' in sys.argv or '--all' in sys.argv:
+    global_options = global_options + 'all'
+if '-video' in sys.argv or '--video' in sys.argv:
+    if 'video' not in global_options:
+        global_options = global_options + 'video'
 
 # Open course's root xml file
 # Get the current course run filename
@@ -216,8 +229,8 @@ course_dict['contents'] = course_info['contents']
 
 
 # Create a "csv" file with tabs as delimiters
-with open('videolinker.csv','wb') as outputfile:
-    fieldnames = ['chapter','sequential','vertical','type','url']
+with open(course_dict['name'] + '.tsv','wb') as outputfile:
+    fieldnames = ['chapter','sequential','vertical','component','type','url']
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
         fieldnames=fieldnames,
