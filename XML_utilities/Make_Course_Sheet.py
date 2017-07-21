@@ -28,8 +28,11 @@ branch_nodes = ['course','chapter','sequential','vertical','split_test']
 skip_tags = ['wiki','lti_consumer','discussion','poll','survey']
 global_options = ['video']
 
+# We're skipping some of the skip_tags because they're inline.
+# Need to develop that code to handle them.
+
 # Always gets the display name.
-# For video files, gets other info too
+# For video and problem files, gets other info too
 def getComponentInfo(folder, filename, depth):
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
@@ -137,6 +140,8 @@ def drillDown(folder, filename, depth):
 # Recursion function for inline-declared XML.
 # def drillDownInline(arguments, and, stuff):
     # This is a placeholder.
+    # Luckily most of them right now are leaf nodes,
+    # but they don't HAVE to be, so... bah.
 
 # Gets the full set of data headers for the course.
 # flat_course is a list of dictionaries.
