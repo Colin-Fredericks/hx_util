@@ -24,11 +24,27 @@ This script may fail on courses with empty sections, subsections, or units.
 # We need lists of container nodes and leaf nodes so we can tell
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video']
-branch_nodes = ['course','chapter','sequential','vertical','split_test']
-skip_tags = ['wiki','lti_consumer','discussion','poll','survey']
+branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+skip_tags = [
+    'annotatable',
+    'discussion',
+    'imageannotation',
+    'library_content',
+    'lti',
+    'lti_consumer',
+    'openassessment',
+    'poll',
+    'recommender',
+    'survey',
+    'textannotation',
+    'ubcpi',
+    'videoannotation',
+    'wiki',
+    'word_cloud'
+]
 global_options = ['video']
 
-# We're skipping some of the skip_tags because they're inline.
+# We're skipping many of the skip_tags because they're inline.
 # Need to develop that code to handle them.
 
 # Always gets the display name.
@@ -52,9 +68,9 @@ def getComponentInfo(folder, filename, depth):
     # get other video information
     if root.tag == 'video' and 'video' in global_options:
         if 'sub' in root.attrib:
-            temp['sub'] = root.attrib['sub']
+            temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
         else:
-            temp['sub'] = 'No sub found.'
+            temp['sub'] = 'No subtitles found.'
 
         if 'youtube_id_1_0' in root.attrib:
             temp['youtube'] = root.attrib['youtube_id_1_0']
@@ -72,7 +88,10 @@ def getComponentInfo(folder, filename, depth):
             temp['rerandomize'] = root.attrib['rerandomize']
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
-        temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('string_escape')
+        if root.text is not None:
+            temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('string_escape')
+        else:
+            temp['inner_xml'] = 'No XML.'
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -84,9 +103,20 @@ def getComponentInfo(folder, filename, depth):
 def drillDown(folder, filename, depth):
     contents = []
 
-    tree = ET.parse(folder + '/' + filename + '.xml')
+    # If there's no file here, just go back.
+    try:
+        tree = ET.parse(folder + '/' + filename + '.xml')
+    except IOError:
+        print "Possible missing file: " + folder + '/' + filename + '.xml'
+        return {'contents': contents, 'parent_name': ''}
+
     root = tree.getroot()
-    display_name = root.attrib['display_name']
+
+    # Some items are created without a display name; use their tag name instead.
+    if 'display_name' in root.attrib:
+        display_name = root.attrib['display_name']
+    else:
+        display_name = root.tag
 
     for index, child in enumerate(root):
         temp = {
@@ -204,9 +234,12 @@ if len(sys.argv) == 1 or '-h' in sys.argv or '--h' in sys.argv:
     # If run without argument, show instructions.
     sys.exit(instructions)
 
-# Get the filename
+# Get the filename and set working directory
 if len(sys.argv) > 1:
-    coursefile = sys.argv[1]
+    course_file_path = sys.argv[1]
+    course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
+    os.chdir(course_folder_path)
+    coursefile = os.path.basename(os.path.abspath(course_file_path))
 
 if '-problems' in sys.argv or '--problems' in sys.argv:
     global_options.append('problems')
@@ -274,4 +307,6 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
             printable += [row for row in spreadsheet if row['type'] == 'problem']
 
     for row in printable:
-       writer.writerow(row)
+        writer.writerow(row)
+
+    print 'Spreadsheet created for ' + course_dict['name']
