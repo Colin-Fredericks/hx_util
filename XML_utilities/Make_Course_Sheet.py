@@ -13,8 +13,10 @@ You will get a TSV file (tab-separated value, open with Excel)
 that shows the location of each video, and the srt filename for that video.
 
 You can specify the following options:
-    -problems (includes problems and problem XML instead of videos)
-    -all (includes all components, but doesn't give XML)
+    -problems (includes problems AND problem XML instead of videos)
+    -html (includes just HTML components)
+    -video (forces inclusion of video)
+    -all (includes all components)
 
 This script may fail on courses with empty sections, subsections, or units.
 """
@@ -193,18 +195,26 @@ def courseFlattener(course_dict, new_row={}):
 # MAIN
 #########
 
-if len(sys.arvg) = 1 or '-h' in sys.argv or '--h' in sys.argv:
+if len(sys.argv) == 1 or '-h' in sys.argv or '--h' in sys.argv:
     # If run without argument, show instructions.
     sys.exit(instructions)
 
 # Get the filename
-if len(sys.arvg) > 1:
+if len(sys.argv) > 1:
     coursefile = sys.argv[1]
 
 if '-problems' in sys.argv or '--problems' in sys.argv:
-    global_options = global_options + 'problems'
+    global_options.append('problems')
+    global_options.remove('video')
 if '-all' in sys.argv or '--all' in sys.argv:
-    global_options = global_options + 'all'
+    global_options.append('all')
+    global_options.remove('video')
+if '-html' in sys.argv or '--html' in sys.argv:
+    global_options.append('html')
+    global_options.remove('video')
+if '-video' in sys.argv or '--video' in sys.argv:
+    if 'video' not in global_options:
+        global_options.append('video')
 
 # Open course's root xml file
 # Get the current course run filename
@@ -231,7 +241,7 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
 
     # Include the XML if we're dealing with problems
     if 'problems' in global_options:
-            fieldnames = fieldnames + 'inner_xml'
+            fieldnames.append('inner_xml')
 
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
@@ -240,13 +250,17 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
     writer.writeheader()
 
     spreadsheet = fillInRows(courseFlattener(course_dict))
+    printable = []
 
-    # Filter to just the rows we care about.
-    for row in spreadsheet
-        if 'problems' in global_options and row['type'] is not 'problem':
-            spreadsheet.remove(row)
-        if 'video'  in global_options and row['type'] is not 'video':
-            spreadsheet.remove(row)
+    if 'all' in global_options:
+        printable = spreadsheet
+    else:
+        if 'html' in global_options:
+            printable += [row for row in spreadsheet if row['type'] == 'html']
+        if 'video' in global_options:
+            printable += [row for row in spreadsheet if row['type'] == 'video']
+        if 'problems' in global_options:
+            printable += [row for row in spreadsheet if row['type'] == 'problem']
 
-        # Write the rows.
-        writer.writerow(row)
+    for row in printable:
+       writer.writerow(row)
