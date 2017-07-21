@@ -3,6 +3,8 @@ import collections
 import csv
 import sys
 import os
+import cStringIO
+import codecs
 
 instructions = """
 To use:
@@ -47,54 +49,85 @@ global_options = ['video']
 # We're skipping many of the skip_tags because they're inline.
 # Need to develop that code to handle them.
 
+# Regular csv writer doesn't handle unicode.
+# Taken from https://stackoverflow.com/questions/5838605/python-dictwriter-writing-utf-8-encoded-csv-files
+class DictUnicodeWriter(object):
+
+    def __init__(self, f, fieldnames, dialect=csv.excel, encoding="utf-8", **kwds):
+        # Redirect output to a queue
+        self.queue = cStringIO.StringIO()
+        self.writer = csv.DictWriter(self.queue, fieldnames, dialect=dialect, **kwds)
+        self.stream = f
+        self.encoder = codecs.getincrementalencoder(encoding)()
+
+    def writerow(self, D):
+        self.writer.writerow({k:v.encode("utf-8") for k,v in D.items()})
+        # Fetch UTF-8 output from the queue ...
+        data = self.queue.getvalue()
+        data = data.decode("utf-8")
+        # ... and reencode it into the target encoding
+        data = self.encoder.encode(data)
+        # write to the target stream
+        self.stream.write(data)
+        # empty queue
+        self.queue.truncate(0)
+
+    def writerows(self, rows):
+        for D in rows:
+            self.writerow(D)
+
+    def writeheader(self):
+        self.writer.writeheader()
+
+
 # Always gets the display name.
 # For video and problem files, gets other info too
 def getComponentInfo(folder, filename, depth):
-    tree = ET.parse(folder + '/' + filename + '.xml')
+    tree = ET.parse(folder + u'/' + filename + u'.xml')
     root = tree.getroot()
 
     temp = {
-        'type': root.tag,
+        'type': unicode(root.tag),
         'name': '',
         # space for other info
     }
 
     # get display_name or use placeholder
     if 'display_name' in root.attrib:
-        temp['name'] = root.attrib['display_name']
+        temp['name'] = unicode(root.attrib['display_name'])
     else:
-        temp['name'] = root.tag
+        temp['name'] = unicode(root.tag)
 
     # get other video information
     if root.tag == 'video' and 'video' in global_options:
         if 'sub' in root.attrib:
-            temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
+            temp['sub'] = u'subs_' + root.attrib['sub'] + u'.srt.sjson'
         else:
-            temp['sub'] = 'No subtitles found.'
+            temp['sub'] = u'No subtitles found.'
 
         if 'youtube_id_1_0' in root.attrib:
-            temp['youtube'] = root.attrib['youtube_id_1_0']
+            temp['youtube'] = unicode(root.attrib['youtube_id_1_0'])
         elif 'youtube' in root.attrib:
             # slice to remove the '1.00:' from the start of the ID
-            temp['youtube'] = root.attrib['youtube'][5:]
+            temp['youtube'] = unicode(root.attrib['youtube'][5:])
         else:
-            temp['youtube'] = 'No YouTube ID found.'
+            temp['youtube'] = u'No YouTube ID found.'
 
         if 'edx_video_id' in root.attrib:
-            temp['edx_video_id'] = root.attrib['edx_video_id']
+            temp['edx_video_id'] = unicode(root.attrib['edx_video_id'])
 
     if root.tag == 'problem':
         if 'rerandomize' in root.attrib:
-            temp['rerandomize'] = root.attrib['rerandomize']
+            temp['rerandomize'] = unicode(root.attrib['rerandomize'])
         if 'show_reset_button' in root.attrib:
-            temp['show_reset_button'] = root.attrib['show_reset_button']
+            temp['show_reset_button'] = unicode(root.attrib['show_reset_button'])
         if root.text is not None:
-            temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('string_escape')
+            temp['inner_xml'] = (root.text + u''.join(ET.tostring(e) for e in root)).encode('unicode_escape')
         else:
-            temp['inner_xml'] = 'No XML.'
+            temp['inner_xml'] = u'No XML.'
 
     # Label all of them as components regardless of type.
-    temp['component'] = temp['name']
+    temp['component'] = unicode(temp['name'])
 
     return {'contents': temp, 'parent_name': temp['name']}
 
@@ -114,14 +147,14 @@ def drillDown(folder, filename, depth):
 
     # Some items are created without a display name; use their tag name instead.
     if 'display_name' in root.attrib:
-        display_name = root.attrib['display_name']
+        display_name = unicode(root.attrib['display_name'])
     else:
-        display_name = root.tag
+        display_name = unicode(root.tag)
 
     for index, child in enumerate(root):
         temp = {
             'index': index,
-            'type': child.tag,
+            'type': unicode(child.tag),
             'name': '',
             'url': '',
             'contents': []
@@ -129,14 +162,14 @@ def drillDown(folder, filename, depth):
 
         # get display_name or use placeholder
         if 'display_name' in child.attrib:
-            temp['name'] = child.attrib['display_name']
+            temp['name'] = unicode(child.attrib['display_name'])
         else:
-            temp['name'] = child.tag + str(index)
+            temp['name'] = unicode(child.tag + unicode(index))
             temp['tempname'] = True
 
         # get url_name but there are no placeholders
         if 'url_name' in child.attrib:
-            temp['url'] = child.attrib['url_name']
+            temp['url'] = unicode(child.attrib['url_name'])
         else:
             temp['url'] = None
 
@@ -150,18 +183,18 @@ def drillDown(folder, filename, depth):
             temp.update(child_info['contents'])
             del temp['contents']
         elif child.tag in skip_tags:
-            child_info = {'contents': False, 'parent_name': child.tag}
+            child_info = {'contents': False, 'parent_name': unicode(child.tag)}
             del temp['contents']
         else:
             sys.exit('New tag type found: ' + child.tag)
 
         # If the display name was temporary, replace it.
         if 'tempname' in temp:
-            temp['name'] = child_info['parent_name']
+            temp['name'] = unicode(child_info['parent_name'])
             del temp['tempname']
 
         # We need not only a name, but a custom key with that name.
-        temp[temp['type']] = temp['name']
+        temp[temp['type']] = unicode(temp['name'])
 
         contents.append(temp)
 
@@ -208,7 +241,7 @@ def courseFlattener(course_dict, new_row={}):
     # Add all the data from the current level to the current row except 'contents'.
     for key in course_dict:
         if key is not 'contents':
-            temp_row[key] = course_dict[key]
+            temp_row[key] = unicode(course_dict[key])
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
     if 'contents' in course_dict:
@@ -216,7 +249,6 @@ def courseFlattener(course_dict, new_row={}):
         for entry in course_dict['contents']:
             temp = courseFlattener(entry, temp_row)
             if temp:
-                # print temp
                 flat_course = flat_course + temp
         return flat_course
 
@@ -284,7 +316,7 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
     if 'video' in global_options:
             fieldnames = fieldnames + ['sub','youtube','edx_video_id']
 
-    writer = csv.DictWriter(outputfile,
+    writer = DictUnicodeWriter(outputfile,
         delimiter='\t',
         fieldnames=fieldnames,
         extrasaction='ignore')
@@ -293,7 +325,7 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
     spreadsheet = fillInRows(courseFlattener(course_dict))
     for index, row in enumerate(spreadsheet):
         for key in row:
-            spreadsheet[index][key] = unicode(spreadsheet[index][key]).encode("utf-8")
+            spreadsheet[index][key] = unicode(spreadsheet[index][key])
     printable = []
 
     if 'all' in global_options:
@@ -307,6 +339,7 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
             printable += [row for row in spreadsheet if row['type'] == 'problem']
 
     for row in printable:
+        # make sure to output unicode
         writer.writerow(row)
 
     print 'Spreadsheet created for ' + course_dict['name']
