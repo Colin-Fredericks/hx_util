@@ -190,10 +190,12 @@ def drillDown(folder, filename, depth):
 
         # If the display name was temporary, replace it.
         if 'tempname' in temp:
+            print unicode(child_info['parent_name'])
             temp['name'] = unicode(child_info['parent_name'])
             del temp['tempname']
 
         # We need not only a name, but a custom key with that name.
+        print temp['name']
         temp[temp['type']] = unicode(temp['name'])
 
         contents.append(temp)
@@ -201,7 +203,7 @@ def drillDown(folder, filename, depth):
     return {'contents': contents, 'parent_name': display_name}
 
 # Recursion function for inline-declared XML.
-def drillDownInline(arguments, and, stuff):
+def drillDownInline(arguments, stuff):
     pass
     # This is a placeholder.
     # Luckily most inlines right now are leaf nodes,
