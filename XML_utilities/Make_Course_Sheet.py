@@ -23,9 +23,9 @@ This script may fail on courses with empty sections, subsections, or units.
 
 # We need lists of container nodes and leaf nodes so we can tell
 # whether we have to do more recursion.
-leaf_nodes = ['html','problem','video','poll']
+leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test']
-skip_tags = ['wiki']
+skip_tags = ['wiki','lti_consumer','discussion','poll','survey']
 global_options = ['video']
 
 # Always gets the display name.
@@ -242,6 +242,9 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
     # Include the XML if we're dealing with problems
     if 'problems' in global_options:
             fieldnames.append('inner_xml')
+    # Include video data if we're dealing with videos
+    if 'video' in global_options:
+            fieldnames = fieldnames + ['sub','youtube','edx_video_id']
 
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
@@ -250,6 +253,9 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
     writer.writeheader()
 
     spreadsheet = fillInRows(courseFlattener(course_dict))
+    for index, row in enumerate(spreadsheet):
+        for key in row:
+            spreadsheet[index][key] = unicode(spreadsheet[index][key]).encode("utf-8")
     printable = []
 
     if 'all' in global_options:
