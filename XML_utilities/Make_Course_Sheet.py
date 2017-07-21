@@ -201,9 +201,10 @@ def drillDown(folder, filename, depth):
     return {'contents': contents, 'parent_name': display_name}
 
 # Recursion function for inline-declared XML.
-# def drillDownInline(arguments, and, stuff):
+def drillDownInline(arguments, and, stuff):
+    pass
     # This is a placeholder.
-    # Luckily most of them right now are leaf nodes,
+    # Luckily most inlines right now are leaf nodes,
     # but they don't HAVE to be, so... bah.
 
 # Gets the full set of data headers for the course.
