@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import collections
 import csv
 import sys
 import os
