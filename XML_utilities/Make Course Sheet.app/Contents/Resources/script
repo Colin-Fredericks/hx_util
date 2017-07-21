@@ -1,9 +1,7 @@
 import xml.etree.ElementTree as ET
-import collections
-import csv
 import sys
 import os
-import unicodecsv as csv
+import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 instructions = """
 To use:
