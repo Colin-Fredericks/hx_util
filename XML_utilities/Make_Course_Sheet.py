@@ -8,16 +8,16 @@ To use:
 python Make_Course_Sheet.py path/to/course.xml (options)
 
 Run this on a course.xml file inside an edX course folder (from export).
-You will get a TSV file (tab-separated value, open with Excel)
-that shows the location of each video, and the srt filename for that video.
+You will get a Tab-Separated Value file that you should open with Google Drive,
+which shows the location of each video and the srt filename for that video.
 
 You can specify the following options:
     -problems (includes problems AND problem XML instead of videos)
     -html (includes just HTML components)
-    -video (forces inclusion of video)
+    -video (forces inclusion of video with html or problems)
     -all (includes all components)
 
-This script may fail on courses with empty sections, subsections, or units.
+This script may fail on courses with empty containers.
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -134,11 +134,15 @@ def drillDown(folder, filename, depth):
             temp['tempname'] = True
 
         # get url_name but there are no placeholders
+        # Note that even some inline XML have url_names.
         if 'url_name' in child.attrib:
             temp['url'] = child.attrib['url_name']
         else:
             temp['url'] = None
 
+        # In the future: check to see whether this child is a pointer tag or inline XML.
+        # Perhaps by seeing no text in tag?
+        # For right now: skip all the inline stuff; assume pointer.
         if child.tag in branch_nodes:
             child_info = drillDown(child.tag, temp['url'], depth+1)
             temp['contents'] = child_info['contents']
