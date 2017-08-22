@@ -24,6 +24,8 @@ This script may fail on courses with empty containers.
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+# Many of these are being skipped because they're currently expressed in inline XML
+# rather than having their own unique folder in the course export.
 skip_tags = [
     'annotatable',
     'discussion',
@@ -141,7 +143,7 @@ def drillDown(folder, filename, depth):
             temp['url'] = None
 
         # In the future: check to see whether this child is a pointer tag or inline XML.
-        # Perhaps by seeing no text in tag?
+        # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
         # For right now: skip all the inline stuff; assume pointer.
         if child.tag in branch_nodes:
             child_info = drillDown(child.tag, temp['url'], depth+1)
