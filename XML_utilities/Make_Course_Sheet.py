@@ -28,6 +28,7 @@ branch_nodes = ['course','chapter','sequential','vertical','split_test','conditi
 # rather than having their own unique folder in the course export.
 skip_tags = [
     'annotatable',
+    'drag-and-drop-v2',
     'discussion',
     'imageannotation',
     'library_content',
@@ -66,7 +67,7 @@ def getComponentInfo(folder, filename, depth):
     else:
         temp['name'] = root.tag
 
-    # get other video information
+    # get video information
     if root.tag == 'video' and 'video' in global_options:
         if 'sub' in root.attrib:
             temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
@@ -84,6 +85,7 @@ def getComponentInfo(folder, filename, depth):
         if 'edx_video_id' in root.attrib:
             temp['edx_video_id'] = root.attrib['edx_video_id']
 
+    # get problem information
     if root.tag == 'problem':
         if 'rerandomize' in root.attrib:
             temp['rerandomize'] = root.attrib['rerandomize']
@@ -109,7 +111,7 @@ def drillDown(folder, filename, depth):
         tree = ET.parse(folder + '/' + filename + '.xml')
     except IOError:
         print "Possible missing file: " + folder + '/' + filename + '.xml'
-        return {'contents': contents, 'parent_name': ''}
+        return {'contents': contents, 'parent_name': '', 'found_file': False}
 
     root = tree.getroot()
 
@@ -170,7 +172,7 @@ def drillDown(folder, filename, depth):
 
         contents.append(temp)
 
-    return {'contents': contents, 'parent_name': display_name}
+    return {'contents': contents, 'parent_name': display_name, 'found_file': True}
 
 # Recursion function for inline-declared XML.
 def drillDownInline(arguments, stuff):

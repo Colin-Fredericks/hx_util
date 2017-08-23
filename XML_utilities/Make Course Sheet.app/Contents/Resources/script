@@ -8,24 +8,27 @@ To use:
 python Make_Course_Sheet.py path/to/course.xml (options)
 
 Run this on a course.xml file inside an edX course folder (from export).
-You will get a TSV file (tab-separated value, open with Excel)
-that shows the location of each video, and the srt filename for that video.
+You will get a Tab-Separated Value file that you should open with Google Drive,
+which shows the location of each video and the srt filename for that video.
 
 You can specify the following options:
     -problems (includes problems AND problem XML instead of videos)
     -html (includes just HTML components)
-    -video (forces inclusion of video)
+    -video (forces inclusion of video with html or problems)
     -all (includes all components)
 
-This script may fail on courses with empty sections, subsections, or units.
+This script may fail on courses with empty containers.
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+# Many of these are being skipped because they're currently expressed in inline XML
+# rather than having their own unique folder in the course export.
 skip_tags = [
     'annotatable',
+    'drag-and-drop-v2',
     'discussion',
     'imageannotation',
     'library_content',
@@ -64,7 +67,7 @@ def getComponentInfo(folder, filename, depth):
     else:
         temp['name'] = root.tag
 
-    # get other video information
+    # get video information
     if root.tag == 'video' and 'video' in global_options:
         if 'sub' in root.attrib:
             temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
@@ -82,6 +85,7 @@ def getComponentInfo(folder, filename, depth):
         if 'edx_video_id' in root.attrib:
             temp['edx_video_id'] = root.attrib['edx_video_id']
 
+    # get problem information
     if root.tag == 'problem':
         if 'rerandomize' in root.attrib:
             temp['rerandomize'] = root.attrib['rerandomize']
@@ -107,7 +111,7 @@ def drillDown(folder, filename, depth):
         tree = ET.parse(folder + '/' + filename + '.xml')
     except IOError:
         print "Possible missing file: " + folder + '/' + filename + '.xml'
-        return {'contents': contents, 'parent_name': ''}
+        return {'contents': contents, 'parent_name': '', 'found_file': False}
 
     root = tree.getroot()
 
@@ -134,11 +138,15 @@ def drillDown(folder, filename, depth):
             temp['tempname'] = True
 
         # get url_name but there are no placeholders
+        # Note that even some inline XML have url_names.
         if 'url_name' in child.attrib:
             temp['url'] = child.attrib['url_name']
         else:
             temp['url'] = None
 
+        # In the future: check to see whether this child is a pointer tag or inline XML.
+        # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
+        # For right now: skip all the inline stuff; assume pointer.
         if child.tag in branch_nodes:
             child_info = drillDown(child.tag, temp['url'], depth+1)
             temp['contents'] = child_info['contents']
@@ -164,7 +172,7 @@ def drillDown(folder, filename, depth):
 
         contents.append(temp)
 
-    return {'contents': contents, 'parent_name': display_name}
+    return {'contents': contents, 'parent_name': display_name, 'found_file': True}
 
 # Recursion function for inline-declared XML.
 def drillDownInline(arguments, stuff):
