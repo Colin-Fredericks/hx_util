@@ -54,6 +54,7 @@ Currently Available Tools
 ----------
 * `SetMaxAttempts.py`, which sets the number of attempts automatically in every problem in a course.
 * `SetShowAnswer.py`, which sets the showanswer value automatically (or removes it) in every problem in a course.
+* `SetVideoDownloads.py`, which enables or disables video and/or transcript downloading for every video in a course.
 * `Make_Course_Sheet.py`, which creates a spreadsheet showing which SRT file is for which video. It'll also make lists of other things in your course, such as problems or html components.
 
-You can run `python filename.py` to have each one show a set of instructions.
+You can run `python filename.py` for each one to have it show a set of instructions.
