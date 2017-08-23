@@ -28,8 +28,8 @@ branch_nodes = ['course','chapter','sequential','vertical','split_test','conditi
 # rather than having their own unique folder in the course export.
 skip_tags = [
     'annotatable',
-    'drag-and-drop-v2',
     'discussion',
+    'drag-and-drop-v2',
     'imageannotation',
     'library_content',
     'lti',
