@@ -34,7 +34,7 @@ for dirpath, dirnames, filenames in os.walk(directory):
         tree = ET.parse(os.path.join(dirpath, eachfile))
         root = tree.getroot()
 
-        # Auto-set the showanswer value
+        # Set the download_track and download_video values
         if allowDownloads.lower() == 'true':
             root.set('download_track', 'true')
             root.set('download_video', 'true')
