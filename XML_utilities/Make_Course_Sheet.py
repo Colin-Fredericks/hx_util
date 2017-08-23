@@ -102,7 +102,6 @@ def getComponentInfo(folder, filename, depth):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-# (doesn't actually recurse yet)
 def drillDown(folder, filename, depth):
     contents = []
 
