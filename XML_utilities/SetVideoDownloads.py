@@ -18,17 +18,6 @@ Set your option as...
 
 """
 
-# Here are all the problem types we work on:
-allProbtypes = ['multiplechoiceresponse',
-    'choiceresponse',
-    'customresponse',
-    'formularesponse',
-    'numericalresponse',
-    'stringresponse',
-]
-
-
-
 # Get directory from command line argument
 try:
     allowDownloads = sys.argv[1]
