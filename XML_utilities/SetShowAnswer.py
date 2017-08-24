@@ -10,9 +10,9 @@ To use:
 python SetShowAnswer.py show_answer_value path/to/problem/folder
 
 show_answer_value can be one of the usual edX set:
-Always	
-Answered	
-Attempted	
+Always
+Answered
+Attempted
 Closed
 Finished
 CorrectOrPastDue
@@ -48,13 +48,16 @@ except IndexError:
 # Walk through the problems folder
 for dirpath, dirnames, filenames in os.walk(directory):
     for eachfile in filenames:
-        thisProbType = []
-        
+
         # Get the XML for each file
         tree = ET.parse(os.path.join(dirpath, eachfile))
         root = tree.getroot()
-        
-        # Set the showanswer value 
+
+        # If this isn't a problem file, skip it.
+        if root.tag is not 'problem':
+            continue
+
+        # Set the showanswer value
         if answerSetting.lower() in allAnswerValues:
             root.set('showanswer', answerSetting)
         elif answerSetting.lower() == 'default' or answerSetting.lower() == 'delete':
@@ -64,6 +67,6 @@ for dirpath, dirnames, filenames in os.walk(directory):
                 pass
         else:
             sys.exit('Invalid showanswer setting.')
-        
+
         # Save the file
         tree.write(os.path.join(dirpath, eachfile), encoding='UTF-8', xml_declaration=False)

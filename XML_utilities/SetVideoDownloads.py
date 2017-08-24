@@ -34,6 +34,10 @@ for dirpath, dirnames, filenames in os.walk(directory):
         tree = ET.parse(os.path.join(dirpath, eachfile))
         root = tree.getroot()
 
+        # If this isn't a video file, skip it.
+        if root.tag is not 'video':
+            continue
+
         # Set the download_track and download_video values
         if allowDownloads.lower() == 'true':
             root.set('download_track', 'true')
