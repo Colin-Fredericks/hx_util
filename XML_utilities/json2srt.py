@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import HTMLParser
 
 instructions = """
 To use:
@@ -50,6 +51,9 @@ def ConvertToSRT(filename, optionlist, dirpath):
         endList = jdata['end']
         newEndList = [msecToHMS(time) for time in startList]
         textList = jdata['text']
+        # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
+        h = HTMLParser.HTMLParser()
+        newTextList = [h.unescape(text) for text in textList]
 
         # Create a file for output
         newFileName = filename.replace('.srt', '')
@@ -57,7 +61,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
         newFileName += '.srt'
         with open(os.path.join(dirpath or '', newFileName), 'wb') as outfile:
             # Step through the lists and write rows of the output file
-            for i, txt in enumerate(textList):
+            for i, txt in enumerate(newTextList):
                 outfile.write(str(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
                 outfile.write(txt + '\n')
