@@ -11,6 +11,7 @@ Creates a new .srt file for every .srt.sjson file found.
 Valid options:
   -o Overwrite. Deletes the .srt.sjson file after it has been converted.
   -r Recursive. Works on .srt.sjson files in subdirectories as well.
+  -h Help. Print this message.
 """
 
 def msecToHMS(time):
@@ -41,6 +42,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
     with open(os.path.join(dirpath or '', filename),'r') as inputfile:
         # Read in the JSON as a dictionary.
         jdata = json.load(inputfile)
+
         # Get the start time, end time, and text as individual lists.
         # Convert all the times to STR-style strings
         startList = jdata['start']
@@ -48,6 +50,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
         endList = jdata['end']
         newEndList = [msecToHMS(time) for time in startList]
         textList = jdata['text']
+
         # Create a file for output
         newFileName = filename.replace('.srt', '')
         newFileName = newFileName.replace('.sjson', '')
@@ -85,6 +88,7 @@ except IndexError:
 optionlist = []
 if 'o' in options: optionlist.append('o')
 if 'r' in options: optionlist.append('r')
+if 'h' in options: sys.exit(instructions)
 
 assert os.path.exists(filename), "File or directory not found."
 
@@ -101,7 +105,8 @@ if os.path.isdir(filename):
     if 'r' in optionlist:
         for dirpath, dirnames, filenames in os.walk(filename):
             for eachfile in filenames:
-                ConvertToSRT(eachfile, optionlist, dirpath)
+                if eachfile.lower().endswith('.sjson'):
+                    ConvertToSRT(eachfile, optionlist, dirpath)
     # Non-recursive version breaks os.walk after the first level.
     else:
         topfiles = []
@@ -109,4 +114,5 @@ if os.path.isdir(filename):
             topfiles.extend(filenames)
             break
         for eachfile in topfiles:
-            ConvertToSRT(eachfile, optionlist, dirpath)
+            if eachfile.lower().endswith('.sjson'):
+                ConvertToSRT(eachfile, optionlist, dirpath)
