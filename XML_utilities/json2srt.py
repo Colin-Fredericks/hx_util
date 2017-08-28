@@ -42,16 +42,26 @@ def ConvertToSRT(filename, optionlist, dirpath):
     # Open the SJSON file
     with open(os.path.join(dirpath or '', filename),'r') as inputfile:
         # Read in the JSON as a dictionary.
-        jdata = json.load(inputfile)
+        try:
+            jdata = json.load(inputfile)
+        except:
+            print 'Skipping ' + filename + ': possible invalid JSON'
+            return
 
         # Get the start time, end time, and text as individual lists.
-        # Convert all the times to STR-style strings
-        startList = jdata['start']
+        try:
+            startList = jdata['start']
+            endList = jdata['end']
+            textList = jdata['text']
+        except:
+            print 'Skipping ' + filename + ': file is missing needed data.'
+
+        # Convert all the times to strings of format H:M:S,ms
         newStartList = [msecToHMS(time) for time in startList]
-        endList = jdata['end']
         newEndList = [msecToHMS(time) for time in startList]
-        textList = jdata['text']
+
         # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
+        # SRT files handle unicode just fine.
         h = HTMLParser.HTMLParser()
         newTextList = [h.unescape(text) for text in textList]
 
