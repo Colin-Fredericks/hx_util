@@ -85,6 +85,19 @@ def getComponentInfo(folder, filename, depth):
         if 'edx_video_id' in root.attrib:
             temp['edx_video_id'] = root.attrib['edx_video_id']
 
+        # We need our original uploaded filename.
+        # It's not present in the old XML. :(
+        # In new XML, it's in a video_asset tag.
+        for child in root:
+            if child.tag == 'video_asset':
+                src = child.attrib['client_video_id']
+                # Stripping the host and folders
+                src = src[src.rfind("/")+1:]
+                # Stripping the extension, if there is one.
+                if src.rfind('.') > 0:
+                    src = src[:src.rfind('.')]
+                temp['upload_name'] = src
+
     # get problem information
     if root.tag == 'problem':
         if 'rerandomize' in root.attrib:
@@ -102,7 +115,6 @@ def getComponentInfo(folder, filename, depth):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-# (doesn't actually recurse yet)
 def drillDown(folder, filename, depth):
     contents = []
 
@@ -289,7 +301,7 @@ with open(course_dict['name'] + '.tsv','wb') as outputfile:
             fieldnames.append('inner_xml')
     # Include video data if we're dealing with videos
     if 'video' in global_options:
-            fieldnames = fieldnames + ['sub','youtube','edx_video_id']
+            fieldnames = fieldnames + ['sub','youtube','edx_video_id','upload_name']
 
     writer = csv.DictWriter(outputfile,
         delimiter='\t',
