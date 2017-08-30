@@ -78,7 +78,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
         with open(os.path.join(dirpath or '', newFileName), 'wb') as outfile:
             # Step through the lists and write rows of the output file
             for i, txt in enumerate(newTextList):
-                outfile.write(str(i) + '\n')
+                outfile.write(unicode(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
                 outfile.write(unicode(txt).encode('utf-8') + '\n')
                 outfile.write('\n')
