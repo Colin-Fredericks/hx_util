@@ -55,6 +55,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
             textList = jdata['text']
         except:
             print 'Skipping ' + filename + ': file is missing needed data.'
+            return
 
         # Convert all the times to strings of format H:M:S,ms
         newStartList = [msecToHMS(time) for time in startList]
@@ -85,48 +86,65 @@ def ConvertToSRT(filename, optionlist, dirpath):
 # MAIN #
 ########
 
-# Get directory from command line argument
-try:
-    filename = sys.argv[1]
-except IndexError:
+print sys.argv
+
+if len(sys.argv) < 2:
     # Wrong number of arguments, probably
     sys.exit(instructions)
 
-# Get the options and make a list of them for easy reference
-try:
-    options = sys.argv[2]
-except IndexError:
-    # it's fine if no options are set.
+# Get file or directory from command line argument.
+# With wildcards we might get passed a lot of them.
+filenames = sys.argv[1:]
+# Get the options and make a list of them for easy reference.
+options = sys.argv[-1]
+
+# If the "options" match a file or folder name, those aren't options.
+if os.path.exists(options):
     options = ''
+# If they don't, that last filename isn't a filename.
+else:
+    del filenames[-1]
+
+print "filenames:"
+print filenames
+print "options:"
+print options
 
 optionlist = []
 if 'o' in options: optionlist.append('o')
 if 'r' in options: optionlist.append('r')
 if 'h' in options: sys.exit(instructions)
+print "optionlist:"
+print optionlist
 
-assert os.path.exists(filename), "File or directory not found."
+print filenames
 
-# If it's a regular file, convert it to .srt format.
-if os.path.isfile(filename):
-    # Make sure this is an sjson file (just check extension)
-    if filename.lower().endswith('.sjson'):
-        # Convert it to an SRT file
-        ConvertToSRT(filename, optionlist, False)
+for name in filenames:
+    # Make sure single files exist.
+    assert os.path.exists(name), "File or directory not found."
 
-# If it's a directory, convert all the files in that directory.
-if os.path.isdir(filename):
-    # Recursive version using os.walk for all levels.
-    if 'r' in optionlist:
-        for dirpath, dirnames, filenames in os.walk(filename):
-            for eachfile in filenames:
+    # If it's just a file...
+    if os.path.isfile(name):
+        # Make sure this is an sjson file (just check extension)
+        if name.lower().endswith('.sjson'):
+            # Convert it to an SRT file
+            ConvertToSRT(name, optionlist, False)
+
+    # If it's a directory and not just as part of a wildcard...
+    if os.path.isdir(name) and len(filenames) == 1:
+        # Recursive version using os.walk for all levels.
+        if 'r' in optionlist:
+            for dirpath, dirnames, files in os.walk(name):
+                for eachfile in files:
+                    # Convert every file in that directory.
+                    if eachfile.lower().endswith('.sjson'):
+                        ConvertToSRT(eachfile, optionlist, dirpath)
+        # Non-recursive version breaks os.walk after the first level.
+        else:
+            topfiles = []
+            for (dirpath, dirnames, files) in os.walk(name):
+                topfiles.extend(files)
+                break
+            for eachfile in topfiles:
                 if eachfile.lower().endswith('.sjson'):
                     ConvertToSRT(eachfile, optionlist, dirpath)
-    # Non-recursive version breaks os.walk after the first level.
-    else:
-        topfiles = []
-        for (dirpath, dirnames, filenames) in os.walk(filename):
-            topfiles.extend(filenames)
-            break
-        for eachfile in topfiles:
-            if eachfile.lower().endswith('.sjson'):
-                ConvertToSRT(eachfile, optionlist, dirpath)
