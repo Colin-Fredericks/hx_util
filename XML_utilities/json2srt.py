@@ -15,6 +15,27 @@ Valid options:
   -h Help. Print this message.
 """
 
+# Split long lines on a space near the middle.
+def splitString(line):
+
+    words = line.split(' ')
+
+    # Get the locations of each space in the line
+    indices = [i for i, x in enumerate(line) if x == ' ']
+
+    # Get the difference in line length for each choice of break.
+    diffs = []
+    for index, word in enumerate(words):
+        lineA = ' '.join(words[:index])
+        lineB = ' '.join(words[index:])
+        diffs.append(abs(len(lineA) - len(lineB)))
+
+    # Break the line on the location of the lowest difference between line lengths.
+    breakpoint = indices[ diffs.index(min(diffs))-1 ]
+
+    return line[:breakpoint], line[breakpoint+1:]
+
+
 def msecToHMS(time):
     # Make sure it's an integer.
     time = int(float(time))
@@ -76,11 +97,18 @@ def ConvertToSRT(filename, optionlist, dirpath):
         newFileName = newFileName.replace('.sjson', '')
         newFileName += '.srt'
         with open(os.path.join(dirpath or '', newFileName), 'wb') as outfile:
-            # Step through the lists and write rows of the output file
+            # Step through the lists and write rows of the output file.
             for i, txt in enumerate(newTextList):
                 outfile.write(unicode(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
-                outfile.write(unicode(txt).encode('utf-8') + '\n')
+                # If it's a short line or one without a space, output the whole thing.
+                if len(txt) < 45 or txt.find(' ') == -1:
+                    outfile.write(unicode(txt).encode('utf-8') + '\n')
+                # Otherwise, break it up.
+                else:
+                    lineA, lineB = splitString(txt)
+                    outfile.write(unicode(lineA).encode('utf-8') + '\n')
+                    outfile.write(unicode(lineB).encode('utf-8') + '\n')
                 outfile.write('\n')
 
     # If the -o option is set, delete the original
