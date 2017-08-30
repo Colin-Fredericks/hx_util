@@ -86,8 +86,6 @@ def ConvertToSRT(filename, optionlist, dirpath):
 # MAIN #
 ########
 
-print sys.argv
-
 if len(sys.argv) < 2:
     # Wrong number of arguments, probably
     sys.exit(instructions)
@@ -105,19 +103,10 @@ if os.path.exists(options):
 else:
     del filenames[-1]
 
-print "filenames:"
-print filenames
-print "options:"
-print options
-
 optionlist = []
 if 'o' in options: optionlist.append('o')
 if 'r' in options: optionlist.append('r')
 if 'h' in options: sys.exit(instructions)
-print "optionlist:"
-print optionlist
-
-print filenames
 
 for name in filenames:
     # Make sure single files exist.
