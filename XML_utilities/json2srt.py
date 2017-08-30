@@ -28,11 +28,16 @@ def msecToHMS(time):
     time -= minutes
     hours = (time / 1000 / 3600) % 24
 
-    # Make sure we get double-zeroes
+    # Make sure we get enough zeroes.
     if msec == 0: msec = '000'
+    if int(msec) < 10: msec = '00' + str(msec)
+    if int(msec) < 100: msec = '0' + str(msec)
     if seconds == 0: seconds = '00'
+    if seconds < 10: seconds = '0' + str(seconds)
     if minutes == 0: minutes = '00'
+    if minutes < 10: minutes = '0' + str(minutes)
     if hours == 0: hours = '00'
+    if hours < 10: hours = '0' + str(hours)
 
     # Send back a string
     return str(hours) + ':' + str(minutes) + ':' + str(seconds) + ',' + str(msec)
@@ -59,7 +64,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
 
         # Convert all the times to strings of format H:M:S,ms
         newStartList = [msecToHMS(time) for time in startList]
-        newEndList = [msecToHMS(time) for time in startList]
+        newEndList = [msecToHMS(time) for time in endList]
 
         # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
         # SRT files handle unicode just fine.
@@ -75,7 +80,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
             for i, txt in enumerate(newTextList):
                 outfile.write(str(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
-                outfile.write(txt + '\n')
+                outfile.write(unicode(txt).encode('utf-8') + '\n')
                 outfile.write('\n')
 
     # If the -o option is set, delete the original
