@@ -7,7 +7,7 @@ instructions = """
 To use:
 python Make_Course_Sheet.py path/to/course.xml (options)
 
-Run this on a course.xml file inside an edX course folder (from export).
+Run this on a course folder, or a course.xml file inside an edX course folder (from export).
 You will get a Tab-Separated Value file that you should open with Google Drive,
 which shows the location of each video and the srt filename for that video.
 
@@ -256,7 +256,15 @@ if len(sys.argv) == 1 or '-h' in sys.argv or '--h' in sys.argv:
 # Get the filename and set working directory
 if len(sys.argv) > 1:
     course_file_path = sys.argv[1]
-    course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
+
+    if os.path.isdir(course_file_path):
+        # If we're fed a course directory, find the course.xml file in it and use that.
+        course_folder_path = os.path.abspath(course_file_path)
+        course_file_path = os.path.join(course_folder_path, 'course.xml')
+    else:
+        # Otherwise, assume we're running on a course.xml file already.
+        course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
+
     os.chdir(course_folder_path)
     coursefile = os.path.basename(os.path.abspath(course_file_path))
 
