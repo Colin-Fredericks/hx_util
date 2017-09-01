@@ -141,6 +141,8 @@ if 'o' in options: optionlist.append('o')
 if 'r' in options: optionlist.append('r')
 if 'h' in options: sys.exit(instructions)
 
+filecount = 0
+
 for name in filenames:
     # Make sure single files exist.
     assert os.path.exists(name), "File or directory not found."
@@ -151,6 +153,7 @@ for name in filenames:
         if name.lower().endswith('.sjson'):
             # Convert it to an SRT file
             ConvertToSRT(name, optionlist, False)
+            filecount += 1
 
     # If it's a directory and not just as part of a wildcard...
     if os.path.isdir(name) and len(filenames) == 1:
@@ -161,6 +164,7 @@ for name in filenames:
                     # Convert every file in that directory.
                     if eachfile.lower().endswith('.sjson'):
                         ConvertToSRT(eachfile, optionlist, dirpath)
+                        filecount += 1
         # Non-recursive version breaks os.walk after the first level.
         else:
             topfiles = []
@@ -170,3 +174,6 @@ for name in filenames:
             for eachfile in topfiles:
                 if eachfile.lower().endswith('.sjson'):
                     ConvertToSRT(eachfile, optionlist, dirpath)
+                    filecount += 1
+
+print 'Converted ' + str(filecount) + ' files.'
