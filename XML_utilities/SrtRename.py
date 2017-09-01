@@ -62,8 +62,7 @@ def setNewNames(course_folder, nameDict, options):
             else:
                 os.rename(oldname, newname)
             filecount += 1
-
-    print 'Renamed ' + str(filecount) + ' files.'
+    print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if 'c' in options else '.')
 
 
 # Main function.

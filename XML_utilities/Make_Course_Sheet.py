@@ -335,7 +335,7 @@ def Make_Course_Sheet(args = ['-h']):
         for row in printable:
             writer.writerow(row)
 
-        print 'Spreadsheet created for ' + course_dict['name']
+        print 'Spreadsheet created for ' + course_dict['name'] + '.'
 
 if __name__ == "__main__":
     # this won't be run when imported

@@ -174,7 +174,7 @@ def json2srt(args):
                         ConvertToSRT(eachfile, optionlist, dirpath)
                         filecount += 1
 
-    print 'Converted ' + str(filecount) + ' files.'
+    print 'Converted ' + str(filecount) + ' SJSON files to SRT.'
 
 if __name__ == "__main__":
     # this won't be run when imported
