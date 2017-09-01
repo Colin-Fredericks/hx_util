@@ -245,95 +245,98 @@ def courseFlattener(course_dict, new_row={}):
         if temp_row['type'] not in skip_tags:
             return [temp_row]
 
-#########
-# MAIN
-#########
+# Main function
+def Make_Course_Sheet(args = ['-h']):
 
-if len(sys.argv) == 1 or '-h' in sys.argv or '--h' in sys.argv:
-    # If run without argument, show instructions.
-    sys.exit(instructions)
+    if len(args) == 1 or '-h' in args or '--h' in args:
+        # If run without argument, show instructions.
+        sys.exit(instructions)
 
-# Get the filename and set working directory
-if len(sys.argv) > 1:
-    course_file_path = sys.argv[1]
+    # Get the filename and set working directory
+    if len(args) > 1:
+        course_file_path = args[1]
 
-    if os.path.isdir(course_file_path):
-        # If we're fed a course directory, find the course.xml file in it and use that.
-        course_folder_path = os.path.abspath(course_file_path)
-        course_file_path = os.path.join(course_folder_path, 'course.xml')
-    else:
-        # Otherwise, assume we're running on a course.xml file already.
-        course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
+        if os.path.isdir(course_file_path):
+            # If we're fed a course directory, find the course.xml file in it and use that.
+            course_folder_path = os.path.abspath(course_file_path)
+            course_file_path = os.path.join(course_folder_path, 'course.xml')
+        else:
+            # Otherwise, assume we're running on a course.xml file already.
+            course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
 
-    os.chdir(course_folder_path)
-    coursefile = os.path.basename(os.path.abspath(course_file_path))
+        os.chdir(course_folder_path)
+        coursefile = os.path.basename(os.path.abspath(course_file_path))
 
-if '-problems' in sys.argv or '--problems' in sys.argv:
-    global_options.append('problems')
-    global_options.remove('video')
-if '-all' in sys.argv or '--all' in sys.argv:
-    global_options.append('all')
-    global_options.remove('video')
-if '-html' in sys.argv or '--html' in sys.argv:
-    global_options.append('html')
-    global_options.remove('video')
-if '-video' in sys.argv or '--video' in sys.argv:
-    if 'video' not in global_options:
-        global_options.append('video')
+    if '-problems' in args or '--problems' in args:
+        global_options.append('problems')
+        global_options.remove('video')
+    if '-all' in args or '--all' in args:
+        global_options.append('all')
+        global_options.remove('video')
+    if '-html' in args or '--html' in args:
+        global_options.append('html')
+        global_options.remove('video')
+    if '-video' in args or '--video' in args:
+        if 'video' not in global_options:
+            global_options.append('video')
 
-# Open course's root xml file
-# Get the current course run filename
-course_tree = ET.parse(coursefile)
-course_root = course_tree.getroot()
+    # Open course's root xml file
+    # Get the current course run filename
+    course_tree = ET.parse(coursefile)
+    course_root = course_tree.getroot()
 
-# This is the ordered dict where we're storing the course structure.
-# Later we'll dump it out to the tab-separated file.
-course_dict = {
-    'type': 'course',
-    'name': '',
-    'url': course_root.attrib['url_name'],
-    'contents': []
-}
+    # This is the ordered dict where we're storing the course structure.
+    # Later we'll dump it out to the tab-separated file.
+    course_dict = {
+        'type': 'course',
+        'name': '',
+        'url': course_root.attrib['url_name'],
+        'contents': []
+    }
 
-course_info = drillDown('course', course_dict['url'], 0)
-course_dict['name'] = course_info['parent_name']
-course_dict['contents'] = course_info['contents']
+    course_info = drillDown('course', course_dict['url'], 0)
+    course_dict['name'] = course_info['parent_name']
+    course_dict['contents'] = course_info['contents']
 
 
-# Create a "csv" file with tabs as delimiters
-with open(course_dict['name'] + '.tsv','wb') as outputfile:
-    fieldnames = ['chapter','sequential','vertical','component','type','url']
+    # Create a "csv" file with tabs as delimiters
+    with open(course_dict['name'] + '.tsv','wb') as outputfile:
+        fieldnames = ['chapter','sequential','vertical','component','type','url']
 
-    # Include the XML if we're dealing with problems
-    if 'problems' in global_options:
-            fieldnames.append('inner_xml')
-    # Include video data if we're dealing with videos
-    if 'video' in global_options:
-            fieldnames = fieldnames + ['sub','youtube','edx_video_id','upload_name']
-
-    writer = csv.DictWriter(outputfile,
-        delimiter='\t',
-        fieldnames=fieldnames,
-        extrasaction='ignore')
-    writer.writeheader()
-
-    spreadsheet = fillInRows(courseFlattener(course_dict))
-    for index, row in enumerate(spreadsheet):
-        for key in row:
-            spreadsheet[index][key] = spreadsheet[index][key]
-    printable = []
-
-    if 'all' in global_options:
-        printable = spreadsheet
-    else:
-        if 'html' in global_options:
-            printable += [row for row in spreadsheet if row['type'] == 'html']
-        if 'video' in global_options:
-            printable += [row for row in spreadsheet if row['type'] == 'video']
+        # Include the XML if we're dealing with problems
         if 'problems' in global_options:
-            printable += [row for row in spreadsheet if row['type'] == 'problem']
+                fieldnames.append('inner_xml')
+        # Include video data if we're dealing with videos
+        if 'video' in global_options:
+                fieldnames = fieldnames + ['sub','youtube','edx_video_id','upload_name']
 
-    for row in printable:
-        writer.writerow(row)
+        writer = csv.DictWriter(outputfile,
+            delimiter='\t',
+            fieldnames=fieldnames,
+            extrasaction='ignore')
+        writer.writeheader()
 
-    print 'Spreadsheet created for ' + course_dict['name']
+        spreadsheet = fillInRows(courseFlattener(course_dict))
+        for index, row in enumerate(spreadsheet):
+            for key in row:
+                spreadsheet[index][key] = spreadsheet[index][key]
+        printable = []
+
+        if 'all' in global_options:
+            printable = spreadsheet
+        else:
+            if 'html' in global_options:
+                printable += [row for row in spreadsheet if row['type'] == 'html']
+            if 'video' in global_options:
+                printable += [row for row in spreadsheet if row['type'] == 'video']
+            if 'problems' in global_options:
+                printable += [row for row in spreadsheet if row['type'] == 'problem']
+
+        for row in printable:
+            writer.writerow(row)
+
+        print 'Spreadsheet created for ' + course_dict['name']
+
+if __name__ == "__main__":
+    # this won't be run when imported
+    Make_Course_Sheet(sys.argv)

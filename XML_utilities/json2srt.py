@@ -115,65 +115,67 @@ def ConvertToSRT(filename, optionlist, dirpath):
     if 'o' in optionlist:
         os.remove(filename)
 
-########
-# MAIN #
-########
+# Main function:
+def json2srt(args):
+    if len(args) < 2:
+        # Wrong number of arguments, probably
+        sys.exit(instructions)
 
-if len(sys.argv) < 2:
-    # Wrong number of arguments, probably
-    sys.exit(instructions)
+    # Get file or directory from command line argument.
+    # With wildcards we might get passed a lot of them.
+    filenames = args[1:]
+    # Get the options and make a list of them for easy reference.
+    options = args[-1]
 
-# Get file or directory from command line argument.
-# With wildcards we might get passed a lot of them.
-filenames = sys.argv[1:]
-# Get the options and make a list of them for easy reference.
-options = sys.argv[-1]
+    # If the "options" match a file or folder name, those aren't options.
+    if os.path.exists(options):
+        options = ''
+    # If they don't, that last filename isn't a filename.
+    else:
+        del filenames[-1]
 
-# If the "options" match a file or folder name, those aren't options.
-if os.path.exists(options):
-    options = ''
-# If they don't, that last filename isn't a filename.
-else:
-    del filenames[-1]
+    optionlist = []
+    if 'o' in options: optionlist.append('o')
+    if 'r' in options: optionlist.append('r')
+    if 'h' in options: sys.exit(instructions)
 
-optionlist = []
-if 'o' in options: optionlist.append('o')
-if 'r' in options: optionlist.append('r')
-if 'h' in options: sys.exit(instructions)
+    filecount = 0
 
-filecount = 0
+    for name in filenames:
+        # Make sure single files exist.
+        assert os.path.exists(name), "File or directory not found."
 
-for name in filenames:
-    # Make sure single files exist.
-    assert os.path.exists(name), "File or directory not found."
+        # If it's just a file...
+        if os.path.isfile(name):
+            # Make sure this is an sjson file (just check extension)
+            if name.lower().endswith('.sjson'):
+                # Convert it to an SRT file
+                ConvertToSRT(name, optionlist, False)
+                filecount += 1
 
-    # If it's just a file...
-    if os.path.isfile(name):
-        # Make sure this is an sjson file (just check extension)
-        if name.lower().endswith('.sjson'):
-            # Convert it to an SRT file
-            ConvertToSRT(name, optionlist, False)
-            filecount += 1
-
-    # If it's a directory and not just as part of a wildcard...
-    if os.path.isdir(name) and len(filenames) == 1:
-        # Recursive version using os.walk for all levels.
-        if 'r' in optionlist:
-            for dirpath, dirnames, files in os.walk(name):
-                for eachfile in files:
-                    # Convert every file in that directory.
+        # If it's a directory and not just as part of a wildcard...
+        if os.path.isdir(name) and len(filenames) == 1:
+            # Recursive version using os.walk for all levels.
+            if 'r' in optionlist:
+                for dirpath, dirnames, files in os.walk(name):
+                    for eachfile in files:
+                        # Convert every file in that directory.
+                        if eachfile.lower().endswith('.sjson'):
+                            ConvertToSRT(eachfile, optionlist, dirpath)
+                            filecount += 1
+            # Non-recursive version breaks os.walk after the first level.
+            else:
+                topfiles = []
+                for (dirpath, dirnames, files) in os.walk(name):
+                    topfiles.extend(files)
+                    break
+                for eachfile in topfiles:
                     if eachfile.lower().endswith('.sjson'):
                         ConvertToSRT(eachfile, optionlist, dirpath)
                         filecount += 1
-        # Non-recursive version breaks os.walk after the first level.
-        else:
-            topfiles = []
-            for (dirpath, dirnames, files) in os.walk(name):
-                topfiles.extend(files)
-                break
-            for eachfile in topfiles:
-                if eachfile.lower().endswith('.sjson'):
-                    ConvertToSRT(eachfile, optionlist, dirpath)
-                    filecount += 1
 
-print 'Converted ' + str(filecount) + ' files.'
+    print 'Converted ' + str(filecount) + ' files.'
+
+if __name__ == "__main__":
+    # this won't be run when imported
+    json2srt(sys.argv)

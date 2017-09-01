@@ -66,45 +66,48 @@ def setNewNames(course_folder, nameDict, options):
     print 'Renamed ' + str(filecount) + ' files.'
 
 
-########
-# MAIN #
-########
+# Main function.
+def SrtRename(args):
 
-if len(sys.argv) < 2:
-    # Wrong number of arguments, probably
-    sys.exit(instructions)
-
-# Get file or directory from command line argument.
-# With wildcards we might get passed a lot of them.
-filenames = sys.argv[1:]
-# Get the options and make a list of them for easy reference.
-options = sys.argv[-1]
-
-# If the "options" match a file or folder name, those aren't options.
-if os.path.exists(options):
-    options = ''
-# If they don't, that last filename isn't a filename.
-else:
-    del filenames[-1]
-
-optionlist = []
-if 'h' in options: sys.exit(instructions)
-if 'c' in options: optionlist.append('c')
-
-for name in filenames:
-    # Make sure single files exist.
-    assert os.path.exists(name), 'File or directory not found.'
-
-    # If it's just a file...
-    if os.path.isfile(name):
-        # We dont' run on files, we run on course folders.
+    if len(args) < 2:
+        # Wrong number of arguments, probably
         sys.exit(instructions)
 
-    # If it's a directory...
-    if os.path.isdir(name):
-        # Get the concordance for this course.
-        nameDict = getOriginalNames(os.path.abspath(name), options)
+    # Get file or directory from command line argument.
+    # With wildcards we might get passed a lot of them.
+    filenames = args[1:]
+    # Get the options and make a list of them for easy reference.
+    options = args[-1]
 
-        # Go into the static folder and rename the files.
-        assert os.path.exists(os.path.join(name, 'static')), 'No static folder found.'
-        setNewNames(name, nameDict, options)
+    # If the "options" match a file or folder name, those aren't options.
+    if os.path.exists(options):
+        options = ''
+    # If they don't, that last filename isn't a filename.
+    else:
+        del filenames[-1]
+
+    optionlist = []
+    if 'h' in options: sys.exit(instructions)
+    if 'c' in options: optionlist.append('c')
+
+    for name in filenames:
+        # Make sure single files exist.
+        assert os.path.exists(name), 'File or directory not found.'
+
+        # If it's just a file...
+        if os.path.isfile(name):
+            # We dont' run on files, we run on course folders.
+            sys.exit(instructions)
+
+        # If it's a directory...
+        if os.path.isdir(name):
+            # Get the concordance for this course.
+            nameDict = getOriginalNames(os.path.abspath(name), options)
+
+            # Go into the static folder and rename the files.
+            assert os.path.exists(os.path.join(name, 'static')), 'No static folder found.'
+            setNewNames(name, nameDict, options)
+
+if __name__ == "__main__":
+    # this won't be run when imported
+    SrtRename(sys.argv)
