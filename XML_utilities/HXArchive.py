@@ -11,3 +11,4 @@ json2srt.json2srt(sys.argv + ['-r'])
 SrtRename.SrtRename(sys.argv + ['-c'])
 #Done!
 print 'SRT archive prep complete.'
+print 'Your renamed SRT files are in the static/ folder.'
