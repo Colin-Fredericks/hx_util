@@ -5,12 +5,10 @@ import json2srt
 import SrtRename
 
 filenames = [os.path.basename(word) for word in sys.argv]
-print filenames
 
 # Make sure we're running on the course folder, not something else.
 if 'course.xml' in filenames:
     sys.exit('Please run me on a course folder, not the course.xml file.')
-
 if 'course' not in filenames:
     sys.exit('Please run me on a course folder.')
 
