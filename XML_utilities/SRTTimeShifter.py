@@ -4,12 +4,12 @@ import csv
 
 instructions = """
 To use:
-python SRTShifter.py seconds filename (options)
+python SRTTimeShifter.py seconds filename (options)
 
 Takes the given subtitle file or files, in SRT format,
 and shifts the times in each by the given number of seconds.
-Use decimals, not frames (e.g. 2.5 seconds).
 
+For time, use decimals, not frames (e.g. 2.5 seconds).
 You can use negative times to shift backwards, if there's enough
 padding at the start of the file.
 
@@ -243,7 +243,7 @@ def SRTTimeShifter(args):
                 completed = openFiles(name, seconds, optionList)
                 if completed: fileCount += 1
                 # If we're not copying files, clean up the original.
-                if 'c' not in optionList: os.remove(name)
+                if completed and 'c' not in optionList: os.remove(name)
 
     plFiles = 'file' if fileCount == 1 else 'files'
     plSeconds = 'second' if seconds == 1 else 'seconds'
