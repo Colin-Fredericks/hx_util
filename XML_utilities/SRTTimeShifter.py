@@ -197,7 +197,7 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
     return True
 
 # Takes in arguments and runs the shifter on each file.
-def SRTShifter(args):
+def SRTTimeShifter(args):
     # Get arguments
     if len(args) < 3:
         # Wrong number of arguments, probably
@@ -252,4 +252,4 @@ def SRTShifter(args):
 
 if __name__ == "__main__":
     # This won't be run when the file is imported
-    SRTShifter(sys.argv)
+    SRTTimeShifter(sys.argv)
