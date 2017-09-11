@@ -96,8 +96,8 @@ def getNextEntry(inFile):
     lastLine = ''
 
     for index, line in enumerate(inFile):
-        # print 'line - ' + line
-        # print 'last line - ' + lastLine
+        print 'line - ' + line
+        print 'last line - ' + lastLine
 
         # Loop down the file, storing lines, until you find ' --> '
         if ' --> ' in line:
@@ -135,36 +135,9 @@ def shiftTimes(inFile, outFile, seconds, optionList):
     if seconds == 0:
         return
 
-    # If we're going positive:
-    if seconds > 0:
-        # Add a blank 'padding' entry at 0.
-        blankEntry = {
-            'start': 0,
-            'end': seconds*1000,
-            'index': 0,
-            'text1': '',
-            'text2': ''
-        }
-        print blankEntry
-        writeEntry(outFile, blankEntry)
-
-    # If we're going negative:
-    else:
-        # Check to see if we can shrink the first entry enough.
-        # Go get the first entry.
-        firstEntry = getNextEntry(inFile)
-
-        # If we have enough time, shrink the first entry back.
-        # If not, stop and throw an error message.
-        if firstEntry['end'] > abs(seconds*1000):
-            firstEntry['end'] += seconds*1000
-            writeEntry(outFile, firstEntry)
-        else:
-            print 'Error: First entry in file is ' + str(-seconds) + ' seconds or less.'
-            return
-
     # Loop through all our entries and write ones with corrected times.
     while True:
+
         nextEntry = getNextEntry(inFile)
 
         # If we're out of entries, stop.
@@ -173,10 +146,37 @@ def shiftTimes(inFile, outFile, seconds, optionList):
         if nextEntry['index'] == -1:
             break
 
-        # Otherwise, write the entry and go on to the next one.
-        nextEntry['start'] = nextEntry['start'] + seconds * 1000
-        nextEntry['end'] = nextEntry['end'] + seconds * 1000
-        writeEntry(outFile, nextEntry)
+        # For the first entry, if we're going positive:
+        if seconds > 0 and nextEntry['index'] == 0:
+            # Add a blank 'padding' entry at 0.
+            blankEntry = {
+                'start': 0,
+                'end': seconds*1000,
+                'index': 0,
+                'text1': '',
+                'text2': ''
+            }
+            print blankEntry
+            writeEntry(outFile, blankEntry)
+
+        # For the first entry, if we're going negative:
+        elif seconds < 0 and nextEntry['index'] == 0:
+            # Check to see if we can shrink the first entry enough.
+            # If we have enough time, shrink the first entry back.
+            # If not, stop and throw an error message.
+            if nextEntry['end'] > abs(seconds*1000):
+                nextEntry['end'] += seconds*1000
+                writeEntry(outFile, nextEntry)
+            else:
+                print 'Cannot shift negative. First entry in file is ' + str(-seconds) + ' seconds or less.'
+                return
+
+        # For all other entries:
+        # Write the adjusted entry and go on to the next one.
+        else:
+            nextEntry['start'] += seconds * 1000
+            nextEntry['end'] += seconds * 1000
+            writeEntry(outFile, nextEntry)
 
     return
 
