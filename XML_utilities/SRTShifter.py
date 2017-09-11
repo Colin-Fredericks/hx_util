@@ -10,8 +10,8 @@ Takes the given subtitle file or files, in SRT format,
 and shifts the times in each by the given number of seconds.
 Use decimals, not frames (e.g. 2.5 seconds).
 
-You can use negative times to shift backwards, but be aware that
-invalid files can result if you shift things back too far.
+You can use negative times to shift backwards, if there's enough
+padding at the start of the file.
 
 Valid options:
   -c Copy. Makes a new file rather than shifting the old one.
@@ -34,8 +34,8 @@ def msecToHMS(time):
 
     # Make sure we get enough zeroes.
     if msec == 0: msec = '000'
-    if int(msec) < 10: msec = '00' + str(msec)
-    if int(msec) < 100: msec = '0' + str(msec)
+    elif int(msec) < 10: msec = '00' + str(msec)
+    elif int(msec) < 100: msec = '0' + str(msec)
     if seconds == 0: seconds = '00'
     if seconds < 10: seconds = '0' + str(seconds)
     if minutes == 0: minutes = '00'
@@ -96,11 +96,13 @@ def getNextEntry(inFile):
     lastLine = ''
 
     for index, line in enumerate(inFile):
+        # print 'line - ' + line
+        # print 'last line - ' + lastLine
 
         # Loop down the file, storing lines, until you find ' --> '
         if ' --> ' in line:
             # The line before that is the index.
-            entryData['index'] = unicode(int(lastLine))
+            entryData['index'] = int(lastLine)
             # That line is the timecode. Store it in miliseconds.
             entryData['start'] = HMSTomsec(line.split(' --> ')[0])
             entryData['end'] = HMSTomsec(line.split(' --> ')[1])
@@ -119,6 +121,7 @@ def getNextEntry(inFile):
 
 # Writes a standard SRT entry into our output files.
 def writeEntry(outFile, entry):
+    print entry
     outFile.write(unicode(entry['index'])+ '\n')
     outFile.write(unicode(msecToHMS(entry['start'])) + ' --> ' + unicode(msecToHMS(entry['end'])) + '\n')
     outFile.write(unicode(entry['text1']))
@@ -142,6 +145,7 @@ def shiftTimes(inFile, outFile, seconds, optionList):
             'text1': '',
             'text2': ''
         }
+        print blankEntry
         writeEntry(outFile, blankEntry)
 
     # If we're going negative:
@@ -152,11 +156,11 @@ def shiftTimes(inFile, outFile, seconds, optionList):
 
         # If we have enough time, shrink the first entry back.
         # If not, stop and throw an error message.
-        if firstEntry['end'] < (seconds*1000):
-            firstEntry['end'] -= (seconds*1000)
+        if firstEntry['end'] > abs(seconds*1000):
+            firstEntry['end'] += seconds*1000
             writeEntry(outFile, firstEntry)
         else:
-            print 'Error: First entry in file is less than ' + srt(seconds) + ' seconds.'
+            print 'Error: First entry in file is ' + str(-seconds) + ' seconds or less.'
             return
 
     # Loop through all our entries and write ones with corrected times.
