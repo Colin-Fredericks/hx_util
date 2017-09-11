@@ -84,18 +84,14 @@ def openFiles(name, seconds, optionList):
     return
 
 # Gets the next entry from our original SRT file
-def getNextEntry(inFile, lastLine):
-    entryData = {
-        'start': 0,
-        'end': 0,
-        'index': 0,
-        'text1': '',
-        'text2': ''
-    }
+def getSRTEntries(inFile):
+
+    SRTEntries = []
+    lastLine = ''
 
     for index, line in enumerate(inFile):
-        print 'line - ' + line
-        print 'last line - ' + lastLine
+        print 'last line - ' + lastLine + 'line - ' + line + '\r'
+        entryData = {}
 
         # Loop down the file, storing lines, until you find ' --> '
         if ' --> ' in line:
@@ -106,21 +102,28 @@ def getNextEntry(inFile, lastLine):
             entryData['end'] = HMSTomsec(line.split(' --> ')[1])
             # The next line is text1, and the one after is text2 or maybe blank.
             entryData['text1'] = unicode(inFile.next())
+            # If text1 is blank, move on.
+            if entryData['text1'].strip() == '':
+                print 'Blank line after timecode.'
+                entryData['text2'] = ''
+                SRTEntries.append(entryData)
+                continue
             # Watch out for the end of the file.
             try:
                 entryData['text2'] = unicode(inFile.next())
             except StopIteration:
                 pass
 
-            # Once we've gotten our info, send it back.
-            return entryData, lastLine
+            # Once we've gotten our info, add it to the list.
+            SRTEntries.append(entryData)
 
         lastLine = line
 
+    return SRTEntries
+
 # Writes a standard SRT entry into our output files.
-def writeEntry(outFile, entry):
-    print entry
-    outFile.write(unicode(entry['index'])+ '\n')
+def writeEntry(outFile, entry, index):
+    outFile.write(unicode(index)+ '\n')
     outFile.write(unicode(msecToHMS(entry['start'])) + ' --> ' + unicode(msecToHMS(entry['end'])) + '\n')
     outFile.write(unicode(entry['text1']))
     if ''.join(entry['text2'].split()) is not '':
@@ -133,52 +136,51 @@ def shiftTimes(inFile, outFile, seconds, optionList):
     if seconds == 0:
         return
 
-    # Loop through all our entries and write ones with corrected times.
-    lastLine = ''
-    while True:
-        try:
-            nextEntry, lastLine = getNextEntry(inFile, lastLine)
-        except TypeError:
-            # No last line to return.
-            break
+    # Get a list of all the entries.
+    SRTEntries = getSRTEntries(inFile)
 
-        # If we're out of entries, stop.
-        if nextEntry is None:
-            break
-        if nextEntry['index'] == -1:
-            break
+    print 'List Made'
 
-        # For the first entry, if we're going positive:
-        if seconds > 0 and nextEntry['index'] == 0:
-            # Add a blank 'padding' entry at 0.
+    removeEntry = False
+    blankEntry = None
+
+    # Go through the list and adjust times.
+    for i, entry in enumerate(SRTEntries):
+
+        # If we're going positive, add a blank 'padding' entry at 0.
+        if seconds > 0 and i==0:
             blankEntry = {
                 'start': 0,
-                'end': seconds*1000,
+                'end': SRTEntries[i]['start'] + seconds * 1000,
                 'index': 0,
                 'text1': '',
                 'text2': ''
             }
-            print blankEntry
-            writeEntry(outFile, blankEntry)
+            entry['start'] += seconds * 1000
+            entry['end'] += seconds * 1000
 
-        # For the first entry, if we're going negative:
-        elif seconds < 0 and nextEntry['index'] == 0:
+        # If we're going negative:
+        elif seconds < 0 and i==0:
             # Check to see if we can shrink the first entry enough.
             # If we have enough time, shrink the first entry back.
             # If not, stop and throw an error message.
-            if nextEntry['end'] > abs(seconds*1000):
-                nextEntry['end'] += seconds*1000
-                writeEntry(outFile, nextEntry)
+            if entry['end'] > abs(seconds*1000):
+                entry['end'] += seconds*1000
+            elif entry['end'] == abs(seconds*1000):
+                removeEntry = True
             else:
-                print 'Cannot shift negative. First entry in file is ' + str(-seconds) + ' seconds or less.'
+                print 'Cannot shift negative. First entry in file is less than ' + str(-seconds) + ' seconds.'
                 return
+        if i>0:
+            entry['start'] += seconds * 1000
+            entry['end'] += seconds * 1000
 
-        # For all other entries:
-        # Write the adjusted entry and go on to the next one.
-        else:
-            nextEntry['start'] += seconds * 1000
-            nextEntry['end'] += seconds * 1000
-            writeEntry(outFile, nextEntry)
+    if blankEntry: SRTEntries.insert(0, blankEntry)
+    if removeEntry: del SRTEntries[0]
+
+    # Write the file.
+    for i, entry in enumerate(SRTEntries):
+        writeEntry(outFile, entry, i)
 
     return
 
