@@ -84,7 +84,7 @@ def openFiles(name, seconds, optionList):
     return
 
 # Gets the next entry from our original SRT file
-def getNextEntry(inFile):
+def getNextEntry(inFile, lastLine):
     entryData = {
         'start': 0,
         'end': 0,
@@ -92,8 +92,6 @@ def getNextEntry(inFile):
         'text1': '',
         'text2': ''
     }
-
-    lastLine = ''
 
     for index, line in enumerate(inFile):
         print 'line - ' + line
@@ -115,7 +113,7 @@ def getNextEntry(inFile):
                 pass
 
             # Once we've gotten our info, send it back.
-            return entryData
+            return entryData, lastLine
 
         lastLine = line
 
@@ -136,9 +134,13 @@ def shiftTimes(inFile, outFile, seconds, optionList):
         return
 
     # Loop through all our entries and write ones with corrected times.
+    lastLine = ''
     while True:
-
-        nextEntry = getNextEntry(inFile)
+        try:
+            nextEntry, lastLine = getNextEntry(inFile, lastLine)
+        except TypeError:
+            # No last line to return.
+            break
 
         # If we're out of entries, stop.
         if nextEntry is None:
