@@ -14,7 +14,7 @@ You can use negative times to shift backwards, if there's enough
 padding at the start of the file.
 
 Valid options:
-  -c Copy. Makes a new file rather than shifting the old one.
+  -c Copy. Leaves the old file in place rather than deleting it when done.
   -h Help. Print this message.
 """
 
