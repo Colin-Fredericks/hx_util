@@ -67,21 +67,25 @@ def HMSTomsec(timestring):
 
 # Opens our input and output files, and maybe deletes the original.
 def openFiles(name, seconds, optionList):
+    completed = False
+
     # Open the existing SRT file.
     with open(name,'r') as inputFile:
         # Open a new file to work with.
         newname = name.rsplit('.srt',1)[0]
         newname += '_plus_' if seconds >= 0 else '_minus_'
-        newname += str(seconds)
+        newname += str(abs(seconds))
         newname += '.srt'
         with open(newname, 'wb') as outputFile:
-            shiftTimes(inputFile, outputFile, seconds, optionList)
+            # With the files open, shift the times.
+            completed = shiftTimes(inputFile, outputFile, name, seconds, optionList)
 
-    # If we're not making copies, delete the old file.
-    if 'c' not in optionList:
-        os.remove(name)
+        # If we fail, we shouldn't leave a random file lying around.
+        if not completed: os.remove(newname)
+        return completed
 
-    return
+    # If we got here, we couldn't open the file I guess.
+    return False
 
 # Gets the next entry from our original SRT file
 def getSRTEntries(inFile):
@@ -90,7 +94,6 @@ def getSRTEntries(inFile):
     lastLine = ''
 
     for index, line in enumerate(inFile):
-        print 'last line - ' + lastLine + 'line - ' + line + '\r'
         entryData = {}
 
         # Loop down the file, storing lines, until you find ' --> '
@@ -100,16 +103,15 @@ def getSRTEntries(inFile):
             # That line is the timecode. Store it in miliseconds.
             entryData['start'] = HMSTomsec(line.split(' --> ')[0])
             entryData['end'] = HMSTomsec(line.split(' --> ')[1])
-            # The next line is text1, and the one after is text2 or maybe blank.
-            entryData['text1'] = unicode(inFile.next())
-            # If text1 is blank, move on.
-            if entryData['text1'].strip() == '':
-                print 'Blank line after timecode.'
-                entryData['text2'] = ''
-                SRTEntries.append(entryData)
-                continue
             # Watch out for the end of the file.
             try:
+                # The next line is text1, and the one after is text2 or maybe blank.
+                entryData['text1'] = unicode(inFile.next())
+                # If text1 is blank, move on.
+                if entryData['text1'].strip() == '':
+                    entryData['text2'] = ''
+                    SRTEntries.append(entryData)
+                    continue
                 entryData['text2'] = unicode(inFile.next())
             except StopIteration:
                 pass
@@ -131,15 +133,13 @@ def writeEntry(outFile, entry, index):
     outFile.write(unicode('\n'))
 
 # The core loop that calls the important stuff.
-def shiftTimes(inFile, outFile, seconds, optionList):
+def shiftTimes(inFile, outFile, name, seconds, optionList):
     # If we're not shifting anything, just return.
     if seconds == 0:
-        return
+        return False
 
     # Get a list of all the entries.
     SRTEntries = getSRTEntries(inFile)
-
-    print 'List Made'
 
     removeEntry = False
     blankEntry = None
@@ -164,13 +164,25 @@ def shiftTimes(inFile, outFile, seconds, optionList):
             # Check to see if we can shrink the first entry enough.
             # If we have enough time, shrink the first entry back.
             # If not, stop and throw an error message.
-            if entry['end'] > abs(seconds*1000):
-                entry['end'] += seconds*1000
+            # print 'start: ' + str(entry['start']/1000.0)
+            # print 'end: ' + str(entry['end']/1000.0)
+            # print entry['start'] > abs(seconds*1000)
+            # print entry['end'] > abs(seconds*1000)
+
+            # If the first entry starts at or after our time, we're all good.
+            if entry['start'] > abs(seconds*1000):
+                entry['start'] += seconds * 1000
+                entry['end'] += seconds * 1000
             elif entry['end'] == abs(seconds*1000):
                 removeEntry = True
+            # We might still be good if our first entry is blank. We can shrink it back.
+            elif entry['end'] > abs(seconds*1000) and entry['text1'].strip() == '':
+                entry['end'] += seconds*1000
+            # But if not, we can't change this file.
             else:
-                print 'Cannot shift negative. First entry in file is less than ' + str(-seconds) + ' seconds.'
-                return
+                print 'Cannot shift ' + name + '. First subtitle is before ' + str(-seconds) + ' seconds.'
+                return False
+
         if i>0:
             entry['start'] += seconds * 1000
             entry['end'] += seconds * 1000
@@ -182,7 +194,7 @@ def shiftTimes(inFile, outFile, seconds, optionList):
     for i, entry in enumerate(SRTEntries):
         writeEntry(outFile, entry, i)
 
-    return
+    return True
 
 # Takes in arguments and runs the shifter on each file.
 def SRTShifter(args):
@@ -227,12 +239,14 @@ def SRTShifter(args):
         if os.path.isfile(name):
             # Make sure this is an srt file (just check extension)
             if name.lower().endswith('.srt'):
-                # Shift the times in that file
-                openFiles(name, seconds, optionList)
-                fileCount += 1
+                # Open that file and shift the times in that file
+                completed = openFiles(name, seconds, optionList)
+                if completed: fileCount += 1
+                # If we're not copying files, clean up the original.
+                if 'c' not in optionList: os.remove(name)
 
-    plFiles = 'files' if fileCount > 1 else 'file'
-    plSeconds = 'seconds' if seconds > 1 else 'second'
+    plFiles = 'file' if fileCount == 1 else 'files'
+    plSeconds = 'second' if seconds == 1 else 'seconds'
     print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
 
 
