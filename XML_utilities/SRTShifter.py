@@ -72,7 +72,7 @@ def openFiles(name, seconds, optionList):
         # Open a new file to work with.
         newname = name.rsplit('.srt',1)[0]
         newname += '_plus_' if seconds >= 0 else '_minus_'
-        newname += srt(seconds)
+        newname += str(seconds)
         newname += '.srt'
         with open(newname, 'wb') as outputFile:
             shiftTimes(inputFile, outputFile, seconds, optionList)
@@ -86,11 +86,11 @@ def openFiles(name, seconds, optionList):
 
 def getNextEntry(inFile):
     entryData = {
-        start: 0,
-        end: 0,
-        index: 0,
-        text1: '',
-        text2: ''
+        'start': 0,
+        'end': 0,
+        'index': 0,
+        'text1': '',
+        'text2': ''
     }
 
     lastLine = ''
@@ -108,11 +108,15 @@ def getNextEntry(inFile):
             # The line before that is the index.
             entryData['index'] = unicode(int(lastLine))
             # That line is the timecode. Store it in miliseconds.
-            entryData['start'] = HMSTomsec(thisLine.split(' --> '))[0]
-            entryData['end'] = HMSTomsec(thisLine.split(' --> '))[1]
+            entryData['start'] = HMSTomsec(thisLine.split(' --> ')[0])
+            entryData['end'] = HMSTomsec(thisLine.split(' --> ')[1])
             # The next line is text1, and the one after is text2 or maybe blank.
             entryData['text1'] = unicode(inFile.next())
-            entryData['text2'] = unicode(inFile.next())
+            # Watch out for the end of the file.
+            try:
+                entryData['text2'] = unicode(inFile.next())
+            except StopIteration:
+                pass
 
         lastLine = thisLine
 
@@ -125,7 +129,7 @@ def writeEntry(outFile, entry):
     outFile.write(unicode(entry['text1']) + '\n')
     if entry['text2'].strip() is not '':
         outFile.write(unicode(entry['text2']) + '\n')
-    outFile.write(unicode()'\n')
+    outFile.write(unicode('\n'))
 
 
 def shiftTimes(inFile, outFile, seconds, optionList):
@@ -137,13 +141,13 @@ def shiftTimes(inFile, outFile, seconds, optionList):
     if seconds > 0:
         # Add a blank 'padding' entry at 0.
         blankEntry = {
-            start: 0,
-            end: seconds*1000,
-            index: 0,
-            text1: '',
-            text2: ''
+            'start': 0,
+            'end': seconds*1000,
+            'index': 0,
+            'text1': '',
+            'text2': ''
         }
-        writeEntry(blankEntry)
+        writeEntry(outFile, blankEntry)
 
     # If we're going negative:
     else:
@@ -211,7 +215,7 @@ def SRTShifter(args):
     # Convert every file we're passed.
     for name in filenames:
         # Make sure single files exist.
-        assert os.path.exists(name), "File or directory not found."
+        assert os.path.exists(name), "File or directory not found: " + name
 
         # If it's just a file...
         if os.path.isfile(name):
@@ -223,7 +227,7 @@ def SRTShifter(args):
 
     plFiles = 'files' if fileCount > 1 else 'file'
     plSeconds = 'seconds' if seconds > 1 else 'second'
-    print 'Shifted ' + str(fileCount) + ' ' + plFiles ' by ' + str(seconds) + ' ' + plSeconds + '.'
+    print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
 
 
 if __name__ == "__main__":
