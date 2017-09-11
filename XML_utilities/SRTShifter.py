@@ -126,7 +126,7 @@ def writeEntry(outFile, entry):
         outFile.write(unicode(entry['text2']))
     outFile.write(unicode('\n'))
 
-#
+# The core loop that calls the important stuff.
 def shiftTimes(inFile, outFile, seconds, optionList):
     # If we're not shifting anything, just return.
     if seconds == 0:
@@ -176,7 +176,7 @@ def shiftTimes(inFile, outFile, seconds, optionList):
 
     return
 
-
+# Takes in arguments and runs the shifter on each file.
 def SRTShifter(args):
     # Get arguments
     if len(args) < 3:
@@ -229,5 +229,5 @@ def SRTShifter(args):
 
 
 if __name__ == "__main__":
-    # this won't be run when imported
+    # This won't be run when the file is imported
     SRTShifter(sys.argv)
