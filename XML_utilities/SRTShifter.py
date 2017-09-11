@@ -67,35 +67,112 @@ def HMSTomsec(timestring):
 
 
 def openFiles(name, seconds, optionList):
-    # Open the existing SRT file
+    # Open the existing SRT file.
     with open(name,'r') as inputFile:
-        if 'c' in optionList:
-            # If we're making a copy, open a new file for output.
-            newname = name.rsplit('.srt',1)[0]
-            newname += '_plus_' if seconds >= 0 else '_minus_'
-            newname += srt(seconds)
-            newname += '.srt'
-            with open(newname, 'wb') as outputFile:
-                shiftTimes(inputFile, outputFile, seconds, optionList)
-        else:
-            # Otherwise, just shfit the times within this file.
-            shiftTimes(inputFile, inputFile, seconds, optionList)
+        # Open a new file to work with.
+        newname = name.rsplit('.srt',1)[0]
+        newname += '_plus_' if seconds >= 0 else '_minus_'
+        newname += srt(seconds)
+        newname += '.srt'
+        with open(newname, 'wb') as outputFile:
+            shiftTimes(inputFile, outputFile, seconds, optionList)
+
+    # If we're not making copies, delete the old file.
+    if 'c' not in optionList:
+        os.remove(name)
 
     return
 
 
+def getNextEntry(inFile):
+    entryData = {
+        start: 0,
+        end: 0,
+        index: 0,
+        text1: '',
+        text2: ''
+    }
+
+    lastLine = ''
+
+    while True:
+        # Loop down the file, storing lines, until you find ' --> '
+        try:
+            thisLine = inFile.next()
+        except:
+            # Let us know when we're at the end of the file.
+            entryData['index'] = -1
+            return entryData
+
+        if ' --> ' in thisLine:
+            # The line before that is the index.
+            entryData['index'] = unicode(int(lastLine))
+            # That line is the timecode. Store it in miliseconds.
+            entryData['start'] = HMSTomsec(thisLine.split(' --> '))[0]
+            entryData['end'] = HMSTomsec(thisLine.split(' --> '))[1]
+            # The next line is text1, and the one after is text2 or maybe blank.
+            entryData['text1'] = unicode(inFile.next())
+            entryData['text2'] = unicode(inFile.next())
+
+        lastLine = thisLine
+
+    return entryData
+
+
+def writeEntry(outFile, entry):
+    outFile.write(unicode(entry['index']) + '\n')
+    outFile.write(unicode(msecToHMS(entry['start'])) + ' --> ' + unicode(msecToHMS(entry['end'])))
+    outFile.write(unicode(entry['text1']) + '\n')
+    if entry['text2'].strip() is not '':
+        outFile.write(unicode(entry['text2']) + '\n')
+    outFile.write(unicode()'\n')
+
+
 def shiftTimes(inFile, outFile, seconds, optionList):
+    # If we're not shifting anything, just return.
+    if seconds == 0:
+        return
+
     # If we're going positive:
+    if seconds > 0:
         # Add a blank 'padding' entry at 0.
+        blankEntry = {
+            start: 0,
+            end: seconds*1000,
+            index: 0,
+            text1: '',
+            text2: ''
+        }
+        writeEntry(blankEntry)
+
     # If we're going negative:
+    else:
         # Check to see if we can shrink the first entry enough.
+        # Go get the first entry.
+        firstEntry = getNextEntry(inFile)
+        print firstEntry
+
+        # If we have enough time, shrink the first entry back.
         # If not, stop and throw an error message.
-    # Step through the file line by line.
-    # If we see a number on a line on its own and it's
-    # bigger than the last one, that's our index.
-    # If we're going positive, increment each index.
-    # Look for '-->', which is the delimiter for SRTs
-    # Get the values before and after '-->' and shfit them.
+        if firstEntry['end'] < (seconds*1000):
+            firstEntry['end'] -= (seconds*1000)
+            writeEntry(outFile, firstEntry)
+        else:
+            print 'Error: First entry in file is less than ' + srt(seconds) + ' seconds.'
+            return
+
+    while True:
+        nextEntry = getNextEntry(inFile)
+
+        # If we're out of entries, stop.
+        if nextEntry['index'] == -1:
+            break
+
+        # Otherwise, write the entry and go on to the next one.
+        nextEntry['start'] = nextEntry['start'] + seconds * 1000
+        nextEntry['end'] = nextEntry['end'] + seconds * 1000
+        writeEntry(nextEntry)
+
     return
 
 def SRTShifter(args):
