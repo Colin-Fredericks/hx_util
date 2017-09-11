@@ -51,8 +51,8 @@ def msecToHMS(time):
 
     # Make sure we get enough zeroes.
     if msec == 0: msec = '000'
-    if int(msec) < 10: msec = '00' + str(msec)
-    if int(msec) < 100: msec = '0' + str(msec)
+    elif int(msec) < 10: msec = '00' + str(msec)
+    elif int(msec) < 100: msec = '0' + str(msec)
     if seconds == 0: seconds = '00'
     if seconds < 10: seconds = '0' + str(seconds)
     if minutes == 0: minutes = '00'
