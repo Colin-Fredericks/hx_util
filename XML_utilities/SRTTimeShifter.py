@@ -14,7 +14,7 @@ You can use negative times to shift backwards, if there's enough
 padding at the start of the file.
 
 Valid options:
-  -c Copy. Leaves the old file in place rather than deleting it when done.
+  -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 """
 
@@ -82,10 +82,10 @@ def openFiles(name, seconds, optionList):
 
         # If we fail, we shouldn't leave a random file lying around.
         if not completed: os.remove(newname)
-        return completed
+        return completed, newname
 
     # If we got here, we couldn't open the file I guess.
-    return False
+    return False, 'error.srt'
 
 # Gets the next entry from our original SRT file
 def getSRTEntries(inFile):
@@ -225,7 +225,7 @@ def SRTTimeShifter(args):
         del filenames[-1]
 
     optionList = []
-    if 'c' in options: optionList.append('c')
+    if 'o' in options: optionList.append('o')
     if 'h' in options: optionList.append('h')
 
     fileCount = 0
@@ -240,14 +240,17 @@ def SRTTimeShifter(args):
             # Make sure this is an srt file (just check extension)
             if name.lower().endswith('.srt'):
                 # Open that file and shift the times in that file
-                completed = openFiles(name, seconds, optionList)
+                completed, newname = openFiles(name, seconds, optionList)
                 if completed: fileCount += 1
                 # If we're not copying files, clean up the original.
-                if completed and 'c' not in optionList: os.remove(name)
+                if completed and 'o' in optionList:
+                    os.remove(name)
+                    os.rename(newname, name)
 
-    plFiles = 'file' if fileCount == 1 else 'files'
-    plSeconds = 'second' if seconds == 1 else 'seconds'
-    print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
+    if fileCount > 0:
+        plFiles = 'file' if fileCount == 1 else 'files'
+        plSeconds = 'second' if seconds == 1 else 'seconds'
+        print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
 
 
 if __name__ == "__main__":
