@@ -133,6 +133,7 @@ def writeEntry(outFile, entry, index):
 def shiftTimes(inFile, outFile, name, seconds, optionList):
     # If we're not shifting anything, just return.
     if seconds == 0:
+        print 'Zero second shift - no files changed.'
         return False
 
     # Get a list of all the entries.
@@ -144,17 +145,26 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
     # Go through the list and adjust times.
     for i, entry in enumerate(SRTEntries):
 
-        # If we're going positive, add a blank 'padding' entry at 0.
+        # If we're going positive:
         if seconds > 0 and i==0:
-            blankEntry = {
-                'start': 0,
-                'end': SRTEntries[i]['start'] + seconds * 1000,
-                'index': 0,
-                'text1': '',
-                'text2': ''
-            }
-            entry['start'] += seconds * 1000
-            entry['end'] += seconds * 1000
+
+            # If there's already a blank 'padding' entry, extend it.
+            if entry['text1'].strip() == '':
+                entry['start'] = 0
+                entry['end'] += seconds * 1000
+            # If not, add a blank entry at 0.
+            else:
+                blankEntry = {
+                    'start': 0,
+                    'end': SRTEntries[i]['start'] + seconds * 1000,
+                    'index': 0,
+                    'text1': '',
+                    'text2': ''
+                }
+
+                # Adjust the existing first entry.
+                entry['start'] += seconds * 1000
+                entry['end'] += seconds * 1000
 
         # If we're going negative:
         elif seconds < 0 and i==0:
@@ -246,7 +256,7 @@ def SRTTimeShifter(args):
                         os.rename(name, name + '.old')
                     os.rename(newname, name)
                     fileCount += 1
-                        
+
 
     if fileCount > 0:
         plFiles = 'file' if fileCount == 1 else 'files'
