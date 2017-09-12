@@ -16,6 +16,8 @@ padding at the start of the file.
 Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
+
+Last update: September 12th 2017
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format
