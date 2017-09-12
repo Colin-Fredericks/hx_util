@@ -72,10 +72,7 @@ def openFiles(name, seconds, optionList):
     # Open the existing SRT file.
     with open(name,'r') as inputFile:
         # Open a new file to work with.
-        newname = name.rsplit('.srt',1)[0]
-        newname += '_plus_' if seconds >= 0 else '_minus_'
-        newname += str(abs(seconds))
-        newname += '.srt'
+        newname = name + '.new'
         with open(newname, 'wb') as outputFile:
             # With the files open, shift the times.
             completed = shiftTimes(inputFile, outputFile, name, seconds, optionList)
@@ -241,11 +238,15 @@ def SRTTimeShifter(args):
             if name.lower().endswith('.srt'):
                 # Open that file and shift the times in that file
                 completed, newname = openFiles(name, seconds, optionList)
-                if completed: fileCount += 1
-                # If we're not copying files, clean up the original.
-                if completed and 'o' in optionList:
-                    os.remove(name)
+                if completed:
+                    # If we're not copying files, clean up the original.
+                    if 'o' in optionList:
+                        os.remove(name)
+                    else:
+                        os.rename(name, name + '.old')
                     os.rename(newname, name)
+                    fileCount += 1
+                        
 
     if fileCount > 0:
         plFiles = 'file' if fileCount == 1 else 'files'
