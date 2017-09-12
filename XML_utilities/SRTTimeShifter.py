@@ -219,15 +219,15 @@ def SRTTimeShifter(args):
     except ValueError:
         # Probably fed arguments in wrong order.
         sys.exit(instructions)
-
     # Get file or directory from command line argument.
     # With wildcards we might get passed a lot of them.
     filenames = args[2:]
     # Get the options and make a list of them for easy reference.
     options = args[-1]
 
+    # If the "options" are a .srt file, those aren't options.
     # If the "options" match a file or folder name, those aren't options.
-    if os.path.exists(options):
+    if os.path.exists(options) or options.endswith('.srt'):
         options = ''
     # If they ARE options, then that last filename isn't a filename.
     else:
@@ -242,7 +242,9 @@ def SRTTimeShifter(args):
     # Convert every file we're passed.
     for name in filenames:
         # Make sure single files exist.
-        assert os.path.exists(name), "File or directory not found: " + name
+        if not os.path.exists(name):
+            print "File or directory not found: " + name
+            return
 
         # If it's just a file...
         if os.path.isfile(name):
