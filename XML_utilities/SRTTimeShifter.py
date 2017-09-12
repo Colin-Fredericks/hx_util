@@ -234,8 +234,8 @@ def SRTTimeShifter(args):
         del filenames[-1]
 
     optionList = []
+    if 'h' in options: sys.exit(instructions)
     if 'o' in options: optionList.append('o')
-    if 'h' in options: optionList.append('h')
 
     fileCount = 0
 
