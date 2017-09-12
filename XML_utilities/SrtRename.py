@@ -78,8 +78,9 @@ def SrtRename(args):
     # Get the options and make a list of them for easy reference.
     options = args[-1]
 
+    # If the "options" are a .srt file, those aren't options.
     # If the "options" match a file or folder name, those aren't options.
-    if os.path.exists(options):
+    if os.path.exists(options) or options.endswith('.srt'):
         options = ''
     # If they don't, that last filename isn't a filename.
     else:
@@ -91,7 +92,9 @@ def SrtRename(args):
 
     for name in filenames:
         # Make sure single files exist.
-        assert os.path.exists(name), 'File or directory not found.'
+        if not os.path.exists(name):
+            print "File or directory not found: " + name
+            return
 
         # If it's just a file...
         if os.path.isfile(name):
