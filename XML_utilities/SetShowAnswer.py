@@ -1,7 +1,5 @@
 # import XML libraries
 import xml.etree.ElementTree as ET
-import xml.dom.minidom as minidom
-import HTMLParser
 import sys
 import os
 

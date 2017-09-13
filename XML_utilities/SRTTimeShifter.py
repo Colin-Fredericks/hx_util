@@ -1,6 +1,5 @@
 import sys
 import os
-import csv
 
 instructions = """
 To use:
