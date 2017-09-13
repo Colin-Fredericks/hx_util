@@ -8,7 +8,7 @@ This repo also has a few utility scripts for batch-work in course XML.
 Currently Working On...
 -----------
 
-Getting the SRT spreadsheet to handle unicode.
+Nothing in particular.
 
 
 How to Implement HXPY in your course
