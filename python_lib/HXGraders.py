@@ -1,17 +1,18 @@
 import json
 import math
 import random
+from difflib import SequenceMatcher
 
 def textResponseGrader(ans, options = None):
 
     parsed = json.loads(ans)
     answer = json.loads(parsed['answer'])['answer']
-    
+
     # Remove quotes and whitespace from the ends.
     answer = answer.strip('"')
     answer = answer.strip('"')
     answer = answer.strip()
-    
+
     # Check options, set defaults if needed.
     if options is None or type(options) is not dict:
         options = dict()
@@ -20,8 +21,8 @@ def textResponseGrader(ans, options = None):
         #   min_length: the minimum length of a response in characters.
         if 'min_length' not in options:
             options['min_length'] = 10
-    
-    
+
+
     if len(answer) >= options['min_length']:
         return {
             'input_list': [
@@ -111,27 +112,26 @@ def videoWatchGrader(ans, grading):
         ]
     }
 
-
 def matchingAGrader(ans, right_answer, partial_credit, feedback):
-  
+
   parsed = json.loads(ans)
   answer = json.loads(parsed['answer'])
   answer = answer['pairings']
-  
+
   if partial_credit:
-  
+
     currentpoints = []
     wrong_answers = []
     maxpoints = []
     scores = []
     answer_index = 0
-  
+
     for right_answer_n in right_answer:
 
       maxpoints.append(len(right_answer_n))
       currentpoints.append(0)
       wrong_answers.append(0)
-      
+
       for item in answer:
         does_match = False
         for target in right_answer_n:
@@ -142,53 +142,98 @@ def matchingAGrader(ans, right_answer, partial_credit, feedback):
           currentpoints[answer_index] += 1
         else:
           wrong_answers[answer_index] += 1
-          
-    
+
+
       scores.append((float(currentpoints[answer_index] - wrong_answers[answer_index])) / float(maxpoints[answer_index]))
       answer_index += 1
-  
+
     final_grade = max(scores)
     final_index = scores.index(final_grade)
     final_grade = round(final_grade, 2)
     final_grade = max(final_grade, 0)
-    message = str(currentpoints[final_index]) 
-    message += ' correct out of ' 
-    message += str(maxpoints[final_index]) 
-    message += ', ' 
-    message += str(wrong_answers[final_index]) 
+    message = str(currentpoints[final_index])
+    message += ' correct out of '
+    message += str(maxpoints[final_index])
+    message += ', '
+    message += str(wrong_answers[final_index])
     message += ' wrong.'
 
     is_right = False
     if 0.1 < final_grade < 0.9: is_right = 'Partial'
     elif final_grade >= 0.9: is_right = True
-    
+
     if not feedback: message = ''
-    
+
     return {
       'input_list': [
         { 'ok': is_right, 'msg': message, 'grade_decimal': final_grade},
       ]
     }
-  
+
   else:
     answer_sort = sorted(answer)
-  
+
     is_right = False
-  
+
     for right_answer_n in right_answer:
       right_answer_sort = sorted(right_answer_n)
-  
+
       if answer_sort == right_answer_sort:
         is_right = True
         break
       else:
         is_right = False
-        
+
     return is_right
 
+def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback': True}):
+
+  parsed = json.loads(ans)
+  answer = json.loads(parsed['answer'])
+  answer = answer['pairings']
+  # We only care about the letters and their order in this answer.
+  answer_letters = [x[0] for x in answer]
+
+  currentpoints = []
+  maxpoints = []
+  scores = []
+
+  for right_answer_n in right_answer:
+
+    # This finds the longest match between a right answer and the student answer.
+    sm = SequenceMatcher(None, right_answer_n, answer_letters)
+    match_info = sm.find_longest_match(0, len(right_answer_n), 0, len(answer_letters))
+    match_text = right_answer_n[match_info.a:(match_info.b + match_info.size)]
+
+    # No credit for matching just one item.
+    currentpoints.append(len(match_text) if len(match_text) > 1 else 0)
+    maxpoints.append(len(right_answer_n))
+    scores.append(float(currentpoints[-1]) / float(maxpoints[-1]))
+
+  final_grade = max(scores)
+  final_index = scores.index(final_grade)
+  final_grade = round(final_grade, 2)
+  final_grade = max(final_grade, 0)
+  message = 'Your best sequence: '
+  message = str(currentpoints[final_index])
+  message += ' in a row out of '
+  message += str(maxpoints[final_index])
+  message += '.'
+
+  is_right = False
+  if 0.1 < final_grade < 0.9 and options['partial_credit']: is_right = 'Partial'
+  elif final_grade >= 0.9: is_right = True
+
+  if not options['feedback']: message = ''
+
+  return {
+    'input_list': [
+      { 'ok': is_right, 'msg': message, 'grade_decimal': final_grade},
+    ]
+  }
 
 def rangeGuessGrader(ans, options):
-    
+
   # Get the student's answer.
   parsed = json.loads(ans)
   answer = json.loads(parsed['answer'])
@@ -196,11 +241,11 @@ def rangeGuessGrader(ans, options):
   guess_lower = answer['lowerguess']
   guess_upper_closed = answer['upperclosed']
   guess_lower_closed = answer['lowerclosed']
-  
+
   # Now begins the grading.
   message = ''
   final_grade = 0
-  
+
   if options['problem_type'] == 'interval':
     if guess_upper < options['correct_interval'][0]:
       # No points if there's no overlap.
@@ -216,21 +261,21 @@ def rangeGuessGrader(ans, options):
       endpoints.append(guess_upper)
       endpoints.append(guess_lower)
       endpoints.sort()
-      
+
       overlap = endpoints[2] - endpoints[1]
       bigrange = max(options['correct_interval'][1] - options['correct_interval'][0], guess_upper - guess_lower)
       final_grade = float(overlap) / float(bigrange)
-      
+
       message = str(int(round(final_grade, 2) * 100)) + '% overlap with correct answer.'
 
       if options['interval_tolerance'] == 'strict':
         final_grade = final_grade * final_grade
       elif options['interval_tolerance'] == 'generous':
         final_grade = math.sqrt(final_grade)
-      
+
       # Round up to the nearest tenth.
       final_grade = math.ceil(final_grade*10.0) / 10.0
-      
+
       if options['show_open_close']:
         if(guess_lower_closed != True and options['interval_type'][0] == 'closed'):
           final_grade = final_grade - options['type_penalty']
@@ -244,11 +289,11 @@ def rangeGuessGrader(ans, options):
         if(guess_upper_closed == True and options['interval_type'][1] != 'closed'):
           final_grade = final_grade - options['type_penalty']
           message += ' Upper endpoint is wrong.'
-      
+
   else:
-    
+
     farthest = max(abs(options['correct_number'] - guess_upper), abs(options['correct_number'] - guess_lower))
-    
+
     if farthest < options['tolerance'][0]:
       final_grade = options['brackets'][0]
       message = 'Close enough! Actual answer: ' + str(options['correct_number'])
@@ -261,12 +306,12 @@ def rangeGuessGrader(ans, options):
     else:
       final_grade = options['brackets'][3]
       message = 'Your range is too large to get points.'
-    
+
     if guess_upper > options['correct_number'] and guess_lower < options['correct_number']:
       message += ' The answer is within your range.'
     else:
       message += ' The answer is outside your range.'
-    
+
   if not options['feedback']:
     message = ''
 
@@ -276,13 +321,12 @@ def rangeGuessGrader(ans, options):
     isOK = "Partial"
   else:
     isOK = False
-  
+
   return {
     'input_list': [
         { 'ok': isOK, 'msg': message, 'grade_decimal': final_grade},
     ]
   }
-
 
 def getRangeGuesserParams(options):
 
