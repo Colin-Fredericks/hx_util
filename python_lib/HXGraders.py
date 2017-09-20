@@ -191,8 +191,12 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   parsed = json.loads(ans)
   answer = json.loads(parsed['answer'])
   answer = answer['pairings']
-  # We only care about the letters and their order in this answer.
-  answer_letters = [x[0] for x in answer]
+
+  # We only care about the letters and their order in this problem type.
+  # Make sure pairings are in order by number.
+  answer_sort = sorted(answer, key=lambda x: x[1])
+  # Make it one word for easy comparison.
+  answer_letters = ''.join([x[0] for x in answer_sort]).lower()
 
   currentpoints = []
   maxpoints = []
@@ -200,10 +204,12 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
 
   for right_answer_n in right_answer:
 
+    ranl = right_answer_n.lower()
+
     # This finds the longest match between a right answer and the student answer.
-    sm = SequenceMatcher(None, right_answer_n, answer_letters)
-    match_info = sm.find_longest_match(0, len(right_answer_n), 0, len(answer_letters))
-    match_text = right_answer_n[match_info.a:(match_info.b + match_info.size)]
+    sm = SequenceMatcher(None, ranl, answer_letters)
+    match_info = sm.find_longest_match(0, len(ranl), 0, len(answer_letters))
+    match_text = ranl[match_info.a:(match_info.b + match_info.size)]
 
     # No credit for matching just one item.
     currentpoints.append(len(match_text) if len(match_text) > 1 else 0)
@@ -215,7 +221,7 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   final_grade = round(final_grade, 2)
   final_grade = max(final_grade, 0)
   message = 'Your best sequence: '
-  message = str(currentpoints[final_index])
+  message += str(currentpoints[final_index])
   message += ' in a row out of '
   message += str(maxpoints[final_index])
   message += '.'
