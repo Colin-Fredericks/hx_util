@@ -186,6 +186,49 @@ def matchingAGrader(ans, right_answer, partial_credit, feedback):
 
     return is_right
 
+def orderHelper(answer_word, right_answer_n):
+  ranl = right_answer_n.lower()
+  continuous = True
+
+  # This finds the longest match between a right answer and the student answer.
+  sm = SequenceMatcher(None, ranl, answer_word)
+  match_info = sm.find_longest_match(0, len(ranl), 0, len(answer_word))
+  match_text = ranl[match_info.a:(match_info.b + match_info.size)]
+
+  # No credit for matching just one item.
+  points = len(match_text) if len(match_text) > 1 else 0
+
+  # If they missed one item in the middle, they should get more than 50% credit.
+  # See if we get a better match with with just one letter missing.
+  for index, letter in enumerate(ranl):
+    skip_one = [a for a in ranl]
+    del skip_one[index]
+    skip_one = ''.join(skip_one)
+    sm_short = SequenceMatcher(None, skip_one, answer_word)
+    match_info_short = sm_short.find_longest_match(0, len(skip_one), 0, len(answer_word))
+    match_text_short = skip_one[match_info_short.a:(match_info_short.b + match_info_short.size)]
+    if len(match_text_short) > points:
+      points = len(match_text_short)
+      continuous = False
+
+  # Now check with one letter missing from the answer.
+  for index, letter in enumerate(answer_word):
+    skip_one = [a for a in answer_word]
+    del skip_one[index]
+    skip_one = ''.join(skip_one)
+    sm_short = SequenceMatcher(None, skip_one, answer_word)
+    match_info_short = sm_short.find_longest_match(0, len(skip_one), 0, len(answer_word))
+    match_text_short = skip_one[match_info_short.a:(match_info_short.b + match_info_short.size)]
+    if len(match_text_short) > points:
+      points = len(match_text_short)
+      continuous = False
+
+  return {
+    'current': points,
+    'max': len(right_answer_n),
+    'continuous': continuous
+  }
+
 def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback': True}):
 
   parsed = json.loads(ans)
@@ -196,7 +239,7 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   # Make sure pairings are in order by number.
   answer_sort = sorted(answer, key=lambda x: x[1])
   # Make it one word for easy comparison.
-  answer_letters = ''.join([x[0] for x in answer_sort]).lower()
+  answer_word = ''.join([x[0] for x in answer_sort]).lower()
 
   currentpoints = []
   maxpoints = []
@@ -204,16 +247,10 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
 
   for right_answer_n in right_answer:
 
-    ranl = right_answer_n.lower()
+    points_list = orderHelper(answer_word, right_answer_n)
 
-    # This finds the longest match between a right answer and the student answer.
-    sm = SequenceMatcher(None, ranl, answer_letters)
-    match_info = sm.find_longest_match(0, len(ranl), 0, len(answer_letters))
-    match_text = ranl[match_info.a:(match_info.b + match_info.size)]
-
-    # No credit for matching just one item.
-    currentpoints.append(len(match_text) if len(match_text) > 1 else 0)
-    maxpoints.append(len(right_answer_n))
+    currentpoints.append(points_list['current'])
+    maxpoints.append(points_list['max'])
     scores.append(float(currentpoints[-1]) / float(maxpoints[-1]))
 
   final_grade = max(scores)
@@ -224,7 +261,7 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   message += str(currentpoints[final_index])
   message += ' in a row out of '
   message += str(maxpoints[final_index])
-  message += '.'
+  message += '.' if points_list['continuous'] else ' with one wrong or missing item.'
 
   is_right = False
   if 0.1 < final_grade < 0.9 and options['partial_credit']: is_right = 'Partial'
