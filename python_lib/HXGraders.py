@@ -255,9 +255,10 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   final_index = scores.index(final_grade)
   final_grade = round(final_grade, 2)
   final_grade = max(final_grade, 0)
-  message = 'You are '
-  message += str(maxpoints[final_index] - currentpoints[final_index])
-  message += ' changes away from the ideal sequence.'
+  delta = maxpoints[final_index] - currentpoints[final_index]
+  message = 'You are ' + str(delta)
+  message += ' changes ' if delta > 1 else ' change '
+  message += ' away from the ideal sequence.'
 
   is_right = False
   if 0.1 < final_grade < 0.9 and options['partial_credit']: is_right = 'Partial'
