@@ -1,7 +1,6 @@
 import json
 import math
 import random
-from difflib import SequenceMatcher
 
 def textResponseGrader(ans, options = None):
 
@@ -186,48 +185,44 @@ def matchingAGrader(ans, right_answer, partial_credit, feedback):
 
     return is_right
 
-def orderHelper(answer_word, right_answer_n):
-  ranl = right_answer_n.lower()
-  continuous = True
+#######################################################################
+# The following block provides a grader for ordinal data.
+# Scores are calculated using Levenshtein distances.
+# Several helper functions are below (before the grader code),
+# taken from https://www.python-course.eu/levenshtein_distance.php
+#######################################################################
 
-  # This finds the longest match between a right answer and the student answer.
-  sm = SequenceMatcher(None, ranl, answer_word)
-  match_info = sm.find_longest_match(0, len(ranl), 0, len(answer_word))
-  match_text = ranl[match_info.a:(match_info.b + match_info.size)]
+def call_counter(func):
+    def helper(*args, **kwargs):
+        helper.calls += 1
+        return func(*args, **kwargs)
+    helper.calls = 0
+    helper.__name__= func.__name__
+    return helper
+def memoize(func):
+    mem = {}
+    def memoizer(*args, **kwargs):
+        key = str(args) + str(kwargs)
+        if key not in mem:
+            mem[key] = func(*args, **kwargs)
+        return mem[key]
+    return memoizer
+@call_counter
+@memoize
+def levenshtein(s, t):
+    if s == "":
+        return len(t)
+    if t == "":
+        return len(s)
+    if s[-1] == t[-1]:
+        cost = 0
+    else:
+        cost = 1
 
-  # No credit for matching just one item.
-  points = len(match_text) if len(match_text) > 1 else 0
-
-  # If they missed one item in the middle, they should get more than 50% credit.
-  # See if we get a better match with with just one letter missing.
-  for index, letter in enumerate(ranl):
-    skip_one = [a for a in ranl]
-    del skip_one[index]
-    skip_one = ''.join(skip_one)
-    sm_short = SequenceMatcher(None, skip_one, answer_word)
-    match_info_short = sm_short.find_longest_match(0, len(skip_one), 0, len(answer_word))
-    match_text_short = skip_one[match_info_short.a:(match_info_short.b + match_info_short.size)]
-    if len(match_text_short) > points:
-      points = len(match_text_short)
-      continuous = False
-
-  # Now check with one letter missing from the answer.
-  for index, letter in enumerate(answer_word):
-    skip_one = [a for a in answer_word]
-    del skip_one[index]
-    skip_one = ''.join(skip_one)
-    sm_short = SequenceMatcher(None, skip_one, answer_word)
-    match_info_short = sm_short.find_longest_match(0, len(skip_one), 0, len(answer_word))
-    match_text_short = skip_one[match_info_short.a:(match_info_short.b + match_info_short.size)]
-    if len(match_text_short) > points:
-      points = len(match_text_short)
-      continuous = False
-
-  return {
-    'current': points,
-    'max': len(right_answer_n),
-    'continuous': continuous
-  }
+    res = min([levenshtein(s[:-1], t)+1,
+               levenshtein(s, t[:-1])+1,
+               levenshtein(s[:-1], t[:-1]) + cost])
+    return res
 
 def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback': True}):
 
@@ -239,7 +234,7 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
   # Make sure pairings are in order by number.
   answer_sort = sorted(answer, key=lambda x: x[1])
   # Make it one word for easy comparison.
-  answer_word = ''.join([x[0] for x in answer_sort]).lower()
+  answer_word = ''.join([x[0] for x in answer_sort])
 
   currentpoints = []
   maxpoints = []
@@ -247,25 +242,34 @@ def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback'
 
   for right_answer_n in right_answer:
 
-    points_list = orderHelper(answer_word, right_answer_n)
+    # Lose a point for every change that needs to happen
+    # to make your sequence into the right one.
+    lev_dist = levenshtein(answer_word.lower(), right_answer_n.lower())
+    points = len(right_answer_n) - lev_dist
 
-    currentpoints.append(points_list['current'])
-    maxpoints.append(points_list['max'])
+    currentpoints.append(points)
+    maxpoints.append(len(right_answer_n))
     scores.append(float(currentpoints[-1]) / float(maxpoints[-1]))
 
   final_grade = max(scores)
   final_index = scores.index(final_grade)
   final_grade = round(final_grade, 2)
   final_grade = max(final_grade, 0)
-  message = 'Your best sequence: '
-  message += str(currentpoints[final_index])
-  message += ' in a row out of '
-  message += str(maxpoints[final_index])
-  message += '.' if points_list['continuous'] else ' with one wrong or missing item.'
+  message = 'You are '
+  message += str(maxpoints[final_index] - currentpoints[final_index])
+  message += ' changes away from the ideal sequence.'
 
   is_right = False
   if 0.1 < final_grade < 0.9 and options['partial_credit']: is_right = 'Partial'
   elif final_grade >= 0.9: is_right = True
+
+  # No points for placing just one item.
+  if len(answer_word) == 1:
+    message = 'Only one item placed.'
+    final_grade = 0
+    is_right = False
+
+  if final_grade == 1: message = 'This sequence is correct.'
 
   if not options['feedback']: message = ''
 
