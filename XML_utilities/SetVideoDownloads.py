@@ -31,6 +31,9 @@ if args.help:
     sys.exit(instructions)
 choice = args.choice.lower()
 
+if not os.path.exists(args.directory):
+    sys.exit('Directory not found: ' + args.directory)
+
 numfiles = 0
 
 # Walk through the problems folder
@@ -72,4 +75,7 @@ for dirpath, dirnames, filenames in os.walk(args.directory):
         # Increment file counter
         numfiles += 1
 
-print 'Video download options set for ' + str(numfiles) + ' files.'
+if numfiles == 0:
+    print 'No files found - wrong or empty directory?'
+else:
+    print 'Video download options set for ' + str(numfiles) + ' files.'
