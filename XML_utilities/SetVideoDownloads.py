@@ -2,30 +2,39 @@
 import xml.etree.ElementTree as ET
 import sys
 import os
+import argparse
 
 instructions = """
 To use:
-python SetVideoDownloads.py option path/to/video/folder
+python SetVideoDownloads.py choice path/to/video/folder -options
 
-Set your option as...
+Set your choice as...
   "true" to allow downloads of videos and transcripts for every video.
   "false" to disallow downloads of videos and transcripts for every video.
   "transcript" to allow only transcripts to be downloaded.
   "video" to allow only videos to be downloaded.
   "reset" to clear this attribute and let the edX defaults take over.
 
+Options:
+  -h   Print this message and exit
+
+Version: Sept 27, 2017
 """
 
-# Get directory from command line argument
-try:
-    allowDownloads = sys.argv[1]
-    directory = sys.argv[2]
-except IndexError:
-    # Probably the wrong number of arguments
+parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+parser.add_argument('-h', '--help', action='store_true')
+parser.add_argument('choice', default='true')
+parser.add_argument('directory', default='.')
+
+args = parser.parse_args()
+if args.help:
     sys.exit(instructions)
+choice = args.choice.lower()
+
+numfiles = 0
 
 # Walk through the problems folder
-for dirpath, dirnames, filenames in os.walk(directory):
+for dirpath, dirnames, filenames in os.walk(args.directory):
     for eachfile in filenames:
 
         # Get the XML for each file
@@ -33,23 +42,23 @@ for dirpath, dirnames, filenames in os.walk(directory):
         root = tree.getroot()
 
         # If this isn't a video file, skip it.
-        if root.tag is not 'video':
+        if root.tag != 'video':
             continue
 
         # Set the download_track and download_video values
-        if allowDownloads.lower() == 'true':
+        if choice == 'true':
             root.set('download_track', 'true')
             root.set('download_video', 'true')
-        elif allowDownloads.lower() == 'false':
+        elif choice == 'false':
             root.set('download_track', 'false')
             root.set('download_video', 'false')
-        elif allowDownloads.lower() == 'video':
+        elif choice == 'video':
             root.set('download_track', 'false')
             root.set('download_video', 'true')
-        elif allowDownloads.lower() == 'transcript':
+        elif choice == 'transcript':
             root.set('download_track', 'true')
             root.set('download_video', 'false')
-        elif allowDownloads.lower() == 'reset':
+        elif choice == 'reset':
             try:
                 del root.attrib['download_track']
                 del root.attrib['download_video']
@@ -60,3 +69,7 @@ for dirpath, dirnames, filenames in os.walk(directory):
 
         # Save the file
         tree.write(os.path.join(dirpath, eachfile), encoding='UTF-8', xml_declaration=False)
+        # Increment file counter
+        numfiles += 1
+
+print 'Video download options set for ' + str(numfiles) + ' files.'
