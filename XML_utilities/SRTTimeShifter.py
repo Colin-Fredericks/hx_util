@@ -231,9 +231,6 @@ def SRTTimeShifter(args):
     # If the filenames don't exist, say so and quit.
     if file_names == []:
         sys.exit('No file or directory found by that name.')
-    for filename in file_names:
-        if not os.path.exists(filename):
-            sys.exit('File or directory not found: ' + filename)
 
     optionList = []
     if args.help: sys.exit(instructions)
