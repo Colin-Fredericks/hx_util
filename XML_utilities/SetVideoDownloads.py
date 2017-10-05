@@ -18,7 +18,7 @@ Set your choice as...
 Options:
   -h   Print this message and exit
 
-Version: Sept 27, 2017
+Last update: September 27th, 2017
 """
 
 parser = argparse.ArgumentParser(usage=instructions, add_help=False)

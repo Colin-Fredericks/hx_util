@@ -25,6 +25,8 @@ Your options for the number are:
 
 There will probably still be some issues, so you'll need to review.
 This code will help you make a first pass, not a final pass.
+
+Last update: September 28th, 2017
 """
 
 # Here are all the problem types we work on:

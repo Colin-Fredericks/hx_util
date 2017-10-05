@@ -25,6 +25,7 @@ default takes over.
 Options:
   -h  Print help message and exit.
 
+Last update: September 27th, 2017
 """
 
 # Here are all the options for show_answer values:
