@@ -2,6 +2,8 @@ import sys
 import os
 import json
 import HTMLParser
+import argparse
+from glob import glob
 
 instructions = """
 To use:
@@ -117,31 +119,35 @@ def ConvertToSRT(filename, optionlist, dirpath):
 
 # Main function:
 def json2srt(args):
-    if len(args) < 2:
-        # Wrong number of arguments, probably
-        sys.exit(instructions)
 
-    # Get file or directory from command line argument.
-    # With wildcards we might get passed a lot of them.
-    filenames = args[1:]
-    # Get the options and make a list of them for easy reference.
-    options = args[-1]
+    # Handle arguments and flags
+    parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('-o', action='store_true')
+    parser.add_argument('-r', action='store_true')
+    parser.add_argument('file_names', nargs='*')
 
-    # If the "options" match a file or folder name, those aren't options.
-    if os.path.exists(options):
-        options = ''
-    # If they don't, that last filename isn't a filename.
-    else:
-        del filenames[-1]
+    args = parser.parse_args()
+
+    # Replace arguments with wildcards with their expansion.
+    # If a string does not contain a wildcard, glob will return it as is.
+    # Mostly important if we run this on Windows systems.
+    file_names = list()
+    for arg in args.file_names:
+        file_names += glob(arg)
+
+    # If the filenames don't exist, say so and quit.
+    if file_names == []:
+        sys.exit('No file or directory found by that name.')
 
     optionlist = []
-    if 'o' in options: optionlist.append('o')
-    if 'r' in options: optionlist.append('r')
-    if 'h' in options: sys.exit(instructions)
+    if args.help: sys.exit(instructions)
+    if args.o: optionList.append('o')
+    if args.o: optionList.append('r')
 
     filecount = 0
 
-    for name in filenames:
+    for name in file_names:
         # Make sure single files exist.
         assert os.path.exists(name), "File or directory not found."
 
@@ -154,7 +160,7 @@ def json2srt(args):
                 filecount += 1
 
         # If it's a directory and not just as part of a wildcard...
-        if os.path.isdir(name) and len(filenames) == 1:
+        if os.path.isdir(name) and len(file_names) == 1:
             # Recursive version using os.walk for all levels.
             if 'r' in optionlist:
                 for dirpath, dirnames, files in os.walk(name):
