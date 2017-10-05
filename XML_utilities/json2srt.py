@@ -15,6 +15,8 @@ Valid options:
   -o Overwrite. Deletes the .srt.sjson file after it has been converted.
   -r Recursive. Works on .srt.sjson files in subdirectories as well.
   -h Help. Print this message.
+
+Last update: October 5th, 2017
 """
 
 # Split long lines on a space near the middle.
@@ -143,7 +145,7 @@ def json2srt(args):
     optionlist = []
     if args.help: sys.exit(instructions)
     if args.o: optionList.append('o')
-    if args.o: optionList.append('r')
+    if args.r: optionList.append('r')
 
     filecount = 0
 
