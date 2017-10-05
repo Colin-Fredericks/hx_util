@@ -1,5 +1,7 @@
 import sys
 import os
+import argparse
+from glob import glob
 
 instructions = """
 To use:
@@ -16,7 +18,7 @@ Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 
-Last update: September 12th 2017
+Last update: October 5th 2017
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format
@@ -132,10 +134,6 @@ def writeEntry(outFile, entry, index):
 
 # The core loop that calls the important stuff.
 def shiftTimes(inFile, outFile, name, seconds, optionList):
-    # If we're not shifting anything, just return.
-    if seconds == 0:
-        print 'Zero second shift - no files changed.'
-        return False
 
     # Get a list of all the entries.
     SRTEntries = getSRTEntries(inFile)
@@ -206,40 +204,50 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
 
 # Takes in arguments and runs the shifter on each file.
 def SRTTimeShifter(args):
-    # Get arguments
-    if len(args) < 3:
-        # Wrong number of arguments, probably
-        sys.exit(instructions)
 
-    # Get the number of seconds to shift by.
-    seconds = args[1]
+    # Handle arguments and flags
+    parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('-o', action='store_true')
+    parser.add_argument('seconds')
+    parser.add_argument('file_names', nargs='*')
+
+    args = parser.parse_args()
+
+    # Replace arguments with wildcards with their expansion.
+    # If a string does not contain a wildcard, glob will return it as is.
+    # Mostly important if we run this on Windows systems.
+    file_names = list()
+    for arg in args.file_names:
+        file_names += glob(arg)
+
+    # If "seconds" is not a number, it's probably in the wrong place.
     try:
-        seconds = float(seconds)
+        seconds = float(args.seconds)
     except ValueError:
         # Probably fed arguments in wrong order.
         sys.exit(instructions)
-    # Get file or directory from command line argument.
-    # With wildcards we might get passed a lot of them.
-    filenames = args[2:]
-    # Get the options and make a list of them for easy reference.
-    options = args[-1]
 
-    # If the "options" are a .srt file, those aren't options.
-    # If the "options" match a file or folder name, those aren't options.
-    if os.path.exists(options) or options.endswith('.srt'):
-        options = ''
-    # If they ARE options, then that last filename isn't a filename.
-    else:
-        del filenames[-1]
+    # If the filenames don't exist, say so and quit.
+    if file_names == []:
+        sys.exit('No file or directory found by that name.')
+    for filename in file_names:
+        if not os.path.exists(filename):
+            sys.exit('File or directory not found: ' + filename)
 
     optionList = []
-    if 'h' in options: sys.exit(instructions)
-    if 'o' in options: optionList.append('o')
+    if args.help: sys.exit(instructions)
+    if args.o: optionList.append('o')
 
     fileCount = 0
 
+    # If we're not shifting anything, just return.
+    if seconds == 0:
+        print 'Zero second shift - no files changed.'
+        return False
+
     # Convert every file we're passed.
-    for name in filenames:
+    for name in file_names:
         # Make sure single files exist.
         if not os.path.exists(name):
             print "File or directory not found: " + name
@@ -260,7 +268,7 @@ def SRTTimeShifter(args):
                     os.rename(newname, name)
                     fileCount += 1
 
-
+    # Finish by saying how many files we shifted.
     if fileCount > 0:
         plFiles = 'file' if fileCount == 1 else 'files'
         plSeconds = 'second' if seconds == 1 else 'seconds'
