@@ -1,0 +1,599 @@
+0
+00:00:00,950 --> 00:00:04,170
+DAVID KEITH: electricity system--
+the electric power grid is one
+
+1
+00:00:04,170 --> 00:00:06,540
+of humanity's most amazing inventions.
+
+2
+00:00:06,540 --> 00:00:09,590
+For example, when the US
+National Academy of Engineering
+
+3
+00:00:09,590 --> 00:00:13,210
+ranked the most important
+inventions of the 20th century,
+
+4
+00:00:13,210 --> 00:00:16,840
+number one on that list was
+the electric power system.
+
+5
+00:00:16,840 --> 00:00:22,280
+This next list of roughly 10 facts
+defines how that system works today.
+
+6
+00:00:22,280 --> 00:00:25,110
+These are not, in fact, all
+exactly facts, as we'll discover,
+
+7
+00:00:25,110 --> 00:00:28,780
+but they are a very good approximation
+to the way the electricity system now
+
+8
+00:00:28,780 --> 00:00:30,050
+works.
+
+9
+00:00:30,050 --> 00:00:33,270
+First, it is a dense
+interconnected network going
+
+10
+00:00:33,270 --> 00:00:36,000
+between generators and final consumers.
+
+11
+00:00:36,000 --> 00:00:38,150
+Second, there's no storage.
+
+12
+00:00:38,150 --> 00:00:43,810
+To a very good approximation, supply and
+demand must be instantaneously matched.
+
+13
+00:00:43,810 --> 00:00:46,480
+In the United States,
+for example, the capacity
+
+14
+00:00:46,480 --> 00:00:49,130
+flowing in and out of all
+the combined storage systems
+
+15
+00:00:49,130 --> 00:00:54,000
+is about 50 times smaller than the peak
+capacity to generate power on the grid.
+
+16
+00:00:54,000 --> 00:00:56,420
+Third, demand is unresponsive.
+
+17
+00:00:56,420 --> 00:01:00,270
+In the short term, demand
+does not respond to price.
+
+18
+00:01:00,270 --> 00:01:02,870
+This means that electric
+power operators work
+
+19
+00:01:02,870 --> 00:01:07,090
+by forecasting demand, building the
+capacity, generators and transmission
+
+20
+00:01:07,090 --> 00:01:10,380
+systems they need to meet that
+demand, and then operating
+
+21
+00:01:10,380 --> 00:01:13,310
+the system in real time to match demand.
+
+22
+00:01:13,310 --> 00:01:17,140
+And that means in real time down
+to the second to match demand.
+
+23
+00:01:17,140 --> 00:01:20,470
+Fourth, alternating power grids are dynamic.
+
+24
+00:01:20,470 --> 00:01:24,510
+They're dynamic beasts with
+both elasticity and inertia
+
+25
+00:01:24,510 --> 00:01:27,590
+and that elasticity and inertia that
+comes both from mechanical systems
+
+26
+00:01:27,590 --> 00:01:29,900
+and electromagnetic systems combines to make
+
+27
+00:01:29,900 --> 00:01:32,370
+instability, oscillations, oscillations that
+
+28
+00:01:32,370 --> 00:01:34,620
+could potentially break the system.
+
+29
+00:01:34,620 --> 00:01:38,060
+This is completely unlike the flow
+of data in the internet, where
+
+30
+00:01:38,060 --> 00:01:40,620
+we can direct exactly where
+it goes, or for that matter,
+
+31
+00:01:40,620 --> 00:01:43,650
+the flow of water in pipes or
+natural gas in the gas system.
+
+32
+00:01:43,650 --> 00:01:48,230
+It is a dynamic system unlike any
+other and much harder to control.
+
+33
+00:01:48,230 --> 00:01:53,120
+It's important to note that the AC
+power grid is not one single world grid.
+
+34
+00:01:53,120 --> 00:01:55,340
+In North America, for
+example, there are actually
+
+35
+00:01:55,340 --> 00:02:00,640
+four independent, synchronous
+alternating current grids, east, west,
+
+36
+00:02:00,640 --> 00:02:02,120
+Texas, and Quebec.
+
+37
+00:02:02,120 --> 00:02:06,260
+Each of these operates at 60 hertz
+but are independently synchronized.
+
+38
+00:02:06,260 --> 00:02:10,080
+And you can only flow power in
+between them with direct current.
+
+39
+00:02:10,080 --> 00:02:14,020
+Fifth, electricity is in many
+senses a natural monopoly.
+
+40
+00:02:14,020 --> 00:02:17,080
+The very tight coupling
+between supply and demand
+
+41
+00:02:17,080 --> 00:02:20,760
+and the ease in which large suppliers
+can gain what's called market power
+
+42
+00:02:20,760 --> 00:02:24,290
+makes it very hard to have the
+traditional free market mechanisms
+
+43
+00:02:24,290 --> 00:02:26,150
+we see in other parts of the economy.
+
+44
+00:02:26,150 --> 00:02:29,720
+Sixth, the electrification
+of the global energy system
+
+45
+00:02:29,720 --> 00:02:31,840
+has increased steadily over the last century
+
+46
+00:02:31,840 --> 00:02:35,730
+and it's a very good bet that this trend
+will continue over the 21st century.
+
+47
+00:02:35,730 --> 00:02:38,160
+The reason is that from the
+point of view of a consumer,
+
+48
+00:02:38,160 --> 00:02:40,930
+whether an individual consumer
+or industry, electricity
+
+49
+00:02:40,930 --> 00:02:46,440
+is such a fantastic energy carrier,
+high-powered, controllable, efficient,
+
+50
+00:02:46,440 --> 00:02:48,320
+and nonpolluting at point of use.
+
+51
+00:02:48,320 --> 00:02:51,150
+These factors mean that
+consumers and industry
+
+52
+00:02:51,150 --> 00:02:53,630
+will keep using more
+electricity as a fraction
+
+53
+00:02:53,630 --> 00:02:56,190
+of total energy over the next century.
+
+54
+00:02:56,190 --> 00:03:01,510
+Seventh, right of access-- electricity
+is such a necessity for modern life
+
+55
+00:03:01,510 --> 00:03:04,270
+that we treat it differently
+from many other commodities.
+
+56
+00:03:04,270 --> 00:03:07,080
+If, for example, you don't
+pay your bill to Amazon,
+
+57
+00:03:07,080 --> 00:03:11,140
+Amazon is free in a free market
+to stop sending you packages.
+
+58
+00:03:11,140 --> 00:03:12,640
+Electricity is different.
+
+59
+00:03:12,640 --> 00:03:14,840
+We regulate it as one of
+the necessities and we
+
+60
+00:03:14,840 --> 00:03:19,540
+make it much harder for an electricity
+utility to cut off your power
+
+61
+00:03:19,540 --> 00:03:21,040
+if you don't pay your bill.
+
+62
+00:03:21,040 --> 00:03:24,700
+Eighth, the electricity system
+depends on a stock of infrastructure,
+
+63
+00:03:24,700 --> 00:03:28,100
+of capital built up over
+decades and decades.
+
+64
+00:03:28,100 --> 00:03:32,260
+In the US, for example, more than half
+of the generating capacity in the US
+
+65
+00:03:32,260 --> 00:03:35,970
+is greater than 30 years old and
+more than 2/3 of the power poles
+
+66
+00:03:35,970 --> 00:03:38,280
+are also more than 30 years old.
+
+67
+00:03:38,280 --> 00:03:40,830
+Ninth, electricity
+transmission and distribution
+
+68
+00:03:40,830 --> 00:03:43,040
+is extraordinarily efficient.
+
+69
+00:03:43,040 --> 00:03:49,800
+In the United States, the system is 94%
+efficient and the global average is 92%
+
+70
+00:03:49,800 --> 00:03:53,240
+So globally, only 8% of
+electricity generated
+
+71
+00:03:53,240 --> 00:03:55,670
+is lost in the transmission
+and distribution system.
+
+72
+00:03:55,670 --> 00:03:58,020
+It's an amazing feat of engineering.
+
+73
+00:03:58,020 --> 00:04:02,050
+10th and finally, the system
+is amazingly reliable.
+
+74
+00:04:02,050 --> 00:04:06,550
+In the United States, consumers
+get power more than 99.95%
+
+75
+00:04:06,550 --> 00:04:11,200
+of the time and those outages are mostly
+local, where, for example, a tree falls
+
+76
+00:04:11,200 --> 00:04:12,759
+on a distribution pole.
+
+77
+00:04:12,759 --> 00:04:14,800
+The amount of time that
+the whole grid goes down,
+
+78
+00:04:14,800 --> 00:04:18,970
+that we have interconnected failures,
+is extraordinarily infrequent.
+
+79
+00:04:18,970 --> 00:04:22,840
+Those failures have happened only
+once every few decades, on average.
+
+80
+00:04:22,840 --> 00:04:25,320
+These 10 "facts" should
+shape your understanding
+
+81
+00:04:25,320 --> 00:04:26,900
+of the electricity system.
+
+82
+00:04:26,900 --> 00:04:29,550
+But of course, not all of
+these are strictly true.
+
+83
+00:04:29,550 --> 00:04:31,801
+The first four particularly
+are subject to change
+
+84
+00:04:31,801 --> 00:04:34,050
+and we'll talk about them
+in the rest of this section.
+
+85
+00:04:34,050 --> 00:04:37,600
+Here's a short walk through a
+modern electric power system.
+
+86
+00:04:37,600 --> 00:04:42,970
+Generators, almost all of which are
+turbines, steam, gas, water, or wind,
+
+87
+00:04:42,970 --> 00:04:48,110
+turn synchronous three-phase
+alternating generators that make power.
+
+88
+00:04:48,110 --> 00:04:52,680
+Transformers then turn that power
+from high-current low-voltage
+
+89
+00:04:52,680 --> 00:04:54,730
+to high-voltage low-current.
+
+90
+00:04:54,730 --> 00:04:59,650
+The power is moved then by high-voltage
+long-distance transmission lines
+
+91
+00:04:59,650 --> 00:05:01,760
+where other transformers turn it back down
+
+92
+00:05:01,760 --> 00:05:04,270
+to lower-voltage higher-current power, which
+
+93
+00:05:04,270 --> 00:05:06,660
+is distributed in intermediate lines.
+
+94
+00:05:06,660 --> 00:05:09,550
+And then finally, still
+other sets of transformers
+
+95
+00:05:09,550 --> 00:05:13,570
+turn it into lower-voltage power which
+goes through final distribution lines
+
+96
+00:05:13,570 --> 00:05:15,420
+to the end users.
+
+97
+00:05:15,420 --> 00:05:17,200
+Why the high voltage?
+
+98
+00:05:17,200 --> 00:05:19,680
+Power is voltage times current.
+
+99
+00:05:19,680 --> 00:05:23,390
+Suppose you wanted to transmit
+one gigawatt of power.
+
+100
+00:05:23,390 --> 00:05:29,740
+You could do that using one gigavolt and
+one amp or using one giga-amp and one
+
+101
+00:05:29,740 --> 00:05:32,970
+volt. Either of those
+would transmit a gigawatt.
+
+102
+00:05:32,970 --> 00:05:37,920
+But the loss of power in a conductive
+line, like a transmission line,
+
+103
+00:05:37,920 --> 00:05:43,120
+is proportional to I-squared R, the
+current squared times the resistance.
+
+104
+00:05:43,120 --> 00:05:47,390
+So if you double the current, you
+lose four times as much power.
+
+105
+00:05:47,390 --> 00:05:50,380
+This puts a big premium
+on running the systems
+
+106
+00:05:50,380 --> 00:05:53,660
+at low current and low
+current means high voltage
+
+107
+00:05:53,660 --> 00:05:55,410
+for a given amount of power.
+
+108
+00:05:55,410 --> 00:05:58,830
+So in practice, we run at
+higher and higher voltages
+
+109
+00:05:58,830 --> 00:06:02,600
+when we want to transmit power a long
+way because that allows us to transmit
+
+110
+00:06:02,600 --> 00:06:04,790
+power long distances efficiently.
+
+111
+00:06:04,790 --> 00:06:07,340
+Well, you can't directly give
+consumers the high voltages
+
+112
+00:06:07,340 --> 00:06:08,710
+we use for transmission.
+
+113
+00:06:08,710 --> 00:06:12,060
+You'd kill them or blow things
+up or in a more pragmatic note,
+
+114
+00:06:12,060 --> 00:06:14,000
+you'd have to use very thick insulators.
+
+115
+00:06:14,000 --> 00:06:17,340
+So we need ways in the system to
+go between the high voltages we
+
+116
+00:06:17,340 --> 00:06:20,700
+use for transmission to lower voltages
+that we use to actually distribute
+
+117
+00:06:20,700 --> 00:06:23,300
+power to final consumers.
+
+118
+00:06:23,300 --> 00:06:27,210
+With alternating current,
+you can use a transformer.
+
+119
+00:06:27,210 --> 00:06:31,130
+A transformer allows you to go
+between high-current low-voltage
+
+120
+00:06:31,130 --> 00:06:33,910
+to high-voltage low-current or vice versa.
+
+121
+00:06:33,910 --> 00:06:37,960
+And it does this using technology that
+actually is 19th-century technology.
+
+122
+00:06:37,960 --> 00:06:40,980
+They have no moving parts,
+they're easy to build,
+
+123
+00:06:40,980 --> 00:06:43,920
+and large transformers can
+be extraordinarily efficient,
+
+124
+00:06:43,920 --> 00:06:46,370
+more than 98% efficient.
+
+125
+00:06:46,370 --> 00:06:49,250
+It's the transformer that
+works only on AC power,
+
+126
+00:06:49,250 --> 00:06:54,330
+not DC, that is the ultimate
+reason that we have AC power grids.
+

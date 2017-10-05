@@ -1,8 +1,9 @@
 import sys
 import os
 import csv
-import glob
 import shutil
+import argparse
+from glob import glob
 
 instructions = """
 To use:
@@ -15,6 +16,8 @@ Make sure there's one and only one tsv file in this course folder.
 Valid options:
   -h Help. Print this message.
   -c Copy. Makes new copy of file with new name. Old one will still be there.
+
+Last updated: October 5th, 2017
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -23,7 +26,7 @@ def getOriginalNames(course_folder, options):
     nameDict = {}
 
     # Find our course tsv file. There's probably only one.
-    for name in glob.glob(os.path.join(course_folder, '*.tsv')):
+    for name in glob(os.path.join(course_folder, '*.tsv')):
         tsv_file = name
 
     course_tsv_path = os.path.join(course_folder, tsv_file)
@@ -68,33 +71,30 @@ def setNewNames(course_folder, nameDict, options):
 # Main function.
 def SrtRename(args):
 
-    if len(args) < 2:
-        # Wrong number of arguments, probably
-        sys.exit(instructions)
+    # Handle arguments and flags
+    parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('-c', action='store_true')
+    parser.add_argument('file_names', nargs='*')
 
-    # Get file or directory from command line argument.
-    # With wildcards we might get passed a lot of them.
-    filenames = args[1:]
-    # Get the options and make a list of them for easy reference.
-    options = args[-1]
+    args = parser.parse_args()
 
-    # If the "options" are a .srt file, those aren't options.
-    # If the "options" match a file or folder name, those aren't options.
-    if os.path.exists(options) or options.endswith('.srt'):
-        options = ''
-    # If they don't, that last filename isn't a filename.
-    else:
-        del filenames[-1]
+    # Replace arguments with wildcards with their expansion.
+    # If a string does not contain a wildcard, glob will return it as is.
+    # Mostly important if we run this on Windows systems.
+    file_names = list()
+    for arg in args.file_names:
+        file_names += glob(arg)
+
+    # If the filenames don't exist, say so and quit.
+    if file_names == []:
+        sys.exit('No file or directory found by that name.')
 
     optionlist = []
-    if 'h' in options: sys.exit(instructions)
-    if 'c' in options: optionlist.append('c')
+    if args.help: sys.exit(instructions)
+    if args.c: optionlist.append('c')
 
-    for name in filenames:
-        # Make sure single files exist.
-        if not os.path.exists(name):
-            print "File or directory not found: " + name
-            return
+    for name in file_names:
 
         # If it's just a file...
         if os.path.isfile(name):
@@ -104,11 +104,11 @@ def SrtRename(args):
         # If it's a directory...
         if os.path.isdir(name):
             # Get the concordance for this course.
-            nameDict = getOriginalNames(os.path.abspath(name), options)
+            nameDict = getOriginalNames(os.path.abspath(name), optionlist)
 
             # Go into the static folder and rename the files.
             assert os.path.exists(os.path.join(name, 'static')), 'No static folder found.'
-            setNewNames(name, nameDict, options)
+            setNewNames(name, nameDict, optionlist)
 
 if __name__ == "__main__":
     # this won't be run when imported

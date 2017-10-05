@@ -1,0 +1,450 @@
+0
+00:00:00,520 --> 00:00:04,150
+Welcome to Energy within
+Environmental Constraints.
+
+1
+00:00:04,150 --> 00:00:06,750
+This course focuses on the energy system,
+
+2
+00:00:06,750 --> 00:00:11,400
+on the nuts and bolts of how it works,
+how energy flows from gas wells or wind
+
+3
+00:00:11,400 --> 00:00:16,450
+turbines through modern economies to
+power indoor lighting or heavy trucks.
+
+4
+00:00:16,450 --> 00:00:18,450
+Not just the flow of materials, but the flow
+
+5
+00:00:18,450 --> 00:00:22,870
+of money, which determines the
+cost of electricity or diesel fuel.
+
+6
+00:00:22,870 --> 00:00:26,440
+Our goal is not a static
+description of the energy system
+
+7
+00:00:26,440 --> 00:00:31,340
+but rather a description that helps you
+understand how it might be improved.
+
+8
+00:00:31,340 --> 00:00:34,350
+Whether you are working in an
+energy company, a government
+
+9
+00:00:34,350 --> 00:00:37,000
+agency, or an environmental
+group, whether you
+
+10
+00:00:37,000 --> 00:00:39,330
+are a student who hopes to work in energy
+
+11
+00:00:39,330 --> 00:00:42,230
+or a citizen who cares about
+energy in the environment,
+
+12
+00:00:42,230 --> 00:00:45,700
+you want to figure out how to
+make the system work better.
+
+13
+00:00:45,700 --> 00:00:49,720
+"Better" could mean lots of things--
+cheaper, less environmentally
+
+14
+00:00:49,720 --> 00:00:54,320
+destructive, more profitable,
+more secure, or more democratic.
+
+15
+00:00:54,320 --> 00:00:58,350
+Our focus is on improving the
+environmental performance of the energy
+
+16
+00:00:58,350 --> 00:00:59,550
+system.
+
+17
+00:00:59,550 --> 00:01:03,450
+That is only possible if you have some
+rough understanding of how the energy
+
+18
+00:01:03,450 --> 00:01:08,020
+system works and its most important
+environmental constraints, particularly
+
+19
+00:01:08,020 --> 00:01:10,170
+air pollution and climate change.
+
+20
+00:01:10,170 --> 00:01:13,820
+But this is not a broad survey
+of energy and the environment.
+
+21
+00:01:13,820 --> 00:01:17,240
+Our focus is on the energy system
+within environment constraints,
+
+22
+00:01:17,240 --> 00:01:20,860
+which we will teach in less
+depth as boundary conditions.
+
+23
+00:01:20,860 --> 00:01:23,370
+This course aspires to a global perspective
+
+24
+00:01:23,370 --> 00:01:26,970
+although many of our examples are
+drawn from the US energy system,
+
+25
+00:01:26,970 --> 00:01:31,450
+and it aims to look out over the
+next half century or more asking
+
+26
+00:01:31,450 --> 00:01:35,390
+how the energy system might evolve
+to provide energy with a far
+
+27
+00:01:35,390 --> 00:01:37,310
+smaller environmental impact.
+
+28
+00:01:37,310 --> 00:01:40,050
+Environment is not the only energy problem.
+
+29
+00:01:40,050 --> 00:01:44,610
+Before diving in, I want to give
+you my view of how environment fits
+
+30
+00:01:44,610 --> 00:01:47,410
+into the spectrum of energy challenges.
+
+31
+00:01:47,410 --> 00:01:51,200
+It's useful to think of three
+grand energy challenges.
+
+32
+00:01:51,200 --> 00:01:53,640
+First, energy access.
+
+33
+00:01:53,640 --> 00:01:58,430
+About 1.3 billion people lack
+access to electricity, and roughly 2
+
+34
+00:01:58,430 --> 00:02:02,120
+and 1/2 billion lack access
+to modern cooking technology.
+
+35
+00:02:02,120 --> 00:02:04,600
+I don't mean fancy induction stoves.
+
+36
+00:02:04,600 --> 00:02:07,520
+I mean anything other than indoor fires.
+
+37
+00:02:07,520 --> 00:02:10,340
+Lack of access to these
+basic energy services
+
+38
+00:02:10,340 --> 00:02:13,120
+is a profound impediment
+that people struggle
+
+39
+00:02:13,120 --> 00:02:14,960
+to improve their own well-being.
+
+40
+00:02:14,960 --> 00:02:18,880
+Without lighting, for example, one
+cannot study at night after outdoor
+
+41
+00:02:18,880 --> 00:02:19,910
+work is done.
+
+42
+00:02:19,910 --> 00:02:22,430
+Second, energy security.
+
+43
+00:02:22,430 --> 00:02:25,310
+The links between energy
+and conflict are ancient.
+
+44
+00:02:25,310 --> 00:02:28,820
+The Romans could not have assembled
+their armies without an energy system
+
+45
+00:02:28,820 --> 00:02:31,830
+that moved food and forged metals.
+
+46
+00:02:31,830 --> 00:02:34,710
+The British decision to
+switch to an oil-fired navy
+
+47
+00:02:34,710 --> 00:02:38,030
+before the First World War
+greatly increased the navy's speed
+
+48
+00:02:38,030 --> 00:02:41,150
+and lethality, but it came
+with a political decision
+
+49
+00:02:41,150 --> 00:02:46,330
+to found the Anglo-Persian Oil Company
+based on access to oil fields in Iran--
+
+50
+00:02:46,330 --> 00:02:48,690
+then partially under British control.
+
+51
+00:02:48,690 --> 00:02:52,060
+That company is now called
+"BP," and oil related conflict
+
+52
+00:02:52,060 --> 00:02:54,510
+is still central to geopolitics.
+
+53
+00:02:54,510 --> 00:02:57,520
+Likewise, the links between
+nuclear energy and conflict
+
+54
+00:02:57,520 --> 00:02:59,830
+could hardly be tighter.
+
+55
+00:02:59,830 --> 00:03:04,650
+Third and finally, energy in the
+environment-- the topic of this course.
+
+56
+00:03:04,650 --> 00:03:07,880
+Air pollution from energy use
+kills millions of people each year
+
+57
+00:03:07,880 --> 00:03:11,520
+worldwide and shortens the lives
+of people in polluted cities
+
+58
+00:03:11,520 --> 00:03:13,360
+by many years.
+
+59
+00:03:13,360 --> 00:03:15,950
+Carbon dioxide from fossil fuel combustion
+
+60
+00:03:15,950 --> 00:03:20,090
+is on track to change the world's
+climate at a pace and direction
+
+61
+00:03:20,090 --> 00:03:24,670
+that the planet has not witnessed
+for perhaps 55 million years.
+
+62
+00:03:24,670 --> 00:03:28,140
+The rest of the course will focus on
+problems at the intersection of energy
+
+63
+00:03:28,140 --> 00:03:29,720
+and the environment.
+
+64
+00:03:29,720 --> 00:03:32,912
+Climate is a topic that draws
+many to study energy technology.
+
+65
+00:03:32,912 --> 00:03:37,600
+I have worked on climate and
+energy for half my life, 25 years.
+
+66
+00:03:37,600 --> 00:03:42,880
+Climate is a huge challenge, but I urge
+you not to become a climate monomaniac.
+
+67
+00:03:42,880 --> 00:03:47,850
+Other energy problems have real human
+costs, and reforming the energy system
+
+68
+00:03:47,850 --> 00:03:50,770
+involves hard choices that
+sometimes bring these competing
+
+69
+00:03:50,770 --> 00:03:52,610
+goals into conflict.
+
+70
+00:03:52,610 --> 00:03:56,390
+We hope that you will adopt
+three broad learning goals as you
+
+71
+00:03:56,390 --> 00:03:58,390
+work your way through this course.
+
+72
+00:03:58,390 --> 00:04:02,300
+First, to learn a web of
+interrelated facts and skills
+
+73
+00:04:02,300 --> 00:04:06,867
+sufficient to enable sound judgment
+about energy technology and policy.
+
+74
+00:04:06,867 --> 00:04:08,700
+Of course, you can never know all the facts.
+
+75
+00:04:08,700 --> 00:04:11,720
+And on this topic, many "facts" aren't.
+
+76
+00:04:11,720 --> 00:04:15,480
+Lots of facts in the energy world
+are contested and uncertain.
+
+77
+00:04:15,480 --> 00:04:19,490
+But if you know some basic background
+information, some reliable sources
+
+78
+00:04:19,490 --> 00:04:23,220
+of data, and you learn how to make
+quantitative estimates about energy
+
+79
+00:04:23,220 --> 00:04:26,070
+resources, costs, and environmental impacts,
+
+80
+00:04:26,070 --> 00:04:29,470
+you have the tools to critically
+analyze energy challenges
+
+81
+00:04:29,470 --> 00:04:32,350
+and, thus, to contribute to overcoming them.
+
+82
+00:04:32,350 --> 00:04:35,420
+Second, to develop a unified
+understanding of energy
+
+83
+00:04:35,420 --> 00:04:38,730
+flows and transformations
+in industrial society--
+
+84
+00:04:38,730 --> 00:04:41,750
+the flows of energy, from
+sources like solar or coal,
+
+85
+00:04:41,750 --> 00:04:45,440
+to end uses, like lighting or air
+travel, and the transformations
+
+86
+00:04:45,440 --> 00:04:49,020
+from coal to diesel fuel or
+from electricity to aluminum.
+
+87
+00:04:49,020 --> 00:04:53,750
+And third, to gain a rough quantitative
+overview of some of the most important
+
+88
+00:04:53,750 --> 00:04:56,760
+links between energy and
+environmental systems.
+
+89
+00:04:56,760 --> 00:05:00,270
+Why exactly do dieselectrics
+cause so much air pollution?
+
+90
+00:05:00,270 --> 00:05:03,920
+How can you estimate the impact of
+that air pollution on human health?
+
+91
+00:05:03,920 --> 00:05:06,580
+How do carbon emissions
+today cause climate change
+
+92
+00:05:06,580 --> 00:05:09,320
+today or in the 23rd century?
+
+93
+00:05:09,320 --> 00:05:11,370
+How do you compare the cost effectiveness
+
+94
+00:05:11,370 --> 00:05:14,020
+of different ways of
+reducing our climate impact,
+
+95
+00:05:14,020 --> 00:05:19,360
+say, installing efficient lighting
+versus reducing natural gas leaks.
+
