@@ -141,7 +141,7 @@ def getAllKeys(flat_course, key_set=set()):
 
 # Ensure that all dicts have the same entries, adding blanks if needed.
 # flat_course is a list of dictionaries.
-def fillInRows(flat_course):
+def prepRows(flat_course):
 
     # Get a list of all dict keys from the entire nested structure and store it in a set.
     key_set = getAllKeys(flat_course)
@@ -151,6 +151,11 @@ def fillInRows(flat_course):
         for key in key_set:
             if key not in row:
                 row[key]=''
+
+    # Arrange the rows to look like an index,
+    # adding new ones for the container tags.
+    for index, newrow in enumerate(flat_course):
+        sys.exit ('Colin, start work here next time.')
 
     return flat_course
 
@@ -218,7 +223,6 @@ def Make_Course_Outline(args = ['-h']):
         'type': 'course',
         'name': '',
         'url': course_root.attrib['url_name'],
-        'filename': course_root.attrib['url_name'],
         'contents': []
     }
 
@@ -237,7 +241,7 @@ def Make_Course_Outline(args = ['-h']):
             extrasaction='ignore')
         writer.writeheader()
 
-        spreadsheet = fillInRows(courseFlattener(course_dict))
+        spreadsheet = prepRows(courseFlattener(course_dict))
         for index, row in enumerate(spreadsheet):
             for key in row:
                 spreadsheet[index][key] = spreadsheet[index][key]
