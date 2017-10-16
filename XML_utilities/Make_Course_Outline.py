@@ -159,7 +159,7 @@ def prepRows(flat_course):
             'sequential': row['sequential'] if type == 'sequential' else '',
             'name': '',
             'vertical': row['vertical'] if type == 'vertical' else '',
-            'url': '/jump_to_id/' + row['url'],
+            'url': row['url'],
             'type': row['type']
             }
 
@@ -256,7 +256,7 @@ def Make_Course_Outline(args = ['-h']):
 
     # Create a "csv" file with tabs as delimiters
     with open(course_dict['name'] + ' Outline.tsv','wb') as outputfile:
-        fieldnames = ['chapter','sequential','vertical','url']
+        fieldnames = ['chapter','sequential','vertical','url','Concept1','Concept2','Concept3']
 
         writer = csv.DictWriter(outputfile,
             delimiter='\t',
