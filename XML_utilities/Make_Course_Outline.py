@@ -152,12 +152,35 @@ def prepRows(flat_course):
             if key not in row:
                 row[key]=''
 
+    def singleLine(row, type):
+        return {
+            'chapter': row['chapter'] if type == 'chapter' else '',
+            'index': row['index'],
+            'sequential': row['sequential'] if type == 'sequential' else '',
+            'name': '',
+            'vertical': row['vertical'] if type == 'vertical' else '',
+            'url': '/jump_to_id/' + row['url'],
+            'type': row['type']
+            }
+
+    # Set up the new course from the top.
+    new_flat_course = []
+
     # Arrange the rows to look like an index,
     # adding new ones for the container tags.
     for index, newrow in enumerate(flat_course):
-        sys.exit ('Colin, start work here next time.')
+        # Don't run off the end of the course.
+        if index == len(flat_course) - 1:
+            # Instead, compare the final line to the previous one.
+            index = index - 2
+        if newrow['chapter'] != flat_course[index+1]['chapter'] or index == 0:
+            new_flat_course.append(singleLine(flat_course[index], 'chapter'))
+        if newrow['sequential'] != flat_course[index+1]['sequential'] or index == 0:
+            new_flat_course.append(singleLine(flat_course[index], 'sequential'))
+        if newrow['vertical'] != flat_course[index+1]['vertical'] or index == 0:
+            new_flat_course.append(singleLine(flat_course[index], 'vertical'))
 
-    return flat_course
+    return new_flat_course
 
 # Takes a nested structure of lists and dicts that represents the course
 # and returns a single list of dicts where each dict is a component
@@ -233,7 +256,7 @@ def Make_Course_Outline(args = ['-h']):
 
     # Create a "csv" file with tabs as delimiters
     with open(course_dict['name'] + ' Outline.tsv','wb') as outputfile:
-        fieldnames = ['chapter','sequential','vertical','filename','url']
+        fieldnames = ['chapter','sequential','vertical','url']
 
         writer = csv.DictWriter(outputfile,
             delimiter='\t',
