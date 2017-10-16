@@ -40,7 +40,7 @@ def indent(elem, level=0):
 def ConvertToHTML(filename, optionList, dirpath):
 
     # Open the TSV file
-    with open(filename) as tsvfile:
+    with open(filename, 'rU') as tsvfile:
         try:
             # Read in the spreadsheet as a dictionary.
             outline_file = csv.DictReader(tsvfile, delimiter='\t')
@@ -161,7 +161,7 @@ def Outline_to_HTML(args):
         # If it's just a file, convert it.
         if os.path.isfile(name):
             # Make sure this is a TSV file (just check extension)
-            if name.lower().endswith('.tsv'):
+            if name.lower().endswith('.tsv') or name.lower().endswith('.txt'):
                 # Convert it to an HTML snippet
                 rawfile = ConvertToHTML(name, optionlist, False)
 
@@ -174,7 +174,7 @@ def Outline_to_HTML(args):
                 topfiles.extend(files)
                 break
             for eachfile in topfiles:
-                if eachfile.lower().endswith('.tsv'):
+                if eachfile.lower().endswith('.tsv') or eachfile.lower().endswith('.txt'):
                     ConvertToHTML(eachfile, optionlist, dirpath)
                     filecount += 1
 
