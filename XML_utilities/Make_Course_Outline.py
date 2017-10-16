@@ -17,7 +17,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last modified: October 13th, 2017
+Last modified: October 16th, 2017
 """
 
 # Note that we're not including any containers below the verticals, like A/B tests.
