@@ -166,19 +166,20 @@ def prepRows(flat_course):
     # Set up the new course from the top.
     new_flat_course = []
 
-    # Arrange the rows to look like an index,
-    # adding new ones for the container tags.
+    # Arrange the rows to look like a tabbed-out index or TOC,
+    # adding new rows for the container tags.
     for index, newrow in enumerate(flat_course):
-        # Don't run off the end of the course.
-        if index == len(flat_course) - 1:
-            # Instead, compare the final line to the previous one.
-            index = index - 2
-        if newrow['chapter'] != flat_course[index+1]['chapter'] or index == 0:
+        if index == 0:
             new_flat_course.append(singleLine(flat_course[index], 'chapter'))
-        if newrow['sequential'] != flat_course[index+1]['sequential'] or index == 0:
             new_flat_course.append(singleLine(flat_course[index], 'sequential'))
-        if newrow['vertical'] != flat_course[index+1]['vertical'] or index == 0:
             new_flat_course.append(singleLine(flat_course[index], 'vertical'))
+        else:
+            if newrow['chapter'] != flat_course[index-1]['chapter']:
+                new_flat_course.append(singleLine(flat_course[index], 'chapter'))
+            if newrow['sequential'] != flat_course[index-1]['sequential']:
+                new_flat_course.append(singleLine(flat_course[index], 'sequential'))
+            if newrow['vertical'] != flat_course[index-1]['vertical']:
+                new_flat_course.append(singleLine(flat_course[index], 'vertical'))
 
     return new_flat_course
 
