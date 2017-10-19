@@ -81,10 +81,10 @@ def ConvertToHTML(filename, optionList, dirpath):
                 input_tag = ET.SubElement(checkboxes_div, 'input')
                 input_tag.set('type', 'checkbox')
                 input_tag.set('class', 'pageselector')
-                input_tag.set('name', key)
-                input_tag.set('id', key)
+                input_tag.set('name', key.replace(' ','_')) # We're matching these with classes.
+                input_tag.set('id', key.replace(' ','_'))   # Classes can't have spaces.
                 input_label = ET.SubElement(input_tag, 'label')
-                input_label.set('for', key)
+                input_label.set('for', key.replace(' ','_'))
                 input_label.text = key
                 ET.SubElement(checkboxes_div, 'br')
 
@@ -103,7 +103,7 @@ def ConvertToHTML(filename, optionList, dirpath):
             for key in row:
                 if key not in ['chapter','sequential','vertical','url']:
                     if row[key]:
-                        classes += key + ' '
+                        classes += key.replace(' ','_') + ' ' # Spaces not allowed in class names.
             row_tag.set('class', classes.strip())
 
             a_tag = ET.SubElement(row_tag, 'a')
