@@ -78,14 +78,15 @@ def ConvertToHTML(filename, optionList, dirpath):
 
         for key in outline_file.fieldnames:
             if key not in ['chapter','sequential','vertical','url']:
+                ukey = key.decode('utf-8')
                 input_tag = ET.SubElement(checkboxes_div, 'input')
                 input_tag.set('type', 'checkbox')
                 input_tag.set('class', 'pageselector')
-                input_tag.set('name', key.replace(' ','_')) # We're matching these with classes.
-                input_tag.set('id', key.replace(' ','_'))   # Classes can't have spaces.
+                input_tag.set('name', ukey.replace(' ','_')) # We're matching these with classes.
+                input_tag.set('id', ukey.replace(' ','_'))   # Classes can't have spaces.
                 input_label = ET.SubElement(input_tag, 'label')
-                input_label.set('for', key.replace(' ','_'))
-                input_label.text = key
+                input_label.set('for', ukey.replace(' ','_'))
+                input_label.text = ukey
                 ET.SubElement(checkboxes_div, 'br')
 
         # Make a div and a link for each row in the outline.
@@ -103,7 +104,8 @@ def ConvertToHTML(filename, optionList, dirpath):
             for key in row:
                 if key not in ['chapter','sequential','vertical','url']:
                     if row[key]:
-                        classes += key.replace(' ','_') + ' ' # Spaces not allowed in class names.
+                        # Spaces not allowed in class names.
+                        classes += (key.replace(' ','_') + ' ').decode('utf-8')
             row_tag.set('class', classes.strip())
 
             a_tag = ET.SubElement(row_tag, 'a')
@@ -111,7 +113,9 @@ def ConvertToHTML(filename, optionList, dirpath):
             a_tag.set('target','_blank')
             # Only one of these will have a value in it.
             # This takes the name from that one.
-            a_tag.text = row['chapter'] or row['sequential'] or row['vertical']
+            a_tag.text = (row['chapter'].decode('utf-8')
+                or row['sequential'].decode('utf-8')
+                or row['vertical'].decode('utf-8'))
 
 
         # Add tags for the javascript that will make this work.
