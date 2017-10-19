@@ -176,9 +176,12 @@ def prepRows(flat_course):
         else:
             if newrow['chapter'] != flat_course[index-1]['chapter']:
                 new_flat_course.append(singleLine(flat_course[index], 'chapter'))
-            if newrow['sequential'] != flat_course[index-1]['sequential']:
                 new_flat_course.append(singleLine(flat_course[index], 'sequential'))
-            if newrow['vertical'] != flat_course[index-1]['vertical']:
+                new_flat_course.append(singleLine(flat_course[index], 'vertical'))
+            elif newrow['sequential'] != flat_course[index-1]['sequential']:
+                new_flat_course.append(singleLine(flat_course[index], 'sequential'))
+                new_flat_course.append(singleLine(flat_course[index], 'vertical'))
+            elif newrow['vertical'] != flat_course[index-1]['vertical']:
                 new_flat_course.append(singleLine(flat_course[index], 'vertical'))
 
     return new_flat_course
