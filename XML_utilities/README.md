@@ -11,3 +11,8 @@ This is a bunch of batch tools to work directly with a course export (the file s
 * `SrtRename`, which copies all the SRT files that were in use in your course and then uses the sheet from Make_Course_Sheet to rename them to match the original video upload names. Useful for archiving.
 * The **HX Archive Prep** tool, which is an executable that combines Make_Course_Sheet, json2srt, and SrtRename. Download the zip file for the Mac app, or get `HXArchive.py` for the all-in-one script.
 * `SRTTimeShifter.py`, which moves the subtitles in an SRT file forward or backward a specified number of seconds.
+* In the `outline_maker` folder there are a set of related items:
+ * Run `Make_Course_Outline.py` on your course export to create a TSV file with an outline of your course.
+ * Open that in Google Docs and edit it to indicate which items are in which categories. Just mark the appropriate cells with an x.
+ * Then save that as a new TSV file and run `Outline_to_HTML.py` on it to create a linked, filterable HTML outline that you can use as alternative navigation in your course.
+ * Upload `hx-collapse-nav.js` and `hx-collapse-nav.css` to your Files & Uploads folder to complete the process.
