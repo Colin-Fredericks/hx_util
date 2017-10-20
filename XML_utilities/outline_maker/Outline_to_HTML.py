@@ -52,10 +52,15 @@ def ConvertToHTML(filename, optionList, dirpath):
         root = ET.Element('html')
 
         # Add tags for the css.
-        css_tag = ET.SubElement(root, 'link')
-        css_tag.set('rel', 'stylesheet')
-        css_tag.set('type', 'text/css')
-        css_tag.set('href', '/static/hx-collapse-nav.css')
+        nav_css_tag = ET.SubElement(root, 'link')
+        nav_css_tag.set('rel', 'stylesheet')
+        nav_css_tag.set('type', 'text/css')
+        nav_css_tag.set('href', '/static/hx-collapse-nav.css')
+
+        grade_css_tag = ET.SubElement(root, 'link')
+        grade_css_tag.set('rel', 'stylesheet')
+        grade_css_tag.set('type', 'text/css')
+        grade_css_tag.set('href', '/static/hx-grade-reader.css')
 
         # Set up the checkboxes
         checkboxes_div = ET.SubElement(root, 'div')
@@ -120,8 +125,11 @@ def ConvertToHTML(filename, optionList, dirpath):
 
         # Add tags for the javascript that will make this work.
         # This is intentionally at the bottom of the file.
-        js_tag = ET.SubElement(root, 'script')
-        js_tag.set('src','/static/hx-collapse-nav.js')
+        nav_js_tag = ET.SubElement(root, 'script')
+        nav_js_tag.set('src','/static/hx-collapse-nav.js')
+
+        score_js_tag = ET.SubElement(root, 'script')
+        score_js_tag.set('src','/static/hx-grade-reader.js')
 
         # Set the new filename
         new_filename = filename[:-3] + ' HTML.html'
@@ -131,7 +139,7 @@ def ConvertToHTML(filename, optionList, dirpath):
         tree = ET.ElementTree(root)
 
         # Output the new file
-        tree.write(os.path.join(dirpath, new_filename), encoding='UTF-8', xml_declaration=False)
+        tree.write(os.path.join(dirpath, new_filename), encoding='UTF-8', xml_declaration=False, method='html')
         return True
 
 
