@@ -1,5 +1,8 @@
-.hiddenpage {
-    display: none;
+.shrunk {
+    max-height: 0px !important;
+    overflow: hidden !important;
+    -webkit-transition: max-height .3s; /* Safari */
+    transition: max-height .3s;
 }
 
 .checkboxes {
@@ -28,4 +31,11 @@
 .nav-unit {
     font-weight: normal;
     margin-left: 2em;
+}
+
+div.allPages > div {
+    max-height: 25px;
+    overflow: hidden;
+    -webkit-transition: max-height .3s; /* Safari */
+    transition: max-height .3s;
 }
