@@ -47,19 +47,33 @@ function storeGradesToLocalStorage(assignments, names, scores){
 function updateOutline(assignments, names, scores){
   // Add text after every line that contains assignments.
 	for(i = 0; i < names.length; i++){
-		var lines = $('div.nav-sub:contains('+names[i]+')')
-			.filter(function(index){
-				// We need not just "contains" but an exact match.
-				return $(this).text().trim() === names[i];
-			});
+
+		currentScore = scores[i].split('%')[0];
+		if(currentScore < 50){
+			var imagetag = '<span class="icon fa fa-arrow-left" style="color:#cb0712" aria-hidden="true"></span>';
+		}else if( currentScore < 75 ){
+			var imagetag = '<span class="icon fa fa-asterisk" style="color:#ccc313" aria-hidden="true"></span>';
+		}else{
+			var imagetag = '<span class="icon fa fa-check" style="color:#009b00" aria-hidden="true"></span>';
+		}
+
 		gradeInfo = '<span class="gradeInfo">'
-			+ ' - ' + assignments [i] + ': ' + scores[i]
+			+ ' - '
+			+ assignments [i]
+			+ ': '
+			+ scores[i]
+			+ ' '
+			+ imagetag
 			+ '</span>'
 
+			var lines = $('div.nav-sub:contains('+names[i]+')')
+				.filter(function(index){
+					// We need not just "contains" but an exact match.
+					return $(this).text().trim() === names[i];
+				});
 		for(j = 0; j < lines.length; j++){
 			// Duplicate lines are possible. Don't append if it's already there.
 			if($(lines[j]).find('.gradeInfo').length == 0){
-				console.log('appending');
 				$(lines[j]).append(gradeInfo);
 				break;
 			}
@@ -105,27 +119,29 @@ function updateScoresFromProgPage(){
 
 }
 
-
 $(document).ready(function(){
 
-	console.log('working');
+	console.log('grade reader working');
 
 	// Update from LocalStorage, if it's there.
 	getGradesFromLocalStorage();
 
 	// iFrame in the student's own progress page.
-	// Need to replace this with something that adjusts the site's own URL,
-	// so that we don't have to hardcode every course's progress page.
-	var framey = '<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-forms" aria-hidden="true" id="yourprogress" title="Your Progress Page" src="https://courses.edx.org/courses/course-v1:HarvardX+CHEM160+1T2017/progress" style="width:1px; height:1px; margin: 0px; border: none; display:none;" scrolling="no">Your browser does not support IFrames.</iframe>';
+	// First, get its URL.
+	var progressURL = window.url().split('/').slice(0,5).join('/') + '/progress';
+
+	var framey = '<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-forms" aria-hidden="true" id="yourprogress" title="Your Progress Page" src="' + progressURL + '" style="width:1px; height:1px; margin: 0px; border: none; display:none;" scrolling="no">Your browser does not support IFrames.</iframe>';
 	$($('.xblock')[0]).append($(framey));
 
-  // Once the progress page loads, update the outline with grades.
+	var cannotLoad = setTimeout(function(){
+		$('#progressbar').text('Unable to load your scores.');
+	}, 10000);
+
+    // Once the progress page loads, update the outline with grades.
 	$('iframe#yourprogress').load(function() {
+		clearTimeout(cannotLoad);
 		updateScoresFromProgPage();
 	});
 
-	setTimeout(function(){
-		$('#progressbar').text('Unable to load your scores.')
-	}, 10000);
 
 });
