@@ -60,7 +60,7 @@ def ConvertToHTML(filename, optionList, dirpath):
         grade_css_tag = ET.SubElement(root, 'link')
         grade_css_tag.set('rel', 'stylesheet')
         grade_css_tag.set('type', 'text/css')
-        grade_css_tag.set('href', '/static/hx-grade-reader.css')
+        grade_css_tag.set('href', '/static/hx-grade-display.css')
 
         # Set up the checkboxes
         checkboxes_div = ET.SubElement(root, 'div')
