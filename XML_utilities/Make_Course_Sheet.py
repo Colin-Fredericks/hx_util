@@ -18,6 +18,8 @@ You can specify the following options:
     -all (includes all components)
 
 This script may fail on courses with empty containers.
+
+Last update: October 26th, 2017
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
