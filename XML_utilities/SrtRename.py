@@ -3,6 +3,7 @@ import os
 import csv
 import shutil
 import argparse
+import xml.etree.ElementTree as ET
 from glob import glob
 
 instructions = """
@@ -17,7 +18,7 @@ Valid options:
   -h Help. Print this message.
   -c Copy. Makes new copy of file with new name. Old one will still be there.
 
-Last updated: October 5th, 2017
+Last updated: October 26th, 2017
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -25,11 +26,11 @@ def getOriginalNames(course_folder, options):
 
     nameDict = {}
 
-    # Find our course tsv file. There's probably only one.
-    for name in glob(os.path.join(course_folder, '*.tsv')):
-        tsv_file = name
-
-    course_tsv_path = os.path.join(course_folder, tsv_file)
+    # Find our course tsv file. It's based on the course's display_name.
+    tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
+    root = tree.getroot()
+    course_title = root.attrib['display_name']
+    course_tsv_path = os.path.join(course_folder, course_title + '.tsv')
 
     # Open the tsv file.
     with open(course_tsv_path,'rb') as tsvfile:
@@ -37,6 +38,7 @@ def getOriginalNames(course_folder, options):
 
         # Get the right columns
         headers = next(reader)
+        print headers
         upload_column = headers.index('upload_name')
         srt_column = headers.index('sub')
 
