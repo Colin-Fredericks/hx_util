@@ -78,7 +78,7 @@ def SrtRename(args):
     parser.add_argument('-c', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.

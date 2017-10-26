@@ -18,7 +18,7 @@ Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 
-Last update: October 5th 2017
+Last update: October 26th 2017
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format
@@ -212,7 +212,7 @@ def SRTTimeShifter(args):
     parser.add_argument('seconds')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
