@@ -38,7 +38,6 @@ def getOriginalNames(course_folder, options):
 
         # Get the right columns
         headers = next(reader)
-        print headers
         upload_column = headers.index('upload_name')
         srt_column = headers.index('sub')
 
