@@ -16,7 +16,7 @@ Valid options:
   -r Recursive. Works on .srt.sjson files in subdirectories as well.
   -h Help. Print this message.
 
-Last update: October 5th, 2017
+Last update: October 26th, 2017
 """
 
 # Split long lines on a space near the middle.
@@ -129,7 +129,7 @@ def json2srt(args):
     parser.add_argument('-r', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
@@ -144,8 +144,8 @@ def json2srt(args):
 
     optionlist = []
     if args.help: sys.exit(instructions)
-    if args.o: optionList.append('o')
-    if args.r: optionList.append('r')
+    if args.o: optionlist.append('o')
+    if args.r: optionlist.append('r')
 
     filecount = 0
 
@@ -161,8 +161,8 @@ def json2srt(args):
                 ConvertToSRT(name, optionlist, False)
                 filecount += 1
 
-        # If it's a directory and not just as part of a wildcard...
-        if os.path.isdir(name) and len(file_names) == 1:
+        # If it's a directory:
+        if os.path.isdir(name):
             # Recursive version using os.walk for all levels.
             if 'r' in optionlist:
                 for dirpath, dirnames, files in os.walk(name):
