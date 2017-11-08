@@ -130,7 +130,7 @@ $(document).ready(function(){
 	// First, get its URL.
 	var progressURL = window.url().split('/').slice(0,5).join('/') + '/progress';
 
-	var framey = '<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-forms" aria-hidden="true" id="yourprogress" title="Your Progress Page" src="' + progressURL + '" style="width:1px; height:1px; margin: 0px; border: none; display:none;" scrolling="no">Your browser does not support IFrames.</iframe>';
+	var framey = '<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-forms" aria-hidden="true" id="yourprogress" title="Your Progress Page" src="' + progressURL + '" style="height: 0px; border: none; margin-left: 40000px;" scrolling="no">Your browser does not support IFrames.</iframe>';
 	$($('.xblock')[0]).append($(framey));
 
 	var cannotLoad = setTimeout(function(){
