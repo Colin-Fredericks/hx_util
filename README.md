@@ -60,6 +60,7 @@ Currently Available Tools
 * `SrtRename`, which copies all the SRT files that were in use in your course and then uses the sheet from Make_Course_Sheet to rename them to match the original video upload names. Useful for archiving.
 * The **HX Archive Prep** tool, which is an executable that combines Make_Course_Sheet, json2srt, and SrtRename. Download the zip file for the Mac app, or get `HXArchive.py` for the all-in-one script.
 * `SRTTimeShifter.py`, which moves the subtitles in an SRT file forward or backward a specified number of seconds.
+* In the `outline_maker` folder you'll find a way to make a linked, filterable outline of your course that even pulls in student grades.
 
 
 You can run `python filename.py` for each one to have it show a set of instructions.
