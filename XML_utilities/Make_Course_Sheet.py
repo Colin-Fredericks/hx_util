@@ -51,6 +51,31 @@ global_options = ['video']
 # We're skipping many of the skip_tags because they're inline.
 # Need to develop that code to handle them.
 
+# Converts from seconds to hh:mm:ss,msec format
+# Used to convert duration
+def secToHMS(time):
+    # Round it to an integer.
+    time = int(round(float(time), 0))
+
+    # Downconvert through hours.
+    seconds = time % 60
+    time -= seconds
+    minutes = (time / 60) % 60
+    time -= (minutes * 60)
+    hours = (time / 3600) % 24
+
+    # Make sure we get enough zeroes.
+    if seconds == 0: seconds = '00'
+    if seconds < 10: seconds = '0' + unicode(seconds)
+    if minutes == 0: minutes = '00'
+    if minutes < 10: minutes = '0' + unicode(minutes)
+    if hours == 0: hours = '00'
+    if hours < 10: hours = '0' + unicode(hours)
+
+    # Send back a string
+    return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
+
+
 # Always gets the display name.
 # For video and problem files, gets other info too
 def getComponentInfo(folder, filename, depth):
@@ -99,6 +124,11 @@ def getComponentInfo(folder, filename, depth):
                 if src.rfind('.') > 0:
                     src = src[:src.rfind('.')]
                 temp['upload_name'] = src
+
+                # Get duration in seconds
+                duration = child.attrib['duration']
+                temp['duration'] = secToHMS(duration)
+
 
     # get problem information
     if root.tag == 'problem':
@@ -310,7 +340,7 @@ def Make_Course_Sheet(args = ['-h']):
                 fieldnames.append('inner_xml')
         # Include video data if we're dealing with videos
         if 'video' in global_options:
-                fieldnames = fieldnames + ['sub','youtube','edx_video_id','upload_name']
+                fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
 
         writer = csv.DictWriter(outputfile,
             delimiter='\t',
