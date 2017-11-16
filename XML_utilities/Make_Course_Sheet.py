@@ -36,6 +36,7 @@ skip_tags = [
     'library_content',
     'lti',
     'lti_consumer',
+    'oppia',
     'openassessment',
     'poll',
     'recommender',
@@ -117,17 +118,19 @@ def getComponentInfo(folder, filename, depth):
         # In new XML, it's in a video_asset tag.
         for child in root:
             if child.tag == 'video_asset':
-                src = child.attrib['client_video_id']
-                # Stripping the host and folders
-                src = src[src.rfind("/")+1:]
-                # Stripping the extension, if there is one.
-                if src.rfind('.') > 0:
-                    src = src[:src.rfind('.')]
-                temp['upload_name'] = src
+                if 'client_video_id' in child.attrib:
+                    src = child.attrib['client_video_id']
+                    # Stripping the host and folders
+                    src = src[src.rfind("/")+1:]
+                    # Stripping the extension, if there is one.
+                    if src.rfind('.') > 0:
+                        src = src[:src.rfind('.')]
+                    temp['upload_name'] = src
 
-                # Get duration in seconds
-                duration = child.attrib['duration']
-                temp['duration'] = secToHMS(duration)
+                if 'duration' in child.attrib:
+                    # Get duration in seconds
+                    duration = child.attrib['duration']
+                    temp['duration'] = secToHMS(duration)
 
 
     # get problem information
