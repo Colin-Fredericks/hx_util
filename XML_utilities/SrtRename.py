@@ -12,13 +12,12 @@ python SrtRename.py course_folder (options)
 
 Renames the .srt files in a course's /static/ folder to match
 our original uploaded filenames, as described in a CourseName.tsv file.
-Make sure there's one and only one tsv file in this course folder.
 
 Valid options:
   -h Help. Print this message.
   -c Copy. Makes new copy of file with new name. Old one will still be there.
 
-Last updated: October 26th, 2017
+Last updated: November 16th, 2017
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -73,7 +72,7 @@ def setNewNames(course_folder, nameDict, options):
 def SrtRename(args):
 
     # Handle arguments and flags
-    parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-c', action='store_true')
     parser.add_argument('file_names', nargs='*')
@@ -94,6 +93,12 @@ def SrtRename(args):
     optionlist = []
     if args.help: sys.exit(instructions)
     if args.c: optionlist.append('c')
+
+    # Our script might be in the arguments. Don't run on it.
+    for i, f in enumerate(file_names):
+        if sys.argv[0] in f:
+            file_names.remove(f)
+            break
 
     for name in file_names:
 
