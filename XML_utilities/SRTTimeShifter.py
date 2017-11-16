@@ -18,7 +18,7 @@ Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 
-Last update: October 26th 2017
+Last update: November 16th 2017
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format
@@ -30,9 +30,9 @@ def msecToHMS(time):
     msec = time % 1000
     time -= msec
     seconds = (time / 1000) % 60
-    time -= seconds
+    time -= (seconds * 1000)
     minutes = (time / 60 / 1000) % 60
-    time -= minutes
+    time -= (minutes * 60 * 1000)
     hours = (time / 1000 / 3600) % 24
 
     # Make sure we get enough zeroes.
