@@ -2,7 +2,7 @@ import json
 import math
 import random
 
-def textResponseGrader(ans, options = None):
+def textResponseGrader(ans, options = {'min_length': 10}):
 
     parsed = json.loads(ans)
     answer = json.loads(parsed['answer'])['answer']
@@ -11,16 +11,6 @@ def textResponseGrader(ans, options = None):
     answer = answer.strip('"')
     answer = answer.strip('"')
     answer = answer.strip()
-
-    # Check options, set defaults if needed.
-    if options is None or type(options) is not dict:
-        options = dict()
-
-    if type(options) is dict:
-        #   min_length: the minimum length of a response in characters.
-        if 'min_length' not in options:
-            options['min_length'] = 10
-
 
     if len(answer) >= options['min_length']:
         return {
@@ -224,11 +214,20 @@ def levenshtein(s, t):
                levenshtein(s[:-1], t[:-1]) + cost])
     return res
 
-def orderGrader(ans, right_answer, options = {'partial_credit': True, 'feedback': True}):
+def orderGrader(ans, right_answer,
+    options = {'partial_credit': True, 'feedback': True, 'all_correct': False}):
 
   parsed = json.loads(ans)
   answer = json.loads(parsed['answer'])
   answer = answer['pairings']
+
+  if options['all_correct']:
+    return {
+      'input_list': [
+        {'ok': True, 'msg': 'Thank you for your response.', 'grade_decimal': 1},
+      ]
+    }
+
 
   # We only care about the letters and their order in this problem type.
   # Make sure pairings are in order by number.
