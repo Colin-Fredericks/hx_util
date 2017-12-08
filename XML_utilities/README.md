@@ -11,6 +11,7 @@ This is a bunch of batch tools to work directly with a course export (the file s
 * `SrtRename`, which copies all the SRT files that were in use in your course and then uses the sheet from Make_Course_Sheet to rename them to match the original video upload names. Useful for archiving.
 * The **HX Archive Prep** tool, which is an executable that combines Make_Course_Sheet, json2srt, and SrtRename. Download the zip file for the Mac app, or get `HXArchive.py` for the all-in-one script.
 * `SRTTimeShifter.py`, which moves the subtitles in an SRT file forward or backward a specified number of seconds.
+* `PrepAdaptiveProblems.py` makes a course container structure for some of our adaptive assessment implementations. You probably don't need or want this tool; it's an in-house thing.
 * In the `outline_maker` folder there are a set of related items:
  * The `unicodecsv` package, which you should download and keep in the same folder with the python scripts.
  * Run `Make_Course_Outline.py` on your course export to create a TSV file with an outline of your course.
