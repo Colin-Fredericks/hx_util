@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import argparse
 from glob import glob
 import xml.etree.ElementTree as ET
@@ -18,10 +19,21 @@ Options:
   -h Display this message and quit
   -m Move the problems instead of copying them
 
-Last update: December 7th, 2017
+Last update: December 8th, 2017
 """
 
+final_instructions = """
+Complete.
+Copy all the files inside the new_material/problem, /chapter, /sequential, and /vertical
+folders into your course XML structure.
 
+Add the following line to your course/course.xml file:
+<chapter url_name="Adaptive_Problems"/>
+
+Then tar, gzip, and upload the course structure to Studio.
+"""
+
+# Makes a dictionary out of the problem filenames and content groupings.
 def getProblemDict(problem_table):
 
     # Open the problem/CG file. Should be CSV.
@@ -79,6 +91,7 @@ def indent(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+# Creates the XML files for the new piece of course structure.
 def writeCourseXML(problem_dict, folder_paths):
 
     # Get the prefixes for the broad content groups.
@@ -120,6 +133,7 @@ def writeCourseXML(problem_dict, folder_paths):
         for fullgroup in full_content_groups:
             unit_text = '<vertical display_name="' + fullgroup + '">'
             for problem in problem_dict:
+                # Put problems into the units according to the first content group listed for them.
                 if problem_dict[problem] == fullgroup:
                     unit_text += '<problem url_name="' + problem + '"/>'
             unit_text += '</vertical>'
@@ -130,17 +144,26 @@ def writeCourseXML(problem_dict, folder_paths):
             unit.write(os.path.join(folder_paths['unit'], fullgroup + '.xml'),
                 encoding='UTF-8', xml_declaration=False)
 
-
-
-    # Put problems into the units according to the first content group listed for them.
-    # Don't change problems.
-
+# Move/copy problems into new problem/ folder
 def copyProblems(old_folder, doMove, new_folder):
-    # If we're moving problems instead of copying:
-        # Delete the new problem folder and move/rename the old one in its place.
-    # Otherwise:
-        # Copy all the problems from the old problem_folder into the new one.
-    return True
+    try:
+        # If we're moving:
+        if doMove:
+            # Delete the new problem folder and move/rename the old one in its place.
+            shutil.rmtree(old_folder)
+            shutil.move(new_folder, old_folder)
+        # If we're copying:
+        else:
+            # Copy all the problems from the old problem_folder into the new one.
+            for f in os.listdir(old_folder):
+                if os.path.isfile(f):
+                    shutil.copy(f, new_folder)
+
+        return True
+
+    except Error:
+        return False
+
 
 # Main function
 def PrepAdaptiveProblems(args):
@@ -176,10 +199,13 @@ def PrepAdaptiveProblems(args):
     # Populate it with xml files for the content groups.
     writeCourseXML(problem_dict, folder_paths)
     # Put the problems into the right folder
-    # copyProblems(args.problem_folder, args.m, folder_paths.problem)
-
-    # Print instructions for use.
-    # Include the XML tag to insert into the course.xml file.
+    copied = copyProblems(args.problem_folder, args.m, folder_paths.problem)
+    if copied:
+        # Print instructions for use.
+        # Include the XML tag to insert into the course.xml file.
+        print final_instructions
+    else:
+        sys.exit('Error in copying problems to new location.')
 
 
 
