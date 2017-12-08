@@ -145,7 +145,7 @@ def writeCourseXML(problem_dict, folder_paths):
                 encoding='UTF-8', xml_declaration=False)
 
 # Move/copy problems into new problem/ folder
-def copyProblems(old_folder, doMove, new_folder):
+def copyProblems(old_folder, doMove, new_folder, problem_dict):
     try:
         # If we're moving:
         if doMove:
@@ -156,8 +156,8 @@ def copyProblems(old_folder, doMove, new_folder):
         else:
             # Copy all the problems from the old problem_folder into the new one.
             for f in os.listdir(old_folder):
-                if os.path.isfile(f):
-                    shutil.copy(f, new_folder)
+                if os.path.isfile(os.path.join(old_folder, f)):
+                    shutil.copy(os.path.join(old_folder, f), new_folder)
 
         return True
 
@@ -199,7 +199,7 @@ def PrepAdaptiveProblems(args):
     # Populate it with xml files for the content groups.
     writeCourseXML(problem_dict, folder_paths)
     # Put the problems into the right folder
-    copied = copyProblems(args.problem_folder, args.m, folder_paths.problem)
+    copied = copyProblems(args.problem_folder, args.m, folder_paths['problem'], problem_dict)
     if copied:
         # Print instructions for use.
         # Include the XML tag to insert into the course.xml file.
