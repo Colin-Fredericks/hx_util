@@ -2,7 +2,10 @@ import json
 import math
 import random
 
-def textResponseGrader(ans, options = {'min_length': 10}):
+def textResponseGrader(ans, new_options = {'min_length': 10}):
+
+    options = {'min_length': 10}
+    options.update(new_options)
 
     parsed = json.loads(ans)
     answer = json.loads(parsed['answer'])['answer']
@@ -215,11 +218,14 @@ def levenshtein(s, t):
     return res
 
 def orderGrader(ans, right_answer,
-    options = {'partial_credit': True, 'feedback': True, 'all_correct': False}):
+    new_options = {'partial_credit': True, 'feedback': True, 'all_correct': False}):
 
   parsed = json.loads(ans)
   answer = json.loads(parsed['answer'])
   answer = answer['pairings']
+
+  options = {'partial_credit': True, 'feedback': True, 'all_correct': False}
+  options.update(new_options)
 
   if options['all_correct']:
     return {
