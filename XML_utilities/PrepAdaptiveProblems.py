@@ -99,9 +99,14 @@ def writeCourseXML(problem_dict, folder_paths):
     # Probably CG0, CG1, but just take what's left of the first dash or dot.
     # Start with the narrow groups (longer names) and throw out duplicates via set.
     long_content_groups = set(problem_dict[key] for key in problem_dict)
+    long_content_groups = sorted(list(long_content_groups))
+    # Fix the blank entry that shows up when things have a blank group listed.
+    long_content_groups[0] = 'unlisted'
 
+    scg = set()
     for group in long_content_groups:
-        short_content_groups = set(x.split('.')[0] for x in long_content_groups)
+        scg.add(group.split('.')[0])
+    short_content_groups = sorted(list(scg))
 
     # Create a section named "Adaptive Problems"
     section_text = '<chapter display_name="Adaptive Problems" visible_to_staff_only="true">'
@@ -113,8 +118,16 @@ def writeCourseXML(problem_dict, folder_paths):
         section_text += '<sequential url_name="' + shortgroup + '"/>'
         subsection_text = '<sequential display_name="' + shortgroup + '">'
 
-        for longgroup in long_content_groups:
+        # Get the long names for the narrow groupings.
+        local_longs = []
+        for sg in short_content_groups:
+            for lg in long_content_groups:
+                if sg in lg:
+                    local_longs += lg
 
+        for longgroup in local_longs:
+
+            # Get the problems that fall into the current group.
             local_problems = []
             for prob in problem_dict:
                 if problem_dict[prob] == longgroup:
@@ -122,39 +135,53 @@ def writeCourseXML(problem_dict, folder_paths):
 
             local_problems.sort()
 
-            # Crete units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
-            subsection_text += '<vertical url_name="' + longgroup + '"/>'
-            unit_text = '<vertical display_name="' + longgroup + '">'
-            # Restricting verticals to no more than 20 problems each.
-            # We'll use a _number suffix to name them.
+            # Break up the local problems into groups of 20.
+            problem_stack = [local_problems[i:i + 20] for i in xrange(0, len(local_problems), 20)]
+            # Put them into units.
+            for index, plist in enumerate(problem_stack):
+                filename = longgroup + '_' + str(index)
 
-            for problem in problem_dict:
-                # Put problems into the units according to the first content group listed for them.
-                if problem_dict[problem] == longgroup:
+                # Crete units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
+                subsection_text += '<vertical url_name="' + filename + '"/>'
+                unit_text = '<vertical display_name="' + filename + '">'
+                # Restricting verticals to no more than 20 problems each.
+                # We'll use a _number suffix to name them.
+
+                for problem in plist:
+                    # Put problems into the units according to the first content group listed for them.
                     unit_text += '<problem url_name="' + problem + '"/>'
-            unit_text += '</vertical>'
+                unit_text += '</vertical>'
 
-            # Write the unit files.
-            unit = ET.ElementTree(ET.fromstring(unit_text))
-            indent(unit.getroot())
-            unit.write(os.path.join(folder_paths['unit'], longgroup + '.xml'),
-                encoding='UTF-8', xml_declaration=False)
+                # Write the unit files.
+                unit = ET.ElementTree(ET.fromstring(unit_text))
+                indent(unit.getroot())
+                unit.write(
+                    os.path.join(folder_paths['unit'], filename + '.xml'),
+                    encoding='UTF-8',
+                    xml_declaration=False
+                )
 
         subsection_text += '</sequential>'
 
         # Write the subsection files.
         subsection = ET.ElementTree(ET.fromstring(subsection_text))
         indent(subsection.getroot())
-        subsection.write(os.path.join(folder_paths['subsection'], shortgroup + '.xml'),
-            encoding='UTF-8', xml_declaration=False)
+        subsection.write(
+            os.path.join(folder_paths['subsection'], shortgroup + '.xml'),
+            encoding='UTF-8',
+            xml_declaration=False
+        )
 
     section_text += '</chapter>'
 
     # Write the section file.
     section = ET.ElementTree(ET.fromstring(section_text))
     indent(section.getroot())
-    section.write(os.path.join(folder_paths['section'], 'Adaptive_Problems.xml'),
-        encoding='UTF-8', xml_declaration=False)
+    section.write(
+        os.path.join(folder_paths['section'], 'Adaptive_Problems.xml'),
+        encoding='UTF-8',
+        xml_declaration=False
+    )
 
 
 # Move/copy problems into new problem/ folder
