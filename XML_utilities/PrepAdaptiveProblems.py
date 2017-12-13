@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import argparse
+from collections import Counter
 from glob import glob
 import xml.etree.ElementTree as ET
 import unicodecsv as csv
@@ -96,16 +97,57 @@ def writeCourseXML(problem_dict, folder_paths):
 
     # Get the prefixes for the broad content groups.
     # Probably CG0, CG1, but just take what's left of the first dash or dot.
-    # Start with the narrow groups and throw out duplicates via set.
-    full_content_groups = set(problem_dict[key] for key in problem_dict)
-    for group in full_content_groups:
-        content_groups = set(x.split('.')[0] for x in full_content_groups)
+    # Start with the narrow groups (longer names) and throw out duplicates via set.
+    long_content_groups = set(problem_dict[key] for key in problem_dict)
+
+    for group in long_content_groups:
+        short_content_groups = set(x.split('.')[0] for x in long_content_groups)
 
     # Create a section named "Adaptive Problems"
     section_text = '<chapter display_name="Adaptive Problems" visible_to_staff_only="true">'
-    for group in content_groups:
+
+    # Create subsections named for the broad content groupings.
+    for shortgroup in short_content_groups:
+
         # With subsections named after the broad content groupings
-        section_text += '<sequential url_name="' + group + '"/>'
+        section_text += '<sequential url_name="' + shortgroup + '"/>'
+        subsection_text = '<sequential display_name="' + shortgroup + '">'
+
+        for longgroup in long_content_groups:
+
+            local_problems = []
+            for prob in problem_dict:
+                if problem_dict[prob] == longgroup:
+                    local_problems.append(prob)
+
+            local_problems.sort()
+
+            # Crete units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
+            subsection_text += '<vertical url_name="' + longgroup + '"/>'
+            unit_text = '<vertical display_name="' + longgroup + '">'
+            # Restricting verticals to no more than 20 problems each.
+            # We'll use a _number suffix to name them.
+
+            for problem in problem_dict:
+                # Put problems into the units according to the first content group listed for them.
+                if problem_dict[problem] == longgroup:
+                    unit_text += '<problem url_name="' + problem + '"/>'
+            unit_text += '</vertical>'
+
+            # Write the unit files.
+            unit = ET.ElementTree(ET.fromstring(unit_text))
+            indent(unit.getroot())
+            unit.write(os.path.join(folder_paths['unit'], longgroup + '.xml'),
+                encoding='UTF-8', xml_declaration=False)
+
+        subsection_text += '</sequential>'
+
+        # Write the subsection files.
+        subsection = ET.ElementTree(ET.fromstring(subsection_text))
+        indent(subsection.getroot())
+        subsection.write(os.path.join(folder_paths['subsection'], shortgroup + '.xml'),
+            encoding='UTF-8', xml_declaration=False)
+
     section_text += '</chapter>'
 
     # Write the section file.
@@ -114,35 +156,6 @@ def writeCourseXML(problem_dict, folder_paths):
     section.write(os.path.join(folder_paths['section'], 'Adaptive_Problems.xml'),
         encoding='UTF-8', xml_declaration=False)
 
-    # Create subsections named for the broad content groupings.
-    for group in content_groups:
-        subsection_text = '<sequential display_name="' + group + '">'
-        for fullgroup in full_content_groups:
-            # With units named after the content groups.
-            subsection_text += '<vertical url_name="' + fullgroup + '"/>'
-        subsection_text += '</sequential>'
-
-        # Write the subsection files.
-        subsection = ET.ElementTree(ET.fromstring(subsection_text))
-        indent(subsection.getroot())
-        subsection.write(os.path.join(folder_paths['subsection'], group + '.xml'),
-            encoding='UTF-8', xml_declaration=False)
-
-    # Crete units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
-    for group in content_groups:
-        for fullgroup in full_content_groups:
-            unit_text = '<vertical display_name="' + fullgroup + '">'
-            for problem in problem_dict:
-                # Put problems into the units according to the first content group listed for them.
-                if problem_dict[problem] == fullgroup:
-                    unit_text += '<problem url_name="' + problem + '"/>'
-            unit_text += '</vertical>'
-
-            # Write the unit files.
-            unit = ET.ElementTree(ET.fromstring(unit_text))
-            indent(unit.getroot())
-            unit.write(os.path.join(folder_paths['unit'], fullgroup + '.xml'),
-                encoding='UTF-8', xml_declaration=False)
 
 # Move/copy problems into new problem/ folder
 def copyProblems(old_folder, doMove, new_folder, problem_dict):
