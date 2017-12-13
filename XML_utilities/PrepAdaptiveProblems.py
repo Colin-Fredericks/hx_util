@@ -2,8 +2,6 @@ import os
 import sys
 import shutil
 import argparse
-from collections import Counter
-from glob import glob
 import xml.etree.ElementTree as ET
 import unicodecsv as csv
 
@@ -96,7 +94,6 @@ def indent(elem, level=0):
 def writeCourseXML(problem_dict, folder_paths):
 
     # Get the prefixes for the broad content groups.
-    # Probably CG0, CG1, but just take what's left of the first dash or dot.
     # Start with the narrow groups (longer names) and throw out duplicates via set.
     long_content_groups = set(problem_dict[key] for key in problem_dict)
     long_content_groups = sorted(list(long_content_groups))
@@ -105,7 +102,8 @@ def writeCourseXML(problem_dict, folder_paths):
 
     scg = set()
     for group in long_content_groups:
-        scg.add(group.split('.')[0])
+        # Probably named CG0, CG1, but just take what's left of the first dash or dot.
+        scg.add(group.replace('-','.').split('.')[0])
     short_content_groups = sorted(list(scg))
 
     # Create a section named "Adaptive Problems"
@@ -182,7 +180,7 @@ def writeCourseXML(problem_dict, folder_paths):
     )
 
 
-# Move/copy problems into new problem/ folder
+# Move/copy problems into the new problem/ folder
 def copyProblems(old_folder, doMove, new_folder, problem_dict):
     try:
         # If we're moving:
@@ -244,7 +242,6 @@ def PrepAdaptiveProblems(args):
         print final_instructions
     else:
         sys.exit('Error in copying problems to new location.')
-
 
 
 if __name__ == "__main__":
