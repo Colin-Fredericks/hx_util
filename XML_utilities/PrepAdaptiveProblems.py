@@ -118,16 +118,15 @@ def writeCourseXML(problem_dict, folder_paths):
         section_text += '<sequential url_name="' + shortgroup + '"/>'
         subsection_text = '<sequential display_name="' + shortgroup + '">'
 
-        # Get the long names for the narrow groupings.
+        # Get the narrow groups that fit within the current broad group.
         local_longs = []
-        for sg in short_content_groups:
-            for lg in long_content_groups:
-                if sg in lg:
-                    local_longs += lg
+        for lg in long_content_groups:
+            if lg.startswith(shortgroup):
+                local_longs.append(lg)
 
         for longgroup in local_longs:
 
-            # Get the problems that fall into the current group.
+            # Get the problems that fall into the current narrow group.
             local_problems = []
             for prob in problem_dict:
                 if problem_dict[prob] == longgroup:
@@ -139,13 +138,12 @@ def writeCourseXML(problem_dict, folder_paths):
             problem_stack = [local_problems[i:i + 20] for i in xrange(0, len(local_problems), 20)]
             # Put them into units.
             for index, plist in enumerate(problem_stack):
-                filename = longgroup + '_' + str(index)
+                # We'll use a _part_number suffix to name them.
+                filename = longgroup + '_part_' + str(index)
 
-                # Crete units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
+                # Create units named "CG1.0.1", "CG1.1.3", etc. for the narrow content groupings
                 subsection_text += '<vertical url_name="' + filename + '"/>'
                 unit_text = '<vertical display_name="' + filename + '">'
-                # Restricting verticals to no more than 20 problems each.
-                # We'll use a _number suffix to name them.
 
                 for problem in plist:
                     # Put problems into the units according to the first content group listed for them.
