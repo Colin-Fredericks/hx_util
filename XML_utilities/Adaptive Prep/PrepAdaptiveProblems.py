@@ -62,8 +62,8 @@ def writeFolderStructure(problem_folder):
         'problem': 'problem'
     }
 
-    # Make new_material directory in parent of problem_folder
-    root = os.path.abspath(os.path.join(problem_folder, os.pardir, 'new_material'))
+    # Make new_material directory in script folder
+    root = os.path.abspath(os.path.join(sys.path[0], 'upload_course'))
     if not os.path.exists(root):
         os.makedirs(root)
     folder_paths = { x: os.path.join(root, folder_names[x]) for x in folder_names }
@@ -76,10 +76,10 @@ def writeFolderStructure(problem_folder):
 
 # For prettifying XML.
 def indent(elem, level=0):
-    i = "\n" + level*"  "
+    i = '\n' + level*'  '
     if len(elem):
         if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
+            elem.text = i + '  '
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
         for elem in elem:
