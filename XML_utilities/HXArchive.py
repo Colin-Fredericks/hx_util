@@ -4,20 +4,41 @@ import Make_Course_Sheet
 import json2srt
 import SrtRename
 
-filenames = [os.path.basename(word) for word in sys.argv]
+######################################
+# HarvardX Archive Prep Script
+#
+# Usage: python HXArchive.py path/to/course/folder
+# Calls multiple scripts to help with the archive process for HarvardX courses.
+# Passes all arguments through to the scripts.
+#
+# Last Update: Dec 20 2017
+######################################
+
+def runArchive(args):
+    # Make the video spreadsheet
+    Make_Course_Sheet.Make_Course_Sheet(args)
+    # Transform all the .sjson files to .srt
+    json2srt.json2srt(args + ['-r'])
+    # Rename (copy) the SRT files to match our upload names
+    SrtRename.SrtRename(args + ['-c'])
+    #Done!
+    print 'SRT archive prep complete.'
+    print 'Your renamed SRT files are in the static/ folder.'
 
 # Make sure we're running on the course folder, not something else.
-if 'course.xml' in filenames:
-    sys.exit('Please run me on a course folder, not the course.xml file.')
-if 'course' not in filenames:
-    sys.exit('Please run me on a course folder.')
+# Note that the course folder is not always named "course",
+# so we need to look for the course.xml file.
+if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
+    print 'Please run me on a course folder, not the course.xml file.'
 
-# Make the video spreadsheet
-Make_Course_Sheet.Make_Course_Sheet(sys.argv)
-# Transform all the .sjson files to .srt
-json2srt.json2srt(sys.argv + ['-r'])
-# Rename (copy) the SRT files to match our upload names
-SrtRename.SrtRename(sys.argv + ['-c'])
-#Done!
-print 'SRT archive prep complete.'
-print 'Your renamed SRT files are in the static/ folder.'
+for directory in sys.argv:
+    if os.path.isdir(directory):
+        if directory == 'course':
+            print 'found course folder: ' + directory
+            runArchive(sys.argv)
+        else:
+            if 'course.xml' in [os.path.basename(f) for f in os.listdir(directory)]:
+                print 'found course folder: ' + directory
+                runArchive(sys.argv)
+            else:
+                print 'No course.xml file found in ' + directory
