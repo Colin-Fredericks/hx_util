@@ -16,6 +16,7 @@ our original uploaded filenames, as described in a CourseName.tsv file.
 Valid options:
   -h Help. Print this message.
   -c Copy. Makes new copy of file with new name. Old one will still be there.
+  -n New folder. Puts SRTs in a new folder that's a sibling of the course folder.
 
 Last updated: November 16th, 2017
 """
@@ -44,19 +45,30 @@ def getOriginalNames(course_folder, options):
         for row in reader:
             nameDict[row[srt_column]] = row[upload_column]
 
-    return nameDict
+    return nameDict, course_title
 
 
 # Set all the srt filenames to be
-def setNewNames(course_folder, nameDict, options):
+def setNewNames(course_folder, nameDict, options, course_title):
     static_folder = os.path.join(os.path.abspath(course_folder), 'static')
+
+    if 'n' in options:
+        # If we're putting it in a new folder, make it as a child of the course folder.
+        target_folder = os.path.join(os.path.abspath(course_folder), os.pardir, course_title + '_SRTs')
+        if not os.path.exists(target_folder):
+            os.mkdir(target_folder)
+    else:
+        # Otherwise, put them in the static folder.
+        target_folder = static_folder
+
+
     filecount = 0
 
     for srt in nameDict:
         # Strip off the .sjson extension since we're renaming only SRTs.
         oldname = os.path.join(static_folder, srt.replace('.sjson',''))
         # Add .mp4 to the upload filenames because they're videos
-        newname = os.path.join(static_folder, nameDict[srt] + '.srt')
+        newname = os.path.join(target_folder, nameDict[srt] + '.srt')
 
         # Rename the files.
         if os.path.exists(oldname):
@@ -65,6 +77,7 @@ def setNewNames(course_folder, nameDict, options):
             else:
                 os.rename(oldname, newname)
             filecount += 1
+
     print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if 'c' in options else '.')
 
 
@@ -75,6 +88,7 @@ def SrtRename(args):
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-c', action='store_true')
+    parser.add_argument('-n', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args(args)
@@ -93,6 +107,7 @@ def SrtRename(args):
     optionlist = []
     if args.help: sys.exit(instructions)
     if args.c: optionlist.append('c')
+    if args.n: optionlist.append('n')
 
     # Our script might be in the arguments. Don't run on it.
     for i, f in enumerate(file_names):
@@ -110,11 +125,11 @@ def SrtRename(args):
         # If it's a directory...
         if os.path.isdir(name):
             # Get the concordance for this course.
-            nameDict = getOriginalNames(os.path.abspath(name), optionlist)
+            nameDict, course_title = getOriginalNames(os.path.abspath(name), optionlist)
 
             # Go into the static folder and rename the files.
             assert os.path.exists(os.path.join(name, 'static')), 'No static folder found.'
-            setNewNames(name, nameDict, optionlist)
+            setNewNames(name, nameDict, optionlist, course_title)
 
 if __name__ == "__main__":
     # this won't be run when imported
