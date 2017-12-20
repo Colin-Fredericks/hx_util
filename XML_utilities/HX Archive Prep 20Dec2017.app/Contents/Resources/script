@@ -20,10 +20,10 @@ def runArchive(args):
     # Transform all the .sjson files to .srt
     json2srt.json2srt(args + ['-r'])
     # Rename (copy) the SRT files to match our upload names
-    SrtRename.SrtRename(args + ['-c'])
+    SrtRename.SrtRename(args + ['-c','-n'])
     #Done!
     print 'SRT archive prep complete.'
-    print 'Your renamed SRT files are in the static/ folder.'
+    print 'Your renamed SRT files are a new folder, in the same directory as your course folder.'
 
 # Make sure we're running on the course folder, not something else.
 # Note that the course folder is not always named "course",
