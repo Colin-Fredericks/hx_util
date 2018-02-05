@@ -11,9 +11,8 @@ Instructions for use:
 
 `python PrepAdaptiveProblems.py path/to/problem_table.csv path/to/problem_folder (options)`
 
-6. Tar and gzip the resulting `upload_course` folder.
-7. Upload to a blank edX course (or an existing one, if you're ok with overwriting).
+6. Tar and gzip the resulting `upload_course` folder. You can use the command line or the included Automator application (runs on macs).
 
-Done!
+Done! You can upload the resulting to a blank edX course (or an existing one, if you're ok with overwriting), or you can hand it off to someone as a single file now.
 
-If you want to see the available options, run the script without any arguments or with -h.
+If you want to see the available options, run the script without any arguments, or with -h.
