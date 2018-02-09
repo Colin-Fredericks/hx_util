@@ -34,13 +34,14 @@ def Check_File_Links(filename):
 
         links = soup.find_all('a')
         urls = [link.get('href') for link in links
-                if link.get('href') and link.get('href')[0:4]=='http']
+                if link.get('href') and ( link.get('href')[0:4]=='http' or link.get('href')[0:4]=='https' ) ]
 
         results = []
         for i, url in enumerate(urls,1):
             try:
                 r = requests.get(url)
                 report = str(r.status_code)
+                print(report)
                 if r.history:
                     history_status_codes = [str(h.status_code) for h in r.history]
                     report += ' [HISTORY: ' + ', '.join(history_status_codes) + ']'
@@ -81,6 +82,7 @@ def Check_File_Links(filename):
                 print(result[0], '-', result[2])
 
         print('*********')
+
 
 # Go to just the parts of the course we care about.
 def Traverse_Course(directory):
