@@ -5,9 +5,15 @@
 
 from __future__ import print_function
 import requests
+from requests.packages.urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import sys
 import os
 from bs4 import BeautifulSoup
+
+# Disables warnings from insecure HTTPS requests.
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 instructions = """
 To use:
@@ -34,14 +40,22 @@ def Check_File_Links(filename):
 
         links = soup.find_all('a')
         urls = [link.get('href') for link in links
-                if link.get('href') and ( link.get('href')[0:4]=='http' or link.get('href')[0:4]=='https' ) ]
+                if link.get('href') and ( link.get('href')[0:4]=='http' or link.get('href')[0:5]=='https' ) ]
 
         results = []
         for i, url in enumerate(urls,1):
             try:
-                r = requests.get(url)
+                s = requests.Session()
+                retries = Retry(total=10,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 500, 502, 503, 504 ])
+                if(link.get('href')[0:4]=='http'):
+                    s.mount('http://', HTTPAdapter(max_retries=retries))
+                else:
+                    s.mount('https://', HTTPAdapter(max_retries=retries))
+                # Note: This doesn't care if the remote host's SSL certificate is valid or not.
+                r = s.get(url, verify=False)
                 report = str(r.status_code)
-                print(report)
                 if r.history:
                     history_status_codes = [str(h.status_code) for h in r.history]
                     report += ' [HISTORY: ' + ', '.join(history_status_codes) + ']'
@@ -80,6 +94,9 @@ def Check_File_Links(filename):
         for result in results:
             if result[0] != 200:
                 print(result[0], '-', result[2])
+            if result[0] == 0:
+                print('Full Result:')
+                print(result)
 
         print('*********')
 
