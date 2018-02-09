@@ -1,5 +1,5 @@
 # Link checker for edX archives.
-# Requires the BeautifulSoup 4+ and Requests libraries.
+# Requires lxml, BeautifulSoup 4+, and Requests
 # Borrows heavily from code on Webucator.
 # https://www.webucator.com/blog/2016/05/checking-your-sitemap-for-broken-links-with-python/
 
@@ -23,57 +23,66 @@ You can specify the following options:
 Last update: February 9th, 2018
 """
 
-def Check_File_Links(f):
+# Checks to see whether the links are valid.
+def Check_File_Links(filename):
 
-    sitemap = 'http://www.nasa.gov/sitemap/sitemap_nasa.html'
+    with open(filename) as inputFile:
+        if filename.endswith('.html'):
+            soup = BeautifulSoup(inputFile, 'html.parser')
+        else:
+            soup = BeautifulSoup(inputFile, 'lxml')
 
-    r = requests.get(sitemap)
-    html = r.content
+        links = soup.find_all('a')
+        urls = [link.get('href') for link in links
+                if link.get('href') and link.get('href')[0:4]=='http']
 
-    soup = BeautifulSoup(html, 'html.parser')
-    links = soup.find_all('a')
-    urls = [link.get('href') for link in links
-            if link.get('href') and link.get('href')[0:4]=='http']
+        results = []
+        for i, url in enumerate(urls,1):
+            try:
+                r = requests.get(url)
+                report = str(r.status_code)
+                if r.history:
+                    history_status_codes = [str(h.status_code) for h in r.history]
+                    report += ' [HISTORY: ' + ', '.join(history_status_codes) + ']'
+                    result = (r.status_code, r.history, url, 'No error. Redirect to ' + r.url)
+                elif r.status_code == 200:
+                    result = (r.status_code, r.history, url, 'No error. No redirect.')
+                else:
+                    result = (r.status_code, r.history, url, 'Error?')
+            except Exception as e:
+                result = (0, [], url, e)
 
-    results = []
-    for i, url in enumerate(urls,1):
-        try:
-            r = requests.get(url)
-            report = str(r.status_code)
-            if r.history:
-                history_status_codes = [str(h.status_code) for h in r.history]
-                report += ' [HISTORY: ' + ', '.join(history_status_codes) + ']'
-                result = (r.status_code, r.history, url, 'No error. Redirect to ' + r.url)
-            elif r.status_code == 200:
-                result = (r.status_code, r.history, url, 'No error. No redirect.')
-            else:
-                result = (r.status_code, r.history, url, 'Error?')
-        except Exception as e:
-            result = (0, [], url, e)
+            results.append(result)
 
-        results.append(result)
+        #Sort by status and then by history length
+        results.sort(key=lambda result:(result[0],len(result[1])))
 
-    #Sort by status and then by history length
-    results.sort(key=lambda result:(result[0],len(result[1])))
+        # Skip files where we have nothing to say.
+        if len(results) == 0:
+            return
 
-    #301s - may want to clean up 301s if you have multiple redirects
-    print('Redirects:')
-    i = 0
-    for result in results:
-        if len(result[1]):
-            i += 1
-            print(i, end='. ')
-            for response in result[1]:
-                print('>>', response.url, end='\n\t')
-            print('>>>>',result[3])
+        print(os.path.basename(filename))
 
-    #non-200s
-    print('\n==========\nERRORS')
-    for result in results:
-        if result[0] != 200:
-            print(result[0], '-', result[2])
+        #301s - may want to clean up 301s if you have multiple redirects
+        print('Redirects:')
+        i = 0
+        for result in results:
+            if len(result[1]):
+                i += 1
+                print(i, end='. ')
+                for response in result[1]:
+                    print('>>', response.url, end='\n\t')
+                print('>>>>',result[3])
 
-#
+        #non-200s
+        print('\n==========\nERRORS')
+        for result in results:
+            if result[0] != 200:
+                print(result[0], '-', result[2])
+
+        print('*********')
+
+# Go to just the parts of the course we care about.
 def Traverse_Course(directory):
     # These are the folders with things that might have links.
     check_folders = [ 'html', 'problem', 'info', 'tabs' ]
@@ -82,10 +91,12 @@ def Traverse_Course(directory):
     # Go into all those folders and check the links in every file.
     for folder in check_folders:
         print('Folder: ' + folder)
-        for f in os.listdir(os.path.join(directory, folder)):
-            if f.endswith('.html') or (f.endswith('.xml') and folder != 'html'):
-                print(f)
-                # Check_File_Links(f)
+        if os.path.exists(os.path.join(directory, folder)):
+            for f in os.listdir(os.path.join(directory, folder)):
+                if f.endswith('.html') or (f.endswith('.xml') and folder != 'html'):
+                    Check_File_Links(os.path.join(directory, folder, f))
+        else:
+            print('(Blank)')
 
 
 # Main function
