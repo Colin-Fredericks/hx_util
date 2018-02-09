@@ -1,0 +1,115 @@
+# Link checker for edX archives.
+# Requires the BeautifulSoup 4+ and Requests libraries.
+# Borrows heavily from code on Webucator.
+# https://www.webucator.com/blog/2016/05/checking-your-sitemap-for-broken-links-with-python/
+
+from __future__ import print_function
+import requests
+import sys
+import os
+from bs4 import BeautifulSoup
+
+instructions = """
+To use:
+
+python linkcheck.py path/to/course/folder/
+
+You will see a list of broken links and redirects that you may want to fix.
+Links to password-protected sites (like edX) may appear broken.
+
+You can specify the following options:
+    -h  Print this message and exit.
+
+Last update: February 9th, 2018
+"""
+
+def Check_File_Links(f):
+
+    sitemap = 'http://www.nasa.gov/sitemap/sitemap_nasa.html'
+
+    r = requests.get(sitemap)
+    html = r.content
+
+    soup = BeautifulSoup(html, 'html.parser')
+    links = soup.find_all('a')
+    urls = [link.get('href') for link in links
+            if link.get('href') and link.get('href')[0:4]=='http']
+
+    results = []
+    for i, url in enumerate(urls,1):
+        try:
+            r = requests.get(url)
+            report = str(r.status_code)
+            if r.history:
+                history_status_codes = [str(h.status_code) for h in r.history]
+                report += ' [HISTORY: ' + ', '.join(history_status_codes) + ']'
+                result = (r.status_code, r.history, url, 'No error. Redirect to ' + r.url)
+            elif r.status_code == 200:
+                result = (r.status_code, r.history, url, 'No error. No redirect.')
+            else:
+                result = (r.status_code, r.history, url, 'Error?')
+        except Exception as e:
+            result = (0, [], url, e)
+
+        results.append(result)
+
+    #Sort by status and then by history length
+    results.sort(key=lambda result:(result[0],len(result[1])))
+
+    #301s - may want to clean up 301s if you have multiple redirects
+    print('Redirects:')
+    i = 0
+    for result in results:
+        if len(result[1]):
+            i += 1
+            print(i, end='. ')
+            for response in result[1]:
+                print('>>', response.url, end='\n\t')
+            print('>>>>',result[3])
+
+    #non-200s
+    print('\n==========\nERRORS')
+    for result in results:
+        if result[0] != 200:
+            print(result[0], '-', result[2])
+
+#
+def Traverse_Course(directory):
+    # These are the folders with things that might have links.
+    check_folders = [ 'html', 'problem', 'info', 'tabs' ]
+    # We should also check folders that have drafts.
+
+    # Go into all those folders and check the links in every file.
+    for folder in check_folders:
+        print('Folder: ' + folder)
+        for f in os.listdir(os.path.join(directory, folder)):
+            if f.endswith('.html') or (f.endswith('.xml') and folder != 'html'):
+                print(f)
+                # Check_File_Links(f)
+
+
+# Main function
+def Check_Course_Links(args = ['-h']):
+
+    if len(args) == 1 or '-h' in args or '--h' in args:
+        # If run with -h or without argument, show instructions.
+        sys.exit(instructions)
+
+    # Make sure we're running on the course folder, not something else.
+    # Note that the course folder is not always named "course",
+    # so we need to look for the course.xml file.
+    if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
+        print('Please run me on a course folder, not the course.xml file.')
+
+    for directory in sys.argv:
+        if os.path.isdir(directory):
+            if 'course.xml' in [os.path.basename(f) for f in os.listdir(directory)]:
+                print('found course folder: ' + directory)
+                Traverse_Course(directory)
+            else:
+                sys.exit('No course.xml file found in ' + directory)
+
+
+if __name__ == "__main__":
+    # this won't be run when imported
+    Check_Course_Links(sys.argv)
