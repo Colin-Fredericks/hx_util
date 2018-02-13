@@ -14,6 +14,7 @@ which shows the location of each video and the srt filename for that video.
 You can specify the following options:
     -problems (includes problems AND problem XML instead of videos)
     -html (includes just HTML components)
+    -link (lists all links in html and problem components)
     -video (forces inclusion of video with html or problems)
     -all (includes all components)
 
@@ -26,6 +27,8 @@ Last update: January 26th, 2018
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+# Auxiliary folders to check when making the list of links.
+aux_folders = ['tabs','info','static']
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
 skip_tags = [
@@ -77,6 +80,31 @@ def secToHMS(time):
     # Send back a string
     return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
 
+
+# get links from XML pages
+def getXMLLinks(root_node):
+    links = []
+    for link in root_node.findall('a'):
+        newlink = {
+            'text': link.text,
+            'href': link.attrib['href']
+        }
+        links.append(newlink)
+    return links
+
+
+# get links from HTML pages
+def getHTMLLinks(root_text):
+    soup = BeautifulSoup(root_text, 'html.parser')
+    links = []
+
+    for link in soup.findAll('a', attrs={'href': re.compile("*")):
+        links.append({
+            'href': link.get('href'),
+            'text': ''.join(link.contents[0])
+        })
+
+    return links
 
 # Always gets the display name.
 # For video and problem files, gets other info too
@@ -142,8 +170,21 @@ def getComponentInfo(folder, filename, depth):
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
             temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('unicode_escape')
+            temp['links'] = getXMLLinks(root)
         else:
             temp['inner_xml'] = 'No XML.'
+
+    if root.tag == 'html':
+        # Most of the time our XML will just point to a separate HTML file.
+        # In those cases, go open that file and get the links from it.
+        if root.text is None:
+            innerfilename = root.attrib['filename']
+            Htree = ET.parse('html/' + innerfilename + '.html')
+            Hroot = Htree.getroot()
+            temp['links'] = getHTMLLinks("".join(Hroot.itertext()))
+        # If it's declared inline, just get the links right away.
+        else:
+            temp['links'] = getHTMLLinks("".join(root.itertext()))
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -175,7 +216,8 @@ def drillDown(folder, filename, depth):
             'type': child.tag,
             'name': '',
             'url': '',
-            'contents': []
+            'contents': [],
+            'links': []
         }
 
         # get display_name or use placeholder
@@ -279,7 +321,13 @@ def courseFlattener(course_dict, new_row={}):
     else:
         # Don't include the wiki and certain other items.
         if temp_row['type'] not in skip_tags:
-            return [temp_row]
+            # If there are links in this row, break it into multiple entries.
+            if len(temp_row['links']) > 0:
+                temp_rows = []
+                for link in temp_row['links']:
+                    # START HERE NEXT TIME
+            else:
+                return [temp_row]
 
 # Main function
 def Make_Course_Sheet(args = ['-h']):
@@ -312,9 +360,15 @@ def Make_Course_Sheet(args = ['-h']):
     if '-html' in args or '--html' in args:
         global_options.append('html')
         global_options.remove('video')
+    if '-links' in args or '--links' in args:
+        global_options.append('links')
+        global_options.remove('video')
     if '-video' in args or '--video' in args:
         if 'video' not in global_options:
             global_options.append('video')
+
+    if 'links' in global_options:
+        from bs4 import BeautifulSoup
 
     # Open course's root xml file
     # Get the current course run filename
@@ -343,6 +397,9 @@ def Make_Course_Sheet(args = ['-h']):
         if 'problems' in global_options:
                 fieldnames.append('inner_xml')
         # Include video data if we're dealing with videos
+        if 'links' in global_options:
+                fieldnames = fieldnames + ['links']
+        # Include video data if we're dealing with videos
         if 'video' in global_options:
                 fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
 
@@ -361,6 +418,8 @@ def Make_Course_Sheet(args = ['-h']):
         if 'all' in global_options:
             printable = spreadsheet
         else:
+            if 'links' in global_options:
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem']]
             if 'html' in global_options:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if 'video' in global_options:
