@@ -81,17 +81,38 @@ def secToHMS(time):
     # Send back a string
     return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
 
+# Adds notes to links based on file type
+def describeLinkData(newlink):
+    image_types = ['.png','.gif','.jpg','.jpeg','.svg','.tiff','.tif','.bmp','.jp2','.jif','.pict']
+    if newlink['href'].endswith(tuple(image_types)):
+        newlink['text'] += '(image link)'
+    if newlink['href'].endswith('.pdf'):    newlink['text'] += '(PDF file)'
+    if newlink['href'].endswith('.ps'):     newlink['text'] += '(PostScript file)'
+    if newlink['href'].endswith('.zip'):    newlink['text'] += '(zip file)'
+    if newlink['href'].endswith('.tar.gz'): newlink['text'] += '(tarred gzip file)'
+    if newlink['href'].endswith('.gz'):     newlink['text'] += '(gzip file)'
+    return newlink
 
 # get links from XML pages, with href and link text
 # root_node is an ElementTree node
 def getXMLLinks(root_node):
     links = []
+
     for link in root_node.findall('a'):
         newlink = {
-            'text': link.text,
-            'href': link.attrib['href']
+            'href': link.attrib['href'],
+            'text': link.text
         }
         links.append(newlink)
+
+    for link in root_node.findall('iframe'):
+        newlink = {
+            'href': link.attrib['src'],
+            'text': '(iframe)'
+        }
+        links.append(newlink)
+
+    betterlinks = [describeLinkData(x) for x in links]
     return links
 
 
@@ -99,26 +120,26 @@ def getXMLLinks(root_node):
 # "soup" is a BeautifulSoup object
 def getHTMLLinks(soup):
     links = []
-    all_links = soup.findAll('a')
+
+    all_links = soup.findAll(['a','iframe'])
 
     for link in all_links:
         if link.has_attr('href'):
-            link_info = {}
-            link_info['href'] = link.get('href')
-            if len(link.contents) > 0:
-                link_info['text'] = ''.join(link.contents[0])
-            else:
-                link_info['text'] = ''
-
-            # Make special note of image links and other types.
-            image_types = ['.png','.gif','.jpg','.jpeg','.svg','.tiff','.tif','.bmp','.jp2','.jif','.pict']
-            if link_info['href'].endswith(tuple(image_types)):
-                link_info['text'] += '(image link)'
-            if link_info['href'].endswith('.pdf'): link_info['text'] += '(PDF file)'
-            if link_info['href'].endswith('.ps'): link_info['text'] += '(PostScript file)'
-
+            # It's a link and not just an anchor.
+            link_info = {
+                'href': link.get('href'),
+                'text': ''.join(link.contents[0]) if len(link.contents) > 0 else ''
+            }
+            links.append(link_info)
+        if link.has_attr('src'):
+            #It's an iframe.
+            link_info = {
+                'href': link.get('src'),
+                'text': '(iframe)'
+            }
             links.append(link_info)
 
+    betterlinks = [describeLinkData(x) for x in links]
     return links
 
 # Gets links that aren't in the courseware
