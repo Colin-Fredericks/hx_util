@@ -15,7 +15,7 @@ which shows the location of each video and the srt filename for that video.
 You can specify the following options:
     -problems (includes problems AND problem XML instead of videos)
     -html (includes just HTML components)
-    -link (lists all links in html and problem components)
+    -links (lists all links in html and problem components)
     -video (forces inclusion of video with html or problems)
     -all (includes all components)
 
@@ -28,9 +28,6 @@ Last update: February 14th, 2018
 # whether we have to do more recursion.
 leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
-# Auxiliary folders to check when making the list of links.
-# Not implemented yet.
-aux_folders = ['tabs','info','static']
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
 skip_tags = [
@@ -56,7 +53,6 @@ skip_tags = [
     'wiki',
     'word_cloud'
 ]
-global_options = ['video']
 
 # We're skipping many of the skip_tags because they're inline.
 # Need to develop that code to handle them.
@@ -109,7 +105,10 @@ def getHTMLLinks(soup):
         if link.has_attr('href'):
             link_info = {}
             link_info['href'] = link.get('href')
-            link_info['text'] = ''.join(link.contents[0])
+            if len(link.contents) > 0:
+                link_info['text'] = ''.join(link.contents[0])
+            else:
+                link_info['text'] = ''
 
             # Make special note of image links and other types.
             image_types = ['.png','.gif','.jpg','.jpeg','.svg','.tiff','.tif','.bmp','.jp2','.jif','.pict']
@@ -122,9 +121,55 @@ def getHTMLLinks(soup):
 
     return links
 
+# Gets links that aren't in the courseware
+def getAuxLinks():
+    # Folders to check:
+    aux_folders = ['tabs','info','static']
+    aux_links = []
+
+    for folder in aux_folders:
+        if os.path.isdir(folder):
+            folder_temp = {
+                'type': '',
+                'name': '',
+                'url': '',
+                'contents': []
+            }
+
+            # Placing all of these folders at the "chapter" level.
+            for f in os.listdir(folder):
+                file_temp = {
+                    'type': '',
+                    'name': '',
+                    'url': '',
+                    'links': []
+                }
+
+                if f.endswith( tuple( ['.html','.htm'] ) ):
+                    soup = BeautifulSoup(open(os.path.join(folder, f)), 'html.parser')
+                    file_temp['links'] = getHTMLLinks(soup)
+                    file_temp['type'] = 'html'
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+                    folder_temp['contents'].append(file_temp)
+                if f.endswith('.xml'):
+                    tree = ET.parse(folder + '/' + f)
+                    root = tree.getroot()
+                    file_temp['links'] = getXMLLinks(root)
+                    file_temp['type'] = 'xml'
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+                    folder_temp['contents'].append(file_temp)
+
+            folder_temp['chapter'] = folder
+            folder_temp['name'] = folder
+            aux_links.append(folder_temp)
+
+    return aux_links
+
 # Always gets the display name.
 # For video and problem files, gets other info too
-def getComponentInfo(folder, filename, depth):
+def getComponentInfo(folder, filename, depth, global_options):
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
@@ -208,7 +253,7 @@ def getComponentInfo(folder, filename, depth):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-def drillDown(folder, filename, depth):
+def drillDown(folder, filename, depth, global_options):
     contents = []
 
     # If there's no file here, just go back.
@@ -254,10 +299,10 @@ def drillDown(folder, filename, depth):
         # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
         # For right now: skip all the inline stuff; assume pointer.
         if child.tag in branch_nodes:
-            child_info = drillDown(child.tag, temp['url'], depth+1)
+            child_info = drillDown(child.tag, temp['url'], depth+1, global_options)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(child.tag, temp['url'], depth+1)
+            child_info = getComponentInfo(child.tag, temp['url'], depth+1, global_options)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info['contents'])
@@ -352,6 +397,9 @@ def courseFlattener(course_dict, new_row={}):
 # Main function
 def Make_Course_Sheet(args = ['-h']):
 
+    # Make video sheet by default.
+    global_options = ['video']
+
     if len(args) == 1 or '-h' in args or '--h' in args:
         # If run without argument, show instructions.
         sys.exit(instructions)
@@ -401,16 +449,19 @@ def Make_Course_Sheet(args = ['-h']):
         'contents': []
     }
 
-    course_info = drillDown('course', course_dict['url'], 0)
+    course_info = drillDown('course', course_dict['url'], 0, global_options)
     course_dict['name'] = course_info['parent_name']
     course_dict['contents'] = course_info['contents']
 
 
-    # Create a "csv" file with tabs as delimiters
+    if 'links' in global_options:
+        course_dict['contents'].extend(getAuxLinks())
+
     course_name = course_dict['name']
     if 'links' in global_options: course_name += ' Links'
     course_name += '.tsv'
 
+    # Create a "csv" file with tabs as delimiters
     with open(course_name,'wb') as outputfile:
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
@@ -440,7 +491,7 @@ def Make_Course_Sheet(args = ['-h']):
             printable = spreadsheet
         else:
             if 'links' in global_options:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem']]
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml']]
             if 'html' in global_options:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if 'video' in global_options:
