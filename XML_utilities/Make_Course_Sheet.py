@@ -36,6 +36,7 @@ aux_folders = ['tabs','info','static']
 skip_tags = [
     'annotatable',
     'discussion',
+    'done',
     'drag-and-drop-v2',
     'imageannotation',
     'library_content',
@@ -45,7 +46,9 @@ skip_tags = [
     'openassessment',
     'poll',
     'poll_question',
+    'problem-builder',
     'recommender',
+    'step-builder',
     'survey',
     'textannotation',
     'ubcpi',
@@ -404,7 +407,11 @@ def Make_Course_Sheet(args = ['-h']):
 
 
     # Create a "csv" file with tabs as delimiters
-    with open(course_dict['name'] + '.tsv','wb') as outputfile:
+    course_name = course_dict['name']
+    if 'links' in global_options: course_name += ' Links'
+    course_name += '.tsv'
+
+    with open(course_name,'wb') as outputfile:
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
         # Include the XML if we're dealing with problems
