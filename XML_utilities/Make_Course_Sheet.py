@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 import sys
 import os
@@ -20,7 +21,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: January 26th, 2018
+Last update: February 14th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -28,6 +29,7 @@ Last update: January 26th, 2018
 leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
 # Auxiliary folders to check when making the list of links.
+# Not implemented yet.
 aux_folders = ['tabs','info','static']
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
@@ -81,7 +83,8 @@ def secToHMS(time):
     return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
 
 
-# get links from XML pages
+# get links from XML pages, with href and link text
+# root_node is an ElementTree node
 def getXMLLinks(root_node):
     links = []
     for link in root_node.findall('a'):
@@ -93,16 +96,26 @@ def getXMLLinks(root_node):
     return links
 
 
-# get links from HTML pages
-def getHTMLLinks(root_text):
-    soup = BeautifulSoup(root_text, 'html.parser')
+# get list of links from HTML pages, with href and link text
+# "soup" is a BeautifulSoup object
+def getHTMLLinks(soup):
     links = []
+    all_links = soup.findAll('a')
 
-    for link in soup.findAll('a', attrs={'href': re.compile("*")):
-        links.append({
-            'href': link.get('href'),
-            'text': ''.join(link.contents[0])
-        })
+    for link in all_links:
+        if link.has_attr('href'):
+            link_info = {}
+            link_info['href'] = link.get('href')
+            link_info['text'] = ''.join(link.contents[0])
+
+            # Make special note of image links and other types.
+            image_types = ['.png','.gif','.jpg','.jpeg','.svg','.tiff','.tif','.bmp','.jp2','.jif','.pict']
+            if link_info['href'].endswith(tuple(image_types)):
+                link_info['text'] += '(image link)'
+            if link_info['href'].endswith('.pdf'): link_info['text'] += '(PDF file)'
+            if link_info['href'].endswith('.ps'): link_info['text'] += '(PostScript file)'
+
+            links.append(link_info)
 
     return links
 
@@ -179,12 +192,12 @@ def getComponentInfo(folder, filename, depth):
         # In those cases, go open that file and get the links from it.
         if root.text is None:
             innerfilename = root.attrib['filename']
-            Htree = ET.parse('html/' + innerfilename + '.html')
-            Hroot = Htree.getroot()
-            temp['links'] = getHTMLLinks("".join(Hroot.itertext()))
+            soup = BeautifulSoup(open('html/' + innerfilename + '.html'), 'html.parser')
+            temp['links'] = getHTMLLinks(soup)
         # If it's declared inline, just get the links right away.
         else:
-            temp['links'] = getHTMLLinks("".join(root.itertext()))
+            soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
+            temp['links'] = getHTMLLinks(soup)
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -323,9 +336,13 @@ def courseFlattener(course_dict, new_row={}):
         if temp_row['type'] not in skip_tags:
             # If there are links in this row, break it into multiple entries.
             if len(temp_row['links']) > 0:
-                temp_rows = []
+                link_rows = []
                 for link in temp_row['links']:
-                    # START HERE NEXT TIME
+                    link_breakout = temp_row.copy()
+                    link_breakout['href'] = link['href']
+                    link_breakout['linktext'] = link['text']
+                    link_rows.append(link_breakout)
+                return link_rows
             else:
                 return [temp_row]
 
@@ -367,9 +384,6 @@ def Make_Course_Sheet(args = ['-h']):
         if 'video' not in global_options:
             global_options.append('video')
 
-    if 'links' in global_options:
-        from bs4 import BeautifulSoup
-
     # Open course's root xml file
     # Get the current course run filename
     course_tree = ET.parse(coursefile)
@@ -398,7 +412,7 @@ def Make_Course_Sheet(args = ['-h']):
                 fieldnames.append('inner_xml')
         # Include video data if we're dealing with videos
         if 'links' in global_options:
-                fieldnames = fieldnames + ['links']
+                fieldnames = fieldnames + ['href','linktext']
         # Include video data if we're dealing with videos
         if 'video' in global_options:
                 fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
@@ -428,7 +442,11 @@ def Make_Course_Sheet(args = ['-h']):
                 printable += [row for row in spreadsheet if row['type'] == 'problem']
 
         for row in printable:
-            writer.writerow(row)
+            if 'links' in global_options:
+                if row['href'] != '':
+                    writer.writerow(row)
+            else:
+                writer.writerow(row)
 
         print 'Spreadsheet created for ' + course_dict['name'] + '.'
 
