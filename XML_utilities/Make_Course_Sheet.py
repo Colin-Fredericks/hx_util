@@ -126,9 +126,14 @@ def getHTMLLinks(soup):
     for link in all_links:
         if link.has_attr('href'):
             # It's a link and not just an anchor.
+            if len(link.contents) > 0:
+                link_text = ''.join(link.findAll(text=True))
+            else:
+                link_text = ''
+
             link_info = {
                 'href': link.get('href'),
-                'text': ''.join(link.contents[0]) if len(link.contents) > 0 else ''
+                'text': link_text
             }
             links.append(link_info)
         if link.has_attr('src'):
