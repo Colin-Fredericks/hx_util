@@ -1,6 +1,12 @@
 HX-PY Course Link Checker
 ====================================
 
+Development on this project has halted.
+
+This is an unfinished project. The goal was to be able to check the links from an edX course export automatically, but it turns out that it's not that easy to tell (without some false results) whether a set of hyperlinks all have working destinations. Instead, I added the -link functionality to `Make_Course_Sheet.py` and we can get a spreadsheet full of links to check manually. It's not quite what I wanted, but it's still faster than going through by hand.
+
+-----
+
 When rerunning a course, download the course export, unzip it, and run this script on it as follows:
 
 `python linkcheck.py path/to/course/folder`
