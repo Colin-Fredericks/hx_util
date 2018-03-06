@@ -1,2 +1,5 @@
 *.pyc
 .DS_Store
+*.pyc
+XML_utilities/unicodecsv/__init__.pyc
+XML_utilities/unicodecsv/py2.pyc
