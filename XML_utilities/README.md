@@ -20,3 +20,7 @@ This is a bunch of batch tools to work directly with a course export (the file s
  * Then save that as a new TSV file and run `Outline_to_HTML.py` on it to create a linked, filterable HTML outline that you can use as alternative navigation in your course.
  * Upload `hx-collapse-nav.js` and `hx-collapse-nav.css` to your Files & Uploads folder to complete the process.
  * If you want to show student scores next to each subsection, you should also upload `hx-grade-display.css` and `hx-grade-reader.js`, and add the following line of HTML (or something similar) near the top of your page: `<div id="progressbar">(Loading your scores <span class="fa fa-spinner fa-pulse fa-fw"></span>)</div>`
+
+-----
+
+Current project: `GetWordLinks.py` to extract links from a Word file, either to CSV or to add to the larger list that `Make_Course_Sheet.py` already creates. The `doc_link_samples` folder is part of this.
