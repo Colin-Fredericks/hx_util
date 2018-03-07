@@ -517,7 +517,7 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-links', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     if args.help: sys.exit(instructions)
 
