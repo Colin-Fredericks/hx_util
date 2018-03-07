@@ -25,7 +25,7 @@ Options:
   -r Recursive - includes nested folders.
   -l Returns a Python list. Used when called by other scripts.
 
-Last update: March 6th, 2018
+Last update: March 7th, 2018
 """
 
 # Word documents have namespaces on their XML.
@@ -163,20 +163,17 @@ def getWordLinks(args):
         return linklist
 
     # Otherwise, output a file and print some info.
-    print ( 'Checked '
+    print ( '\nChecked '
         + str(filecount)
         + ' .docx file'
         + ('s' if filecount > 1 else '')
         +  ' for links.' )
 
-    # For right now, create a csv file with the links
-    # Later, should be an option to do this or return list of dicts.
-    # Might need to fix location of resulting file - right now it just
-    # shows up in the first folder to be scanned.
-    with open('Word_Doc_Links.csv','wb') as outputfile:
+    outFilePath = os.path.abspath(os.path.join(file_names[0], os.pardir, 'Word_Doc_Links.csv'))
+    with open(outFilePath,'wb') as outputFile:
         fieldnames = ['filename','url','linktext']
 
-        writer = csv.DictWriter(outputfile,
+        writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,
             extrasaction='ignore')
         writer.writeheader()
@@ -185,6 +182,7 @@ def getWordLinks(args):
             writer.writerow(row)
 
     print 'Spreadsheet created: Word_Doc_Links.csv'
+    print 'Location: ' + outFilePath
 
 if __name__ == "__main__":
     # this won't be run when imported
