@@ -1,8 +1,12 @@
 from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import sys
 import os
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
+try:
+    import GetWordLinks
+except:
+    print 'Cannot find GetWordLinks.py, skipping links in .docx files.'
 
 instructions = """
 To use:
@@ -21,7 +25,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: February 14th, 2018
+Last update: March 6th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -56,6 +60,7 @@ skip_tags = [
 
 # We're skipping many of the skip_tags because they're inline.
 # Need to develop that code to handle them.
+# Best suggestion to date: try to open file, and traveerse inline XML if we can't.
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -83,7 +88,9 @@ def secToHMS(time):
 
 # Adds notes to links based on file type
 def describeLinkData(newlink):
-    image_types = ['.png','.gif','.jpg','.jpeg','.svg','.tiff','.tif','.bmp','.jp2','.jif','.pict']
+    image_types = ['.png','.gif','.jpg','.jpeg','.svg',
+        '.tiff','.tif','.bmp','.jp2','.jif','.pict']
+
     if newlink['href'].endswith(tuple(image_types)):
         newlink['text'] += '(image link)'
     if newlink['href'].endswith('.pdf'):    newlink['text'] += '(PDF file)'
@@ -98,19 +105,23 @@ def describeLinkData(newlink):
 def getXMLLinks(root_node):
     links = []
 
-    for link in root_node.findall('a'):
-        newlink = {
-            'href': link.attrib['href'],
-            'text': link.text
-        }
-        links.append(newlink)
+    for link in root_node.xpath('.//a'):
+        try:
+            links.append({
+                'href': link.attrib['href'],
+                'text': link.text or ''
+            })
+        except:
+            pass
 
-    for link in root_node.findall('iframe'):
-        newlink = {
-            'href': link.attrib['src'],
-            'text': '(iframe)'
-        }
-        links.append(newlink)
+    for link in root_node.xpath('.//iframe'):
+        try:
+            links.append({
+                'href': link.attrib['src'],
+                'text': '(iframe)'
+            })
+        except:
+            pass
 
     betterlinks = [describeLinkData(x) for x in links]
     return links
@@ -130,19 +141,17 @@ def getHTMLLinks(soup):
                 link_text = ''.join(link.findAll(text=True))
             else:
                 link_text = ''
-
-            link_info = {
+            links.append({
                 'href': link.get('href'),
                 'text': link_text
-            }
-            links.append(link_info)
+            })
+
         if link.has_attr('src'):
             #It's an iframe.
-            link_info = {
+            links.append({
                 'href': link.get('src'),
                 'text': '(iframe)'
-            }
-            links.append(link_info)
+            })
 
     betterlinks = [describeLinkData(x) for x in links]
     return links
@@ -183,6 +192,18 @@ def getAuxLinks():
                     root = tree.getroot()
                     file_temp['links'] = getXMLLinks(root)
                     file_temp['type'] = 'xml'
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+                    folder_temp['contents'].append(file_temp)
+                if f.endswith('.docx'):
+                    targetFile = os.path.join(folder,f)
+                    file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
+                    for l in file_temp['links']:
+                        l['text'] = l['linktext']
+                        l['href'] = l['url']
+                        del l['linktext']
+                        del l['url']
+                    file_temp['type'] = 'docx'
                     file_temp['name'] = f
                     file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
@@ -517,7 +538,7 @@ def Make_Course_Sheet(args = ['-h']):
             printable = spreadsheet
         else:
             if 'links' in global_options:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml']]
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx']]
             if 'html' in global_options:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if 'video' in global_options:

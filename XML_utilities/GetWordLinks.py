@@ -23,8 +23,9 @@ If you feed it a folder, it includes all the files in the folder.
 Options:
   -h Print this message and quit.
   -r Recursive - includes nested folders.
+  -l Returns a Python list. Used when called by other scripts.
 
-Last update: February 28th, 2018
+Last update: March 6th, 2018
 """
 
 # Word documents have namespaces on their XML.
@@ -100,6 +101,7 @@ def getWordLinks(args):
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-r', action='store_true')
+    parser.add_argument('-l', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args(args)
@@ -118,6 +120,7 @@ def getWordLinks(args):
     optionlist = []
     if args.help: sys.exit(instructions)
     if args.r: optionlist.append('r')
+    if args.l: optionlist.append('l')
 
     filecount = 0
     linklist = []
@@ -155,6 +158,11 @@ def getWordLinks(args):
                         linklist.extend(getLinks(eachfile, optionlist, dirpath))
                         filecount += 1
 
+    # When called by other scripts, quietly return the list and stop.
+    if 'l' in optionlist:
+        return linklist
+
+    # Otherwise, output a file and print some info.
     print ( 'Checked '
         + str(filecount)
         + ' .docx file'
