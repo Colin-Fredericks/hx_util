@@ -9,7 +9,8 @@ Because python's built-in xml parser has trouble with namespaces and xpaths, som
 * `SetShowAnswer.py`, which sets the showanswer value automatically (or removes it) in every problem in a course.
 * `SetVideoDownloads.py`, which enables or disables video and/or transcript downloading for every video in a course.
 * `Make_Course_Sheet.py`, which creates a spreadsheet showing which SRT file is for which video. It'll also make lists of other things in your course, such as problems or html components. This is also available as a Mac executable (download the zip file).
- * You can also run this with the `-links` argument to get a list of all the links in your course, including those in .html, .xml, and .docx files in your Files & Uploads. If you do this, you will want to grab the bs4 folder, because this functionality requires BeautifulSoup.
+ * You can also run this with the `-links` argument to get a list of all the links in your course, including those in .html, .xml, and .docx files in your Files & Uploads. If you do this, you will want to grab the bs4 and unicodecsv folders, and you might want `GetWordLinks.py` to handle the word docs.
+* `Make_Link_Spreadsheet.zip`, which contains a Mac executable that runs `Make_Course_Sheet.py` with `GetWordLinks.py` to create a csv of all the links in the course for quick checking.
 * `json2srt.py`, which converts the .srt.sjson files that edX uses into .srt files that more other things use.
 * `SrtRename`, which copies all the SRT files that were in use in your course and then uses the sheet from Make_Course_Sheet to rename them to match the original video upload names. Useful for archiving.
 * The **HX Archive Prep** tool, which is an executable that combines Make_Course_Sheet, json2srt, and SrtRename. Download the zip file for the Mac app, or get `HXArchive.py` for the all-in-one script.
