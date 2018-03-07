@@ -43,8 +43,8 @@ def getLinkedText(soup):
         # try/except because some hyperlinks have no id.
         try:
             links.append({
-                'id': tag.get['id'],
-                'linktext': ET.tostring(tag, method='text')
+                'id': tag['r:id'],
+                'linktext': tag.text
             })
         except:
             pass
@@ -57,8 +57,8 @@ def getURLs(soup, links):
     # Find every link by id and get its url.
     for link in links:
         for rel in soup.findAll('Relationship'):
-            if rel.get['Id'] == link['id']:
-                link['url'] = rel.get['Target']
+            if rel['Id'] == link['id']:
+                link['url'] = rel['Target']
 
     return links
 
@@ -100,12 +100,17 @@ def getWordLinks(args):
     # If a string does not contain a wildcard, glob will return it as is.
     # Mostly important if we run this on Windows systems.
     file_names = list()
-    for arg in args.file_names:
-        file_names += glob(arg)
+
+    for name in args.file_names:
+        file_names += glob(name)
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
         sys.exit('No file or directory found by that name.')
+
+    # Don't run the script on itself.
+    if sys.argv[0] in file_names:
+        file_names.remove(sys.argv[0])
 
     optionlist = []
     if args.help: sys.exit(instructions)
@@ -114,6 +119,7 @@ def getWordLinks(args):
 
     filecount = 0
     linklist = []
+    target_is_folder = False
 
     for name in file_names:
         # Make sure single files exist.
@@ -129,6 +135,7 @@ def getWordLinks(args):
 
         # If it's a directory:
         if os.path.isdir(name):
+            target_is_folder = True
             # Recursive version using os.walk for all levels.
             if 'r' in optionlist:
                 for dirpath, dirnames, files in os.walk(name):
@@ -159,7 +166,13 @@ def getWordLinks(args):
         + ('s' if filecount > 1 else '')
         +  ' for links.' )
 
-    outFilePath = os.path.abspath(os.path.join(file_names[0], os.pardir, 'Word_Doc_Links.csv'))
+    # Create output file as sibling to the original target of the script.
+    if target_is_folder:
+        outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
+        outFilePath = os.path.join(outFileFolder, 'Word_Doc_Links.csv')
+    else:
+        outFilePath = os.path.join(os.path.dirname(file_names[0]), 'Word_Doc_Links.csv')
+
     with open(outFilePath,'wb') as outputFile:
         fieldnames = ['filename','url','linktext']
 

@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 import sys
 import os
+import argparse
+from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
     import GetWordLinks
@@ -25,7 +27,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 6th, 2018
+Last update: March 7th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -160,12 +162,13 @@ def getHTMLLinks(soup):
     return links
 
 # Gets links that aren't in the courseware
-def getAuxLinks():
+def getAuxLinks(rootFileDir):
     # Folders to check:
     aux_folders = ['tabs','info','static']
+    aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
     aux_links = []
 
-    for folder in aux_folders:
+    for folder in aux_paths:
         if os.path.isdir(folder):
             folder_temp = {
                 'type': '',
@@ -201,6 +204,7 @@ def getAuxLinks():
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
                     targetFile = os.path.join(folder,f)
+                    print targetFile
                     file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
                     for l in file_temp['links']:
                         l['text'] = l['linktext']
@@ -212,8 +216,8 @@ def getAuxLinks():
                     file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
 
-            folder_temp['chapter'] = folder
-            folder_temp['name'] = folder
+            folder_temp['chapter'] = os.path.basename(folder)
+            folder_temp['name'] = os.path.basename(folder)
             aux_links.append(folder_temp)
 
     return aux_links
@@ -291,8 +295,8 @@ def getComponentInfo(folder, filename, depth, global_options):
         # Most of the time our XML will just point to a separate HTML file.
         # In those cases, go open that file and get the links from it.
         if root.text is None:
-            innerfilename = root.attrib['filename']
-            soup = BeautifulSoup(open('html/' + innerfilename + '.html'), 'html.parser')
+            innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
+            soup = BeautifulSoup(open(innerfilepath), 'html.parser')
             temp['links'] = getHTMLLinks(soup)
         # If it's declared inline, just get the links right away.
         else:
@@ -310,9 +314,9 @@ def drillDown(folder, filename, depth, global_options):
 
     # If there's no file here, just go back.
     try:
-        tree = ET.parse(folder + '/' + filename + '.xml')
+        tree = ET.parse(os.path.join(folder, (filename + '.xml')))
     except IOError:
-        print "Possible missing file: " + folder + '/' + filename + '.xml'
+        print "Possible missing file: " + os.path.join(folder, (filename + '.xml'))
         return {'contents': contents, 'parent_name': '', 'found_file': False}
 
     root = tree.getroot()
@@ -350,11 +354,12 @@ def drillDown(folder, filename, depth, global_options):
         # In the future: check to see whether this child is a pointer tag or inline XML.
         # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
         # For right now: skip all the inline stuff; assume pointer.
+        nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(child.tag, temp['url'], depth+1, global_options)
+            child_info = drillDown(nextFile, temp['url'], depth+1, global_options)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(child.tag, temp['url'], depth+1, global_options)
+            child_info = getComponentInfo(nextFile, temp['url'], depth+1, global_options)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info['contents'])
@@ -446,75 +451,13 @@ def courseFlattener(course_dict, new_row={}):
             else:
                 return [temp_row]
 
-# Main function
-def Make_Course_Sheet(args = ['-h']):
-
-    # Make video sheet by default.
-    global_options = ['video']
-
-    if len(args) == 1 or '-h' in args or '--h' in args:
-        # If run without argument, show instructions.
-        sys.exit(instructions)
-
-    # Get the filename and set working directory
-    if len(args) > 1:
-        course_file_path = args[1]
-
-        if os.path.isdir(course_file_path):
-            # If we're fed a course directory, find the course.xml file in it and use that.
-            course_folder_path = os.path.abspath(course_file_path)
-            course_file_path = os.path.join(course_folder_path, 'course.xml')
-        else:
-            # Otherwise, assume we're running on a course.xml file already.
-            course_folder_path = os.path.dirname(os.path.abspath(course_file_path))
-
-        os.chdir(course_folder_path)
-        coursefile = os.path.basename(os.path.abspath(course_file_path))
-
-    if '-problems' in args or '--problems' in args:
-        global_options.append('problems')
-        global_options.remove('video')
-    if '-all' in args or '--all' in args:
-        global_options.append('all')
-        global_options.remove('video')
-    if '-html' in args or '--html' in args:
-        global_options.append('html')
-        global_options.remove('video')
-    if '-links' in args or '--links' in args:
-        global_options.append('links')
-        global_options.remove('video')
-    if '-video' in args or '--video' in args:
-        if 'video' not in global_options:
-            global_options.append('video')
-
-    # Open course's root xml file
-    # Get the current course run filename
-    course_tree = ET.parse(coursefile)
-    course_root = course_tree.getroot()
-
-    # This is the ordered dict where we're storing the course structure.
-    # Later we'll dump it out to the tab-separated file.
-    course_dict = {
-        'type': 'course',
-        'name': '',
-        'url': course_root.attrib['url_name'],
-        'contents': []
-    }
-
-    course_info = drillDown('course', course_dict['url'], 0, global_options)
-    course_dict['name'] = course_info['parent_name']
-    course_dict['contents'] = course_info['contents']
-
-
-    if 'links' in global_options:
-        course_dict['contents'].extend(getAuxLinks())
-
+def writeCourseSheet(rootFileDir, rootFileName, course_dict, global_options):
     course_name = course_dict['name']
     if 'links' in global_options: course_name += ' Links'
     course_name += '.tsv'
 
     # Create a "csv" file with tabs as delimiters
-    with open(course_name,'wb') as outputfile:
+    with open(os.path.join(rootFileDir, course_name),'wb') as outputfile:
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
         # Include the XML if we're dealing with problems
@@ -559,6 +502,95 @@ def Make_Course_Sheet(args = ['-h']):
                 writer.writerow(row)
 
         print 'Spreadsheet created for ' + course_dict['name'] + '.'
+        print 'Location: ' + course_name
+
+# Main function
+def Make_Course_Sheet(args = ['-h']):
+
+    # Handle arguments and flags
+    parser = argparse.ArgumentParser(usage=instructions, add_help=False)
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('-all', action='store_true')
+    parser.add_argument('-problems', action='store_true')
+    parser.add_argument('-html', action='store_true')
+    parser.add_argument('-video', action='store_true')
+    parser.add_argument('-links', action='store_true')
+    parser.add_argument('file_names', nargs='*')
+
+    args = parser.parse_args(args)
+
+    if args.help: sys.exit(instructions)
+
+    # Make video sheet by default.
+    global_options = ['video']
+    if args.problems:
+        global_options.append('problems')
+        global_options.remove('video')
+    if args.all:
+        global_options.append('all')
+        global_options.remove('video')
+    if args.html:
+        global_options.append('html')
+        global_options.remove('video')
+    if args.links:
+        global_options.append('links')
+        global_options.remove('video')
+    if args.video:
+        if 'video' not in global_options:
+            global_options.append('video')
+
+    # Replace arguments with wildcards with their expansion.
+    # If a string does not contain a wildcard, glob will return it as is.
+    # Mostly important if we run this on Windows systems.
+    file_names = list()
+    for arg in args.file_names:
+        file_names += glob(arg)
+
+    # If the filenames don't exist, say so and quit.
+    if file_names == []:
+        sys.exit('No file or directory found by that name.')
+
+    # Don't run the script on itself.
+    if sys.argv[0] in file_names:
+        file_names.remove(sys.argv[0])
+
+    # Get the course.xml file and root directory
+    for name in file_names:
+        if os.path.isdir(name):
+            if os.path.exists( os.path.join(name, 'course.xml')):
+                rootFileDir = name
+        else:
+            if 'course.xml' in name:
+                rootFileDir = os.path.dirname(name)
+
+        rootFilePath = os.path.join(rootFileDir, 'course.xml')
+        course_tree = ET.parse(rootFilePath)
+
+        # Open course's root xml file
+        # Get the current course run filename
+        course_root = course_tree.getroot()
+
+        course_dict = {
+            'type': course_root.tag,
+            'name': '',
+            'url': course_root.attrib['url_name'],
+            'contents': []
+        }
+
+        course_info = drillDown(
+            os.path.join(rootFileDir, course_dict['type']),
+            course_dict['url'],
+            0,
+            global_options
+        )
+        course_dict['name'] = course_info['parent_name']
+        course_dict['contents'] = course_info['contents']
+
+        if 'links' in global_options:
+            course_dict['contents'].extend(getAuxLinks(rootFileDir))
+
+        writeCourseSheet(rootFileDir, rootFilePath, course_dict, global_options)
+
 
 if __name__ == "__main__":
     # this won't be run when imported
