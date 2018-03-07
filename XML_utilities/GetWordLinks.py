@@ -6,7 +6,6 @@ import zipfile
 import argparse
 from glob import glob
 from lxml import etree as ET
-from lxml import objectify
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 
