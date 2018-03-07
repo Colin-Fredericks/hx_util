@@ -3,7 +3,7 @@ HX-PY XML Utilities
 
 This is a bunch of batch tools to work directly with a course export (the file structure, not the tarball) or with .srt files. You can run `python filename.py` for each one to have it show a set of instructions, or just open the code with a text editor - the instructions are the first thing there.
 
-Because python's built-in xml parser has trouble with namespaces and xpaths, anything that searches the course export or Word .docx files now uses `lxml`. You should [install lxml](https://github.com/lxml/lxml) before using these scripts.
+Because python's built-in xml parser has trouble with namespaces and xpaths, some XML parsing is done with BeautifulSoup instead. It's included in this folder as `bs4`. For better unicode handling, `unicodecsv` is also included.
 
 * `SetMaxAttempts.py`, which sets the number of attempts automatically in every problem in a course.
 * `SetShowAnswer.py`, which sets the showanswer value automatically (or removes it) in every problem in a course.

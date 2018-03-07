@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from lxml import etree as ET
+import xml.etree.ElementTree as ET
 import sys
 import os
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
@@ -100,31 +100,34 @@ def describeLinkData(newlink):
     if newlink['href'].endswith('.gz'):     newlink['text'] += '(gzip file)'
     return newlink
 
+# This function is deprecated because
+# BeautifulSoup beats lxml for my purposes.
+#
 # get links from XML pages, with href and link text
 # root_node is an ElementTree node
-def getXMLLinks(root_node):
-    links = []
-
-    for link in root_node.xpath('.//a'):
-        try:
-            links.append({
-                'href': link.attrib['href'],
-                'text': link.text or ''
-            })
-        except:
-            pass
-
-    for link in root_node.xpath('.//iframe'):
-        try:
-            links.append({
-                'href': link.attrib['src'],
-                'text': '(iframe)'
-            })
-        except:
-            pass
-
-    betterlinks = [describeLinkData(x) for x in links]
-    return links
+# def getXMLLinks(root_node):
+#     links = []
+#
+#     for link in root_node.xpath('.//a'):
+#         try:
+#             links.append({
+#                 'href': link.attrib['href'],
+#                 'text': link.text or ''
+#             })
+#         except:
+#             pass
+#
+#     for link in root_node.xpath('.//iframe'):
+#         try:
+#             links.append({
+#                 'href': link.attrib['src'],
+#                 'text': '(iframe)'
+#             })
+#         except:
+#             pass
+#
+#     betterlinks = [describeLinkData(x) for x in links]
+#     return links
 
 
 # get list of links from HTML pages, with href and link text
@@ -190,7 +193,8 @@ def getAuxLinks():
                 if f.endswith('.xml'):
                     tree = ET.parse(folder + '/' + f)
                     root = tree.getroot()
-                    file_temp['links'] = getXMLLinks(root)
+                    soup = BeautifulSoup(open(os.path.join(folder, f)), 'xml')
+                    file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'xml'
                     file_temp['name'] = f
                     file_temp['url'] = f
@@ -278,7 +282,8 @@ def getComponentInfo(folder, filename, depth, global_options):
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
             temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('unicode_escape')
-            temp['links'] = getXMLLinks(root)
+            soup = BeautifulSoup(temp['inner_xml'], 'xml')
+            temp['links'] = getHTMLLinks(soup)
         else:
             temp['inner_xml'] = 'No XML.'
 

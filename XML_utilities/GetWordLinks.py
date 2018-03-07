@@ -5,7 +5,8 @@ import re
 import zipfile
 import argparse
 from glob import glob
-from lxml import etree as ET
+import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 
@@ -30,29 +31,19 @@ Last update: March 7th, 2018
 # Word documents have namespaces on their XML.
 # This is very unhelpful for us. Strip them all.
 def strip_ns_prefix(tree):
-    #xpath query for selecting all element nodes in namespace
-    query = "descendant-or-self::*[namespace-uri()!='']"
-    #for each element returned by the above xpath query...
-    for element in tree.xpath(query):
-        #replace element name with its local name
-        element.tag = ET.QName(element).localname
-        for attr in element.attrib:
-            a = ET.QName(attr).localname
-            element.attrib[a] = element.attrib[attr]
-    return tree
+    return tree.prettify()
 
 # Get the text that is the source for the hyperlink.
 # Not sure what this will do with image links.
-def getLinkedText(root_node):
+def getLinkedText(soup):
 
     links = []
 
-    # xpath for recursive search
-    for tag in root_node.xpath('.//hyperlink'):
+    for tag in soup.findAll('hyperlink'):
         # try/except because some hyperlinks have no id.
         try:
             links.append({
-                'id': tag.attrib['id'],
+                'id': tag.get['id'],
                 'linktext': ET.tostring(tag, method='text')
             })
         except:
@@ -61,13 +52,13 @@ def getLinkedText(root_node):
     return links
 
 # URLs for .docx hyperlinks are stored in a different file.
-def getURLs(root_node, links):
+def getURLs(soup, links):
 
     # Find every link by id and get its url.
     for link in links:
-        for rel in root_node.xpath('.//Relationship'):
-            if rel.attrib['Id'] == link['id']:
-                link['url'] = rel.attrib['Target']
+        for rel in soup.findAll('Relationship'):
+            if rel.get['Id'] == link['id']:
+                link['url'] = rel.get['Target']
 
     return links
 
@@ -79,13 +70,13 @@ def getLinks(filename, optionlist, dirpath):
 
     # read bytes from archive for the file text and get link text
     file_data = archive.read('word/document.xml')
-    doc_root = strip_ns_prefix(ET.fromstring(file_data))
-    linked_text = getLinkedText(doc_root)
+    doc_soup = BeautifulSoup(file_data, 'xml')
+    linked_text = getLinkedText(doc_soup)
 
     # URLs are stored in a different file. Cross-reference.
     url_data = archive.read('word/_rels/document.xml.rels')
-    url_root = strip_ns_prefix(ET.fromstring(url_data))
-    links_with_urls = getURLs(url_root, linked_text)
+    url_soup = BeautifulSoup(url_data, 'xml')
+    links_with_urls = getURLs(url_soup, linked_text)
 
     # Mark each line with the filename in case we're processing more than one.
     for link in links_with_urls:
