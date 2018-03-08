@@ -19,11 +19,12 @@ You will get a Tab-Separated Value file that you should open with Google Drive,
 which shows the location of each video and the srt filename for that video.
 
 You can specify the following options:
-    -problems (includes problems AND problem XML instead of videos)
-    -html (includes just HTML components)
-    -links (lists all links in html and problem components)
-    -video (forces inclusion of video with html or problems)
-    -all (includes all components)
+    -problems  Includes problems AND problem XML instead of videos
+    -html      Includes just HTML components
+    -video     Forces inclusion of video with html or problems
+    -all       Includes html, video, and problem components
+    -links     Lists all links in the course.
+               Not compatible with other options.
 
 This script may fail on courses with empty containers.
 
@@ -224,7 +225,7 @@ def getAuxLinks(rootFileDir):
 
 # Always gets the display name.
 # For video and problem files, gets other info too
-def getComponentInfo(folder, filename, depth, global_options):
+def getComponentInfo(folder, filename, args):
     tree = ET.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
@@ -241,7 +242,7 @@ def getComponentInfo(folder, filename, depth, global_options):
         temp['name'] = root.tag
 
     # get video information
-    if root.tag == 'video' and 'video' in global_options:
+    if root.tag == 'video' and args.video:
         if 'sub' in root.attrib:
             temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
         else:
@@ -291,17 +292,19 @@ def getComponentInfo(folder, filename, depth, global_options):
         else:
             temp['inner_xml'] = 'No XML.'
 
+    # Right now all we get from HTML is links.
     if root.tag == 'html':
-        # Most of the time our XML will just point to a separate HTML file.
-        # In those cases, go open that file and get the links from it.
-        if root.text is None:
-            innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
-            soup = BeautifulSoup(open(innerfilepath), 'html.parser')
-            temp['links'] = getHTMLLinks(soup)
-        # If it's declared inline, just get the links right away.
-        else:
-            soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
-            temp['links'] = getHTMLLinks(soup)
+        if args.links:
+            # Most of the time our XML will just point to a separate HTML file.
+            # In those cases, go open that file and get the links from it.
+            if root.text is None:
+                innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
+                soup = BeautifulSoup(open(innerfilepath), 'html.parser')
+                temp['links'] = getHTMLLinks(soup)
+            # If it's declared inline, just get the links right away.
+            else:
+                soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
+                temp['links'] = getHTMLLinks(soup)
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -309,7 +312,7 @@ def getComponentInfo(folder, filename, depth, global_options):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-def drillDown(folder, filename, depth, global_options):
+def drillDown(folder, filename, args):
     contents = []
 
     # If there's no file here, just go back.
@@ -356,10 +359,10 @@ def drillDown(folder, filename, depth, global_options):
         # For right now: skip all the inline stuff; assume pointer.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(nextFile, temp['url'], depth+1, global_options)
+            child_info = drillDown(nextFile, temp['url'], args)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(nextFile, temp['url'], depth+1, global_options)
+            child_info = getComponentInfo(nextFile, temp['url'], args)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info['contents'])
@@ -451,9 +454,9 @@ def courseFlattener(course_dict, new_row={}):
             else:
                 return [temp_row]
 
-def writeCourseSheet(rootFileDir, rootFileName, course_dict, global_options):
+def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
     course_name = course_dict['name']
-    if 'links' in global_options: course_name += ' Links'
+    if args.links: course_name += ' Links'
     course_name += '.tsv'
 
     # Create a "csv" file with tabs as delimiters
@@ -461,13 +464,13 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, global_options):
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
         # Include the XML if we're dealing with problems
-        if 'problems' in global_options:
+        if args.problems:
                 fieldnames.append('inner_xml')
         # Include video data if we're dealing with videos
-        if 'links' in global_options:
+        if args.links:
                 fieldnames = fieldnames + ['href','linktext']
         # Include video data if we're dealing with videos
-        if 'video' in global_options:
+        if args.video:
                 fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
 
         writer = csv.DictWriter(outputfile,
@@ -482,20 +485,20 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, global_options):
                 spreadsheet[index][key] = spreadsheet[index][key]
         printable = []
 
-        if 'all' in global_options:
+        if args.all:
             printable = spreadsheet
         else:
-            if 'links' in global_options:
+            if args.links:
                 printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx']]
-            if 'html' in global_options:
+            if args.html:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
-            if 'video' in global_options:
+            if args.video:
                 printable += [row for row in spreadsheet if row['type'] == 'video']
-            if 'problems' in global_options:
+            if args.problems:
                 printable += [row for row in spreadsheet if row['type'] == 'problem']
 
         for row in printable:
-            if 'links' in global_options:
+            if args.links:
                 if row['href'] != '':
                     writer.writerow(row)
             else:
@@ -513,31 +516,25 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-all', action='store_true')
     parser.add_argument('-problems', action='store_true')
     parser.add_argument('-html', action='store_true')
-    parser.add_argument('-video', action='store_true')
+    parser.add_argument('-video', default='True', action='store_true')
     parser.add_argument('-links', action='store_true')
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args()
+    print args
 
     if args.help: sys.exit(instructions)
 
-    # Make video sheet by default.
-    global_options = ['video']
-    if args.problems:
-        global_options.append('problems')
-        global_options.remove('video')
-    if args.all:
-        global_options.append('all')
-        global_options.remove('video')
-    if args.html:
-        global_options.append('html')
-        global_options.remove('video')
+    # Do video by default. Don't do it when we're doing other stuff,
+    # unless someone intentionally turned it on.
+    if not args.video:
+        if args.problems or args.html or args.all or args.links:
+            args.video = False
+
+    # Link lister is not compatible with other options,
+    # mostly because it makes for too big a spreawdsheet.
     if args.links:
-        global_options.append('links')
-        global_options.remove('video')
-    if args.video:
-        if 'video' not in global_options:
-            global_options.append('video')
+        args.problems = args.html = args.all = args.links = False
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
@@ -580,16 +577,15 @@ def Make_Course_Sheet(args = ['-h']):
         course_info = drillDown(
             os.path.join(rootFileDir, course_dict['type']),
             course_dict['url'],
-            0,
-            global_options
+            args
         )
         course_dict['name'] = course_info['parent_name']
         course_dict['contents'] = course_info['contents']
 
-        if 'links' in global_options:
+        if args.links:
             course_dict['contents'].extend(getAuxLinks(rootFileDir))
 
-        writeCourseSheet(rootFileDir, rootFilePath, course_dict, global_options)
+        writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
 
 if __name__ == "__main__":
