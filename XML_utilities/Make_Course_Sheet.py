@@ -28,7 +28,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 7th, 2018
+Last update: March 8th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
