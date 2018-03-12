@@ -17,12 +17,14 @@ Valid options:
   -h Help. Print this message.
   -c Copy. Makes new copy of file with new name. Old one will still be there.
   -n New folder. Puts SRTs in a new folder that's a sibling of the course folder.
+  -z Zip the new SRTs into a single file.
+  -o Name the zip file using the following argument. Only works with -z.
 
 Last updated: November 16th, 2017
 """
 
 # Make a dictionary that shows which srt files match which original upload names
-def getOriginalNames(course_folder, options):
+def getOriginalNames(course_folder, args):
 
     nameDict = {}
 
@@ -49,10 +51,10 @@ def getOriginalNames(course_folder, options):
 
 
 # Set all the srt filenames to be
-def setNewNames(course_folder, nameDict, options, course_title):
+def setNewNames(course_folder, nameDict, args, course_title):
     static_folder = os.path.join(os.path.abspath(course_folder), 'static')
 
-    if 'n' in options:
+    if args.n:
         # If we're putting it in a new folder, make it as a child of the course folder.
         target_folder = os.path.join(os.path.abspath(course_folder), os.pardir, course_title + '_SRTs')
         if not os.path.exists(target_folder):
@@ -72,13 +74,13 @@ def setNewNames(course_folder, nameDict, options, course_title):
 
         # Rename the files.
         if os.path.exists(oldname):
-            if 'c' in options:
+            if args.c:
                 shutil.copyfile(oldname, newname)
             else:
                 os.rename(oldname, newname)
             filecount += 1
 
-    print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if 'c' in options else '.')
+    print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.')
 
 
 # Main function.
@@ -89,9 +91,11 @@ def SrtRename(args):
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-c', action='store_true')
     parser.add_argument('-n', action='store_true')
+    parser.add_argument('-z', action='store_true')
+    parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
@@ -104,10 +108,7 @@ def SrtRename(args):
     if file_names == []:
         sys.exit('No file or directory found by that name.')
 
-    optionlist = []
     if args.help: sys.exit(instructions)
-    if args.c: optionlist.append('c')
-    if args.n: optionlist.append('n')
 
     # Our script might be in the arguments. Don't run on it.
     for i, f in enumerate(file_names):
@@ -125,11 +126,11 @@ def SrtRename(args):
         # If it's a directory...
         if os.path.isdir(name):
             # Get the concordance for this course.
-            nameDict, course_title = getOriginalNames(os.path.abspath(name), optionlist)
+            nameDict, course_title = getOriginalNames(os.path.abspath(name), args)
 
             # Go into the static folder and rename the files.
             assert os.path.exists(os.path.join(name, 'static')), 'No static folder found.'
-            setNewNames(name, nameDict, optionlist, course_title)
+            setNewNames(name, nameDict, args, course_title)
 
 if __name__ == "__main__":
     # this won't be run when imported
