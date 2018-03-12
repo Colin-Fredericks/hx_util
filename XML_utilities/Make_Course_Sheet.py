@@ -24,11 +24,12 @@ You can specify the following options:
     -video     Forces inclusion of video with html or problems
     -all       Includes html, video, and problem components
     -links     Lists all links in the course.
-               Not compatible with other options.
+               Not compatible with above options.
+    -o         Sets the output filename to the next argument.
 
 This script may fail on courses with empty containers.
 
-Last update: March 8th, 2018
+Last update: March 12th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -459,8 +460,10 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
     if args.links: course_name += ' Links'
     course_name += '.tsv'
 
+    outFileName = args.o if args.o else course_name
+
     # Create a "csv" file with tabs as delimiters
-    with open(os.path.join(rootFileDir, course_name),'wb') as outputfile:
+    with open(os.path.join(rootFileDir, outFileName),'wb') as outputfile:
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
         # Include the XML if we're dealing with problems
@@ -505,7 +508,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
                 writer.writerow(row)
 
         print 'Spreadsheet created for ' + course_dict['name'] + '.'
-        print 'Location: ' + course_name
+        print 'Location: ' + outFileName
 
 # Main function
 def Make_Course_Sheet(args = ['-h']):
@@ -518,10 +521,10 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-html', action='store_true')
     parser.add_argument('-video', default='True', action='store_true')
     parser.add_argument('-links', action='store_true')
+    parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args()
-    print args
 
     if args.help: sys.exit(instructions)
 
