@@ -21,11 +21,12 @@ and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
 
 Options:
-  -h Print this message and quit.
-  -r Recursive - includes nested folders.
-  -l Returns a Python list. Used when called by other scripts.
+  -h  Print this message and quit.
+  -r  Recursive - includes nested folders.
+  -o  Set an output filename as the next argument.
+  -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 7th, 2018
+Last update: March 12th, 2018
 """
 
 # Word documents have namespaces on their XML.
@@ -62,7 +63,7 @@ def getURLs(soup, links):
 
     return links
 
-def getLinks(filename, optionlist, dirpath):
+def getLinks(filename, args, dirpath):
 
     # Open the .docx file as if it were a zip (because it is)
     fullname = os.path.join(dirpath or '', filename)
@@ -92,6 +93,7 @@ def getWordLinks(args):
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-r', action='store_true')
     parser.add_argument('-l', action='store_true')
+    parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args()
@@ -112,10 +114,7 @@ def getWordLinks(args):
     if sys.argv[0] in file_names:
         file_names.remove(sys.argv[0])
 
-    optionlist = []
     if args.help: sys.exit(instructions)
-    if args.r: optionlist.append('r')
-    if args.l: optionlist.append('l')
 
     filecount = 0
     linklist = []
@@ -130,19 +129,19 @@ def getWordLinks(args):
             # Make sure this is an sjson file (just check extension)
             if name.lower().endswith('.docx'):
                 # Convert it to an SRT file
-                linklist.extend(getLinks(name, optionlist, False))
+                linklist.extend(getLinks(name, args, False))
                 filecount += 1
 
         # If it's a directory:
         if os.path.isdir(name):
             target_is_folder = True
             # Recursive version using os.walk for all levels.
-            if 'r' in optionlist:
+            if args.r:
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
                         # Convert every file in that directory.
                         if eachfile.lower().endswith('.docx'):
-                            linklist.extend(getLinks(eachfile, optionlist, dirpath))
+                            linklist.extend(getLinks(eachfile, args, dirpath))
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
             else:
@@ -152,11 +151,11 @@ def getWordLinks(args):
                     break
                 for eachfile in topfiles:
                     if eachfile.lower().endswith('.docx'):
-                        linklist.extend(getLinks(eachfile, optionlist, dirpath))
+                        linklist.extend(getLinks(eachfile, args, dirpath))
                         filecount += 1
 
     # When called by other scripts, quietly return the list and stop.
-    if 'l' in optionlist:
+    if args.l:
         return linklist
 
     # Otherwise, output a file and print some info.
@@ -167,11 +166,12 @@ def getWordLinks(args):
         +  ' for links.' )
 
     # Create output file as sibling to the original target of the script.
+    outFileName = args.o if args.o else 'Word_Doc_Links.csv'
     if target_is_folder:
         outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
-        outFilePath = os.path.join(outFileFolder, 'Word_Doc_Links.csv')
+        outFilePath = os.path.join(outFileFolder, outFileName)
     else:
-        outFilePath = os.path.join(os.path.dirname(file_names[0]), 'Word_Doc_Links.csv')
+        outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
         fieldnames = ['filename','url','linktext']
@@ -184,7 +184,7 @@ def getWordLinks(args):
         for row in linklist:
             writer.writerow(row)
 
-    print 'Spreadsheet created: Word_Doc_Links.csv'
+    print 'Spreadsheet created: ' + outFileName
     print 'Location: ' + outFilePath
 
 if __name__ == "__main__":
