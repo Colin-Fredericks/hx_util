@@ -18,9 +18,10 @@ Valid options:
   -c Copy. Makes new copy of file with new name. Old one will still be there.
   -n New folder. Puts SRTs in a new folder that's a sibling of the course folder.
   -z Zip the new SRTs into a single file.
+  -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last updated: November 16th, 2017
+Last updated: March 12th, 2018
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -28,11 +29,16 @@ def getOriginalNames(course_folder, args):
 
     nameDict = {}
 
-    # Find our course tsv file. It's based on the course's display_name.
-    tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
-    root = tree.getroot()
-    course_title = root.attrib['display_name']
-    course_tsv_path = os.path.join(course_folder, course_title + '.tsv')
+    # Find our course tsv file. It's based on the course's display_name,
+    # or set by an input filename argument.
+    if args.i:
+        course_outline_file = args.i
+    else:
+        tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
+        root = tree.getroot()
+        course_title = root.attrib['display_name']
+        course_outline_file = course_title + '.tsv'
+    course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
     with open(course_tsv_path,'rb') as tsvfile:
