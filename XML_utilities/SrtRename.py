@@ -54,7 +54,7 @@ def getOriginalNames(course_folder, args):
 def setNewNames(course_folder, nameDict, args, course_title):
     static_folder = os.path.join(os.path.abspath(course_folder), 'static')
 
-    if args.n:
+    if args.n or args.z:
         # If we're putting it in a new folder, make it as a child of the course folder.
         target_folder = os.path.join(os.path.abspath(course_folder), os.pardir, course_title + '_SRTs')
         if not os.path.exists(target_folder):
@@ -80,7 +80,14 @@ def setNewNames(course_folder, nameDict, args, course_title):
                 os.rename(oldname, newname)
             filecount += 1
 
-    print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.')
+    if args.z:
+        course_title = args.o if args.o else course_title + '_SRT'
+        target_file_path = os.path.join(target_folder, os.pardir, course_title)
+        shutil.make_archive(target_file_path, 'zip', target_folder)
+        shutil.rmtree(target_folder)
+        print 'Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.'
+    else:
+        print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.')
 
 
 # Main function.
@@ -95,7 +102,7 @@ def SrtRename(args):
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
