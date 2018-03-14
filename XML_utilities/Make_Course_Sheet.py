@@ -263,21 +263,28 @@ def getComponentInfo(folder, filename, args):
         # We need our original uploaded filename.
         # It's not present in the old XML. :(
         # In new XML, it's in a video_asset tag.
+        found_video_asset = False
         for child in root:
             if child.tag == 'video_asset':
                 if 'client_video_id' in child.attrib:
+                    found_video_asset = True
                     src = child.attrib['client_video_id']
                     # Stripping the host and folders
                     src = src[src.rfind("/")+1:]
                     # Stripping the extension, if there is one.
-                    if src.rfind('.') > 0:
-                        src = src[:src.rfind('.')]
+                    if src.rfind('.') > 0: src = src[:src.rfind('.')]
+                    if src == '': temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
                     temp['upload_name'] = src
 
                 if 'duration' in child.attrib:
                     # Get duration in seconds
                     duration = child.attrib['duration']
                     temp['duration'] = secToHMS(duration)
+
+        # Need a placeholder if there's no video_asset tag or if it's less than informative.
+        if not found_video_asset:
+            temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
+            temp['duration'] = 'unknown'
 
 
     # get problem information
