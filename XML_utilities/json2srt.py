@@ -68,7 +68,7 @@ def msecToHMS(time):
     return str(hours) + ':' + str(minutes) + ':' + str(seconds) + ',' + str(msec)
 
 
-def ConvertToSRT(filename, optionlist, dirpath):
+def ConvertToSRT(filename, args, dirpath):
     # Open the SJSON file
     with open(os.path.join(dirpath or '', filename),'r') as inputfile:
         # Read in the JSON as a dictionary.
@@ -116,7 +116,7 @@ def ConvertToSRT(filename, optionlist, dirpath):
                 outfile.write('\n')
 
     # If the -o option is set, delete the original
-    if 'o' in optionlist:
+    if args.o:
         os.remove(filename)
 
 # Main function:
@@ -142,10 +142,7 @@ def json2srt(args):
     if file_names == []:
         sys.exit('No file or directory found by that name.')
 
-    optionlist = []
     if args.help: sys.exit(instructions)
-    if args.o: optionlist.append('o')
-    if args.r: optionlist.append('r')
 
     filecount = 0
 
@@ -158,18 +155,18 @@ def json2srt(args):
             # Make sure this is an sjson file (just check extension)
             if name.lower().endswith('.sjson'):
                 # Convert it to an SRT file
-                ConvertToSRT(name, optionlist, False)
+                ConvertToSRT(name, args, False)
                 filecount += 1
 
         # If it's a directory:
         if os.path.isdir(name):
             # Recursive version using os.walk for all levels.
-            if 'r' in optionlist:
+            if args.r:
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
                         # Convert every file in that directory.
                         if eachfile.lower().endswith('.sjson'):
-                            ConvertToSRT(eachfile, optionlist, dirpath)
+                            ConvertToSRT(eachfile, args, dirpath)
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
             else:
@@ -179,7 +176,7 @@ def json2srt(args):
                     break
                 for eachfile in topfiles:
                     if eachfile.lower().endswith('.sjson'):
-                        ConvertToSRT(eachfile, optionlist, dirpath)
+                        ConvertToSRT(eachfile, args, dirpath)
                         filecount += 1
 
     print 'Converted ' + str(filecount) + ' SJSON files to SRT.'

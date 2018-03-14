@@ -21,7 +21,7 @@ Valid options:
   -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last updated: March 12th, 2018
+Last updated: March 14th, 2018
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -31,13 +31,10 @@ def getOriginalNames(course_folder, args):
 
     # Find our course tsv file. It's based on the course's display_name,
     # or set by an input filename argument.
-    if args.i:
-        course_outline_file = args.i
-    else:
-        tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
-        root = tree.getroot()
-        course_title = root.attrib['display_name']
-        course_outline_file = course_title + '.tsv'
+    tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
+    root = tree.getroot()
+    course_title = root.attrib['display_name']
+    course_outline_file = args.i if args.i else course_title + '.tsv'
     course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
@@ -87,8 +84,11 @@ def setNewNames(course_folder, nameDict, args, course_title):
             filecount += 1
 
     if args.z:
-        course_title = args.o if args.o else course_title + '_SRT'
+        course_title = os.path.basename(args.o) if args.o else course_title + '_SRT'
+        # If the zip file has the name '.zip' in it, ditch that. The archiver will add it.
+        if course_title.endswith('.zip'): course_title = course_title.rsplit('.zip',1)[0]
         target_file_path = os.path.join(target_folder, os.pardir, course_title)
+
         shutil.make_archive(target_file_path, 'zip', target_folder)
         shutil.rmtree(target_folder)
         print 'Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.'
@@ -105,6 +105,7 @@ def SrtRename(args):
     parser.add_argument('-c', action='store_true')
     parser.add_argument('-n', action='store_true')
     parser.add_argument('-z', action='store_true')
+    parser.add_argument('-i', action='store')
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
