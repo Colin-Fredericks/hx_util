@@ -205,18 +205,22 @@ def getAuxLinks(rootFileDir):
                     file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
-                    targetFile = os.path.join(folder,f)
-                    print targetFile
-                    file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
-                    for l in file_temp['links']:
-                        l['text'] = l['linktext']
-                        l['href'] = l['url']
-                        del l['linktext']
-                        del l['url']
-                    file_temp['type'] = 'docx'
-                    file_temp['name'] = f
-                    file_temp['url'] = f
-                    folder_temp['contents'].append(file_temp)
+                    # Most likely to fail if GetWordLinks wasn't imported.
+                    try:
+                        targetFile = os.path.join(folder,f)
+                        print targetFile
+                        file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
+                        for l in file_temp['links']:
+                            l['text'] = l['linktext']
+                            l['href'] = l['url']
+                            del l['linktext']
+                            del l['url']
+                        file_temp['type'] = 'docx'
+                        file_temp['name'] = f
+                        file_temp['url'] = f
+                        folder_temp['contents'].append(file_temp)
+                    except:
+                        pass
 
             folder_temp['chapter'] = os.path.basename(folder)
             folder_temp['name'] = os.path.basename(folder)
@@ -556,13 +560,13 @@ def Make_Course_Sheet(args = ['-h']):
     for item in extra:
         file_names += glob(item)
 
-    # If the filenames don't exist, say so and quit.
-    if file_names == []:
-        sys.exit('No file or directory found by that name.')
-
     # Don't run the script on itself.
     if sys.argv[0] in file_names:
         file_names.remove(sys.argv[0])
+
+    # If the filenames don't exist, say so and quit.
+    if file_names == []:
+        sys.exit('No file or directory found by that name.')
 
     # Get the course.xml file and root directory
     for name in file_names:
