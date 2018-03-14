@@ -531,7 +531,9 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args(args)
+    # "extra" will help us deal with out-of-order arguments.
+    args, extra = parser.parse_known_args(args)
+
     if args.help: sys.exit(instructions)
 
     # Do video by default. Don't do it when we're doing other stuff,
@@ -551,6 +553,8 @@ def Make_Course_Sheet(args = ['-h']):
     file_names = list()
     for arg in args.file_names:
         file_names += glob(arg)
+    for item in extra:
+        file_names += glob(item)
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
