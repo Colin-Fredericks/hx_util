@@ -31,13 +31,10 @@ def getOriginalNames(course_folder, args):
 
     # Find our course tsv file. It's based on the course's display_name,
     # or set by an input filename argument.
-    if args.i:
-        course_outline_file = args.i
-    else:
-        tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
-        root = tree.getroot()
-        course_title = root.attrib['display_name']
-        course_outline_file = course_title + '.tsv'
+    tree = ET.parse(os.path.join(course_folder, 'course/course.xml'))
+    root = tree.getroot()
+    course_title = root.attrib['display_name']
+    course_outline_file = args.i if args.i else course_title + '.tsv'
     course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
