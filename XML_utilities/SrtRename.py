@@ -87,7 +87,9 @@ def setNewNames(course_folder, nameDict, args, course_title):
             filecount += 1
 
     if args.z:
-        course_title = args.o if args.o else course_title + '_SRT'
+        course_title = os.path.basename(args.o) if args.o else course_title + '_SRT'
+        # If the zip file has the name '.zip' in it, ditch that. The archiver will add it.
+        if course_title.endswith('.zip'): course_title = course_title.rsplit('.zip',1)[0]
         target_file_path = os.path.join(target_folder, os.pardir, course_title)
         shutil.make_archive(target_file_path, 'zip', target_folder)
         shutil.rmtree(target_folder)
@@ -105,6 +107,7 @@ def SrtRename(args):
     parser.add_argument('-c', action='store_true')
     parser.add_argument('-n', action='store_true')
     parser.add_argument('-z', action='store_true')
+    parser.add_argument('-i', action='store')
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
