@@ -170,10 +170,10 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
             # Check to see if we can shrink the first entry enough.
             # If we have enough time, shrink the first entry back.
             # If not, stop and throw an error message.
-            # print 'start: ' + str(entry['start']/1000.0)
-            # print 'end: ' + str(entry['end']/1000.0)
-            # print entry['start'] > abs(seconds*1000)
-            # print entry['end'] > abs(seconds*1000)
+            # print('start: ' + str(entry['start']/1000.0))
+            # print('end: ' + str(entry['end']/1000.0))
+            # print(entry['start'] > abs(seconds*1000))
+            # print(entry['end'] > abs(seconds*1000))
 
             # If the first entry starts at or after our time, we're all good.
             if entry['start'] > abs(seconds*1000):
@@ -186,7 +186,7 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
                 entry['end'] += seconds*1000
             # But if not, we can't change this file.
             else:
-                print 'Cannot shift ' + name + '. First subtitle is before ' + str(-seconds) + ' seconds.'
+                print('Cannot shift ' + name + '. First subtitle is before ' + str(-seconds) + ' seconds.')
                 return False
 
         if i>0:
@@ -240,14 +240,14 @@ def SRTTimeShifter(args):
 
     # If we're not shifting anything, just return.
     if seconds == 0:
-        print 'Zero second shift - no files changed.'
+        print('Zero second shift - no files changed.')
         return False
 
     # Convert every file we're passed.
     for name in file_names:
         # Make sure single files exist.
         if not os.path.exists(name):
-            print "File or directory not found: " + name
+            print('File or directory not found: ' + name)
             return
 
         # If it's just a file...
@@ -269,7 +269,7 @@ def SRTTimeShifter(args):
     if fileCount > 0:
         plFiles = 'file' if fileCount == 1 else 'files'
         plSeconds = 'second' if seconds == 1 else 'seconds'
-        print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
+        print('Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.')
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
     import GetWordLinks
 except:
-    print 'Cannot find GetWordLinks.py, skipping links in .docx files.'
+    print('Cannot find GetWordLinks.py, skipping links in .docx files.')
 
 instructions = """
 To use:
@@ -206,7 +206,6 @@ def getAuxLinks(rootFileDir):
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
                     targetFile = os.path.join(folder,f)
-                    print targetFile
                     file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
                     for l in file_temp['links']:
                         l['text'] = l['linktext']
@@ -327,7 +326,7 @@ def drillDown(folder, filename, args):
     try:
         tree = ET.parse(os.path.join(folder, (filename + '.xml')))
     except IOError:
-        print "Possible missing file: " + os.path.join(folder, (filename + '.xml'))
+        print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
         return {'contents': contents, 'parent_name': '', 'found_file': False}
 
     root = tree.getroot()
@@ -514,8 +513,8 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             else:
                 writer.writerow(row)
 
-        print 'Spreadsheet created for ' + course_dict['name'] + '.'
-        print 'Location: ' + outFileName
+        print('Spreadsheet created for ' + course_dict['name'] + '.')
+        print('Location: ' + outFileName)
 
 # Main function
 def Make_Course_Sheet(args = ['-h']):

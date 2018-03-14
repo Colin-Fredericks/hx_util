@@ -159,7 +159,7 @@ def getWordLinks(args):
         return linklist
 
     # Otherwise, output a file and print some info.
-    print ( '\nChecked '
+    print( '\nChecked '
         + str(filecount)
         + ' .docx file'
         + ('s' if filecount > 1 else '')
@@ -184,8 +184,8 @@ def getWordLinks(args):
         for row in linklist:
             writer.writerow(row)
 
-    print 'Spreadsheet created: ' + outFileName
-    print 'Location: ' + outFilePath
+    print('Spreadsheet created: ' + outFileName)
+    print('Location: ' + outFilePath)
 
 if __name__ == "__main__":
     # this won't be run when imported

@@ -76,6 +76,6 @@ for dirpath, dirnames, filenames in os.walk(args.directory):
         numfiles += 1
 
 if numfiles == 0:
-    print 'No files found - wrong or empty directory?'
+    print('No files found - wrong or empty directory?')
 else:
-    print 'Video download options set for ' + str(numfiles) + ' files.'
+    print('Video download options set for ' + str(numfiles) + ' files.')

@@ -75,7 +75,7 @@ def ConvertToSRT(filename, args, dirpath):
         try:
             jdata = json.load(inputfile)
         except:
-            print 'Skipping ' + filename + ': possible invalid JSON'
+            print('Skipping ' + filename + ': possible invalid JSON')
             return
 
         # Get the start time, end time, and text as individual lists.
@@ -84,7 +84,7 @@ def ConvertToSRT(filename, args, dirpath):
             endList = jdata['end']
             textList = jdata['text']
         except:
-            print 'Skipping ' + filename + ': file is missing needed data.'
+            print('Skipping ' + filename + ': file is missing needed data.')
             return
 
         # Convert all the times to strings of format H:M:S,ms
@@ -179,7 +179,7 @@ def json2srt(args):
                         ConvertToSRT(eachfile, args, dirpath)
                         filecount += 1
 
-    print 'Converted ' + str(filecount) + ' SJSON files to SRT.'
+    print('Converted ' + str(filecount) + ' SJSON files to SRT.')
 
 if __name__ == "__main__":
     # this won't be run when imported

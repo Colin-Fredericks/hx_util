@@ -27,23 +27,23 @@ def runLiveTools(args):
     # Make the link spreadsheet.
     Make_Course_Sheet.Make_Course_Sheet(args + ['-all', '-o', 'Course_Full_Sheet.tsv'])
     #Done!
-    print 'SRT archive prep complete.'
-    print 'Your renamed SRT files are a new folder, in the same directory as your course folder.'
+    print('SRT archive prep complete.')
+    print('Your renamed SRT files are a zip file, in the same directory as your course folder.')
 
 # Make sure we're running on the course folder, not something else.
 # Note that the course folder is not always named "course",
 # so we need to look for the course.xml file.
 if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
-    print 'Please run me on a course folder, not the course.xml file.'
+    print('Please run me on a course folder, not the course.xml file.')
 
 for directory in sys.argv:
     if os.path.isdir(directory):
         if directory == 'course':
-            print 'found course folder: ' + directory
+            print('found course folder: ' + directory)
             runLiveTools(sys.argv)
         else:
             if 'course.xml' in [os.path.basename(f) for f in os.listdir(directory)]:
-                print 'found course folder: ' + directory
+                print('found course folder: ' + directory)
                 runLiveTools(sys.argv)
             else:
-                print 'No course.xml file found in ' + directory
+                print('No course.xml file found in ' + directory)

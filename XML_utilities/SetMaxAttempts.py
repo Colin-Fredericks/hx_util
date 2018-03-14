@@ -116,6 +116,6 @@ for dirpath, dirnames, filenames in os.walk(args.directory):
 
 
 if numfiles == 0:
-    print 'No files found - wrong or empty directory?'
+    print('No files found - wrong or empty directory?')
 else:
-    print 'Max Attempts set for ' + str(numfiles) + ' files.'
+    print('Max Attempts set for ' + str(numfiles) + ' files.')

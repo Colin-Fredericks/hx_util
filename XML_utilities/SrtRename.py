@@ -91,9 +91,9 @@ def setNewNames(course_folder, nameDict, args, course_title):
 
         shutil.make_archive(target_file_path, 'zip', target_folder)
         shutil.rmtree(target_folder)
-        print 'Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.'
+        print('Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.')
     else:
-        print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.')
+        print('Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.'))
 
 
 # Main function.
