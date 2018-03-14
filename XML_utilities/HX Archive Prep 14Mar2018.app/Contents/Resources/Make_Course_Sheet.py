@@ -24,11 +24,12 @@ You can specify the following options:
     -video     Forces inclusion of video with html or problems
     -all       Includes html, video, and problem components
     -links     Lists all links in the course.
-               Not compatible with other options.
+               Not compatible with above options.
+    -o         Sets the output filename to the next argument.
 
 This script may fail on courses with empty containers.
 
-Last update: March 8th, 2018
+Last update: March 14th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -262,21 +263,28 @@ def getComponentInfo(folder, filename, args):
         # We need our original uploaded filename.
         # It's not present in the old XML. :(
         # In new XML, it's in a video_asset tag.
+        found_video_asset = False
         for child in root:
             if child.tag == 'video_asset':
                 if 'client_video_id' in child.attrib:
+                    found_video_asset = True
                     src = child.attrib['client_video_id']
                     # Stripping the host and folders
                     src = src[src.rfind("/")+1:]
                     # Stripping the extension, if there is one.
-                    if src.rfind('.') > 0:
-                        src = src[:src.rfind('.')]
+                    if src.rfind('.') > 0: src = src[:src.rfind('.')]
+                    if src == '': temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
                     temp['upload_name'] = src
 
                 if 'duration' in child.attrib:
                     # Get duration in seconds
                     duration = child.attrib['duration']
                     temp['duration'] = secToHMS(duration)
+
+        # Need a placeholder if there's no video_asset tag or if it's less than informative.
+        if not found_video_asset:
+            temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
+            temp['duration'] = 'unknown'
 
 
     # get problem information
@@ -459,8 +467,10 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
     if args.links: course_name += ' Links'
     course_name += '.tsv'
 
+    outFileName = args.o if args.o else course_name
+
     # Create a "csv" file with tabs as delimiters
-    with open(os.path.join(rootFileDir, course_name),'wb') as outputfile:
+    with open(os.path.join(rootFileDir, outFileName),'wb') as outputfile:
         fieldnames = ['chapter','sequential','vertical','component','type','url']
 
         # Include the XML if we're dealing with problems
@@ -505,7 +515,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
                 writer.writerow(row)
 
         print 'Spreadsheet created for ' + course_dict['name'] + '.'
-        print 'Location: ' + course_name
+        print 'Location: ' + outFileName
 
 # Main function
 def Make_Course_Sheet(args = ['-h']):
@@ -518,11 +528,10 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-html', action='store_true')
     parser.add_argument('-video', default='True', action='store_true')
     parser.add_argument('-links', action='store_true')
+    parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
-    print args
-
+    args = parser.parse_args(args)
     if args.help: sys.exit(instructions)
 
     # Do video by default. Don't do it when we're doing other stuff,
@@ -534,7 +543,7 @@ def Make_Course_Sheet(args = ['-h']):
     # Link lister is not compatible with other options,
     # mostly because it makes for too big a spreawdsheet.
     if args.links:
-        args.problems = args.html = args.all = args.links = False
+        args.problems = args.html = args.all = args.video = False
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
