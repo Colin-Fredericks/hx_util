@@ -38,6 +38,7 @@ def getOriginalNames(course_folder, args):
     course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
+    # Need to rewrite without using next() for Python3
     with open(course_tsv_path,'rb') as tsvfile:
         reader = csv.reader(tsvfile, delimiter='\t')
 
