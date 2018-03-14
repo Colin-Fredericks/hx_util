@@ -21,7 +21,7 @@ Valid options:
   -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last updated: March 12th, 2018
+Last updated: March 14th, 2018
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -88,6 +88,7 @@ def setNewNames(course_folder, nameDict, args, course_title):
         # If the zip file has the name '.zip' in it, ditch that. The archiver will add it.
         if course_title.endswith('.zip'): course_title = course_title.rsplit('.zip',1)[0]
         target_file_path = os.path.join(target_folder, os.pardir, course_title)
+
         shutil.make_archive(target_file_path, 'zip', target_folder)
         shutil.rmtree(target_folder)
         print 'Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.'

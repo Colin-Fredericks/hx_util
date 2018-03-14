@@ -21,7 +21,7 @@ def runLiveTools(args):
     json2srt.json2srt(args + ['-r'])
     # Rename (copy) the SRT files to match our upload names and make a zip file.
     # Put this in the course folder.
-    SrtRename.SrtRename(args + ['-n', '-z', '-i', 'Course_Video_Sheet.tsv', '-o', '../Course_SRT_Files.zip'])
+    SrtRename.SrtRename(args + ['-n', '-z', '-i', 'Course_Video_Sheet.tsv', '-o', 'Course_SRT_Files.zip'])
     # Make the link spreadsheet.
     Make_Course_Sheet.Make_Course_Sheet(args + ['-links', '-o', 'Course_Link_Sheet.tsv'])
     # Make the link spreadsheet.

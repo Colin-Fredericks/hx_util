@@ -29,7 +29,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 12th, 2018
+Last update: March 14th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -525,7 +525,6 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('file_names', nargs='*')
 
     args = parser.parse_args(args)
-
     if args.help: sys.exit(instructions)
 
     # Do video by default. Don't do it when we're doing other stuff,
@@ -537,7 +536,7 @@ def Make_Course_Sheet(args = ['-h']):
     # Link lister is not compatible with other options,
     # mostly because it makes for too big a spreawdsheet.
     if args.links:
-        args.problems = args.html = args.all = args.links = False
+        args.problems = args.html = args.all = args.video = False
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
