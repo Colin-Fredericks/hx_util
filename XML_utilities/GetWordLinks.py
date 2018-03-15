@@ -13,12 +13,13 @@ import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 instructions = """
 Usage:
 
-python GetWordLinks.py path/to/file/ (options)
+python3 GetWordLinks.py path/to/file/ (options)
 
 Extract all hyperlinks from a .docx file,
 including link destination and linked text,
 and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
+Excel mangles unicode, so you will need to open the csv in Google Drive.
 
 Options:
   -h  Print this message and quit.
@@ -26,7 +27,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 12th, 2018
+Last update: March 15th 2018
 """
 
 # Word documents have namespaces on their XML.
@@ -159,7 +160,7 @@ def getWordLinks(args):
         return linklist
 
     # Otherwise, output a file and print some info.
-    print ( '\nChecked '
+    print( '\nChecked '
         + str(filecount)
         + ' .docx file'
         + ('s' if filecount > 1 else '')
@@ -184,8 +185,8 @@ def getWordLinks(args):
         for row in linklist:
             writer.writerow(row)
 
-    print 'Spreadsheet created: ' + outFileName
-    print 'Location: ' + outFilePath
+    print('Spreadsheet created: ' + outFileName)
+    print('Location: ' + outFilePath)
 
 if __name__ == "__main__":
     # this won't be run when imported

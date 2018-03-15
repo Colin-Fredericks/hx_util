@@ -8,7 +8,7 @@ from glob import glob
 
 instructions = """
 To use:
-python SrtRename.py course_folder (options)
+python3 SrtRename.py course_folder (options)
 
 Renames the .srt files in a course's /static/ folder to match
 our original uploaded filenames, as described in a CourseName.tsv file.
@@ -21,7 +21,7 @@ Valid options:
   -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last updated: March 14th, 2018
+Last update: March 15th 2018
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -38,7 +38,7 @@ def getOriginalNames(course_folder, args):
     course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
-    with open(course_tsv_path,'rb') as tsvfile:
+    with open(course_tsv_path,'r') as tsvfile:
         reader = csv.reader(tsvfile, delimiter='\t')
 
         # Get the right columns
@@ -91,9 +91,9 @@ def setNewNames(course_folder, nameDict, args, course_title):
 
         shutil.make_archive(target_file_path, 'zip', target_folder)
         shutil.rmtree(target_folder)
-        print 'Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.'
+        print('Zipped ' + str(filecount) + ' SRT files into ' + course_title + '.zip.')
     else:
-        print 'Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.')
+        print('Renamed ' + str(filecount) + ' SRT files' + (', kept originals.' if args.c else '.'))
 
 
 # Main function.
@@ -125,10 +125,9 @@ def SrtRename(args):
     if args.help: sys.exit(instructions)
 
     # Our script might be in the arguments. Don't run on it.
-    for i, f in enumerate(file_names):
+    for f in file_names:
         if sys.argv[0] in f:
             file_names.remove(f)
-            break
 
     for name in file_names:
 

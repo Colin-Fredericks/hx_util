@@ -1,18 +1,22 @@
-from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
 import sys
+import sys
+if sys.version_info <= (3, 0):
+    sys.exit('I am a Python 3 script. Run me with python3.')
+
 import os
 import argparse
+from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
     import GetWordLinks
 except:
-    print 'Cannot find GetWordLinks.py, skipping links in .docx files.'
+    print('Cannot find GetWordLinks.py, skipping links in .docx files.')
 
 instructions = """
 To use:
-python Make_Course_Sheet.py path/to/course.xml (options)
+python3 Make_Course_Sheet.py path/to/course.xml (options)
 
 Run this on a course folder, or a course.xml file inside an edX course folder (from export).
 You will get a Tab-Separated Value file that you should open with Google Drive,
@@ -29,7 +33,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 14th, 2018
+Last update: March 15th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -80,15 +84,15 @@ def secToHMS(time):
     hours = (time / 3600) % 24
 
     # Make sure we get enough zeroes.
-    if seconds == 0: seconds = '00'
-    if seconds < 10: seconds = '0' + unicode(seconds)
-    if minutes == 0: minutes = '00'
-    if minutes < 10: minutes = '0' + unicode(minutes)
-    if hours == 0: hours = '00'
-    if hours < 10: hours = '0' + unicode(hours)
+    if int(seconds) == 0: seconds = '00'
+    if int(seconds) < 10: seconds = '0' + str(seconds)
+    if int(minutes) == 0: minutes = '00'
+    if int(minutes) < 10: minutes = '0' + str(minutes)
+    if int(hours) == 0: hours = '00'
+    if int(hours) < 10: hours = '0' + str(hours)
 
     # Send back a string
-    return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
+    return str(hours) + ':' + str(minutes) + ':' + str(seconds)
 
 # Adds notes to links based on file type
 def describeLinkData(newlink):
@@ -208,7 +212,6 @@ def getAuxLinks(rootFileDir):
                     # Most likely to fail if GetWordLinks wasn't imported.
                     try:
                         targetFile = os.path.join(folder,f)
-                        print targetFile
                         file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
                         for l in file_temp['links']:
                             l['text'] = l['linktext']
@@ -298,7 +301,7 @@ def getComponentInfo(folder, filename, args):
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
-            temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('unicode_escape')
+            temp['inner_xml'] = root.text + ''.join(str(ET.tostring(e)) for e in root)
             soup = BeautifulSoup(temp['inner_xml'], 'xml')
             temp['links'] = getHTMLLinks(soup)
         else:
@@ -331,7 +334,7 @@ def drillDown(folder, filename, args):
     try:
         tree = ET.parse(os.path.join(folder, (filename + '.xml')))
     except IOError:
-        print "Possible missing file: " + os.path.join(folder, (filename + '.xml'))
+        print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
         return {'contents': contents, 'parent_name': '', 'found_file': False}
 
     root = tree.getroot()
@@ -518,8 +521,8 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             else:
                 writer.writerow(row)
 
-        print 'Spreadsheet created for ' + course_dict['name'] + '.'
-        print 'Location: ' + outFileName
+        print('Spreadsheet created for ' + course_dict['name'] + '.')
+        print('Location: ' + outFileName)
 
 # Main function
 def Make_Course_Sheet(args = ['-h']):

@@ -5,7 +5,7 @@ from glob import glob
 
 instructions = """
 To use:
-python SRTTimeShifter.py seconds filename (options)
+python3 SRTTimeShifter.py filename seconds (options)
 
 Takes the given subtitle file or files, in SRT format,
 and shifts the times in each by the given number of seconds.
@@ -18,7 +18,7 @@ Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 
-Last update: November 16th 2017
+Last update: March 15th 2018
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format
@@ -93,6 +93,7 @@ def getSRTEntries(inFile):
     SRTEntries = []
     lastLine = ''
 
+    # Need to rewrite without using .next() for Python3 compatibility.
     for index, line in enumerate(inFile):
         entryData = {}
 
@@ -106,13 +107,13 @@ def getSRTEntries(inFile):
             # Watch out for the end of the file.
             try:
                 # The next line is text1, and the one after is text2 or maybe blank.
-                entryData['text1'] = unicode(inFile.next())
+                entryData['text1'] = str(inFile.next())
                 # If text1 is blank, move on.
                 if entryData['text1'].strip() == '':
                     entryData['text2'] = ''
                     SRTEntries.append(entryData)
                     continue
-                entryData['text2'] = unicode(inFile.next())
+                entryData['text2'] = str(inFile.next())
             except StopIteration:
                 pass
 
@@ -125,12 +126,12 @@ def getSRTEntries(inFile):
 
 # Writes a standard SRT entry into our output files.
 def writeEntry(outFile, entry, index):
-    outFile.write(unicode(index)+ '\n')
-    outFile.write(unicode(msecToHMS(entry['start'])) + ' --> ' + unicode(msecToHMS(entry['end'])) + '\n')
-    outFile.write(unicode(entry['text1']))
+    outFile.write(str(index)+ '\n')
+    outFile.write(str(msecToHMS(entry['start'])) + ' --> ' + str(msecToHMS(entry['end'])) + '\n')
+    outFile.write(str(entry['text1']))
     if ''.join(entry['text2'].split()) is not '':
-        outFile.write(unicode(entry['text2']))
-    outFile.write(unicode('\n'))
+        outFile.write(str(entry['text2']))
+    outFile.write('\n')
 
 # The core loop that calls the important stuff.
 def shiftTimes(inFile, outFile, name, seconds, optionList):
@@ -170,10 +171,10 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
             # Check to see if we can shrink the first entry enough.
             # If we have enough time, shrink the first entry back.
             # If not, stop and throw an error message.
-            # print 'start: ' + str(entry['start']/1000.0)
-            # print 'end: ' + str(entry['end']/1000.0)
-            # print entry['start'] > abs(seconds*1000)
-            # print entry['end'] > abs(seconds*1000)
+            # print('start: ' + str(entry['start']/1000.0))
+            # print('end: ' + str(entry['end']/1000.0))
+            # print(entry['start'] > abs(seconds*1000))
+            # print(entry['end'] > abs(seconds*1000))
 
             # If the first entry starts at or after our time, we're all good.
             if entry['start'] > abs(seconds*1000):
@@ -186,7 +187,7 @@ def shiftTimes(inFile, outFile, name, seconds, optionList):
                 entry['end'] += seconds*1000
             # But if not, we can't change this file.
             else:
-                print 'Cannot shift ' + name + '. First subtitle is before ' + str(-seconds) + ' seconds.'
+                print('Cannot shift ' + name + '. First subtitle is before ' + str(-seconds) + ' seconds.')
                 return False
 
         if i>0:
@@ -209,8 +210,8 @@ def SRTTimeShifter(args):
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
     parser.add_argument('--help', '-h', action='store_true')
     parser.add_argument('-o', action='store_true')
-    parser.add_argument('seconds')
     parser.add_argument('file_names', nargs='*')
+    parser.add_argument('seconds', action='store')
 
     args = parser.parse_args(args)
 
@@ -240,14 +241,14 @@ def SRTTimeShifter(args):
 
     # If we're not shifting anything, just return.
     if seconds == 0:
-        print 'Zero second shift - no files changed.'
+        print('Zero second shift - no files changed.')
         return False
 
     # Convert every file we're passed.
     for name in file_names:
         # Make sure single files exist.
         if not os.path.exists(name):
-            print "File or directory not found: " + name
+            print('File or directory not found: ' + name)
             return
 
         # If it's just a file...
@@ -269,7 +270,7 @@ def SRTTimeShifter(args):
     if fileCount > 0:
         plFiles = 'file' if fileCount == 1 else 'files'
         plSeconds = 'second' if seconds == 1 else 'seconds'
-        print 'Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.'
+        print('Shifted ' + str(fileCount) + ' ' + plFiles + ' by ' + str(seconds) + ' ' + plSeconds + '.')
 
 
 if __name__ == "__main__":
