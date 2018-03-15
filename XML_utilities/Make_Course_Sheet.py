@@ -1,8 +1,12 @@
-from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
 import sys
+import sys
+if sys.version_info <= (3, 0):
+    sys.exit('I am a Python 3 script. Run me with python3.')
+
 import os
 import argparse
+from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
