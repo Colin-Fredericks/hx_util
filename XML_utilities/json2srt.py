@@ -99,19 +99,19 @@ def ConvertToSRT(filename, args, dirpath):
         newFileName = filename.replace('.srt', '')
         newFileName = newFileName.replace('.sjson', '')
         newFileName += '.srt'
-        with open(os.path.join(dirpath or '', newFileName), 'wb') as outfile:
+        with open(os.path.join(dirpath or '', newFileName), 'w') as outfile:
             # Step through the lists and write rows of the output file.
             for i, txt in enumerate(newTextList):
                 outfile.write(str(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
                 # If it's a short line or one without a space, output the whole thing.
                 if len(txt) < 45 or txt.find(' ') == -1:
-                    outfile.write(str(txt).encode('utf-8') + '\n')
+                    outfile.write(str(txt) + '\n')
                 # Otherwise, break it up.
                 else:
                     lineA, lineB = splitString(txt)
-                    outfile.write(str(lineA).encode('utf-8') + '\n')
-                    outfile.write(str(lineB).encode('utf-8') + '\n')
+                    outfile.write(str(lineA) + '\n')
+                    outfile.write(str(lineB) + '\n')
                 outfile.write('\n')
 
     # If the -o option is set, delete the original
