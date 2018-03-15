@@ -29,22 +29,22 @@ def msecToHMS(time):
     # Downconvert through hours. SRTs don't handle days.
     msec = time % 1000
     time -= msec
-    seconds = (time / 1000) % 60
+    seconds = (time // 1000) % 60
     time -= (seconds * 1000)
-    minutes = (time / 60 / 1000) % 60
+    minutes = (time // 60 // 1000) % 60
     time -= (minutes * 60 * 1000)
-    hours = (time / 1000 / 3600) % 24
+    hours = (time // 1000 // 3600) % 24
 
     # Make sure we get enough zeroes.
-    if msec == 0: msec = '000'
+    if int(msec) == 0: msec = '000'
     elif int(msec) < 10: msec = '00' + str(msec)
     elif int(msec) < 100: msec = '0' + str(msec)
-    if seconds == 0: seconds = '00'
-    if seconds < 10: seconds = '0' + str(seconds)
-    if minutes == 0: minutes = '00'
-    if minutes < 10: minutes = '0' + str(minutes)
-    if hours == 0: hours = '00'
-    if hours < 10: hours = '0' + str(hours)
+    if int(seconds) == 0: seconds = '00'
+    elif int(seconds) < 10: seconds = '0' + str(seconds)
+    if int(minutes) == 0: minutes = '00'
+    elif int(minutes) < 10: minutes = '0' + str(minutes)
+    if int(hours) == 0: hours = '00'
+    elif int(hours) < 10: hours = '0' + str(hours)
 
     # Send back a string
     return str(hours) + ':' + str(minutes) + ':' + str(seconds) + ',' + str(msec)
@@ -68,17 +68,17 @@ def HMSTomsec(timestring):
     # Send back an integer
     return msec
 
-# Opens our input and output files, and maybe deletes the original.
-def openFiles(name, seconds, optionList):
+# Opens our input and output files.
+def openFiles(name, seconds, args):
     completed = False
 
     # Open the existing SRT file.
     with open(name,'r') as inputFile:
         # Open a new file to work with.
         newname = name + '.new'
-        with open(newname, 'wb') as outputFile:
+        with open(newname, 'w') as outputFile:
             # With the files open, shift the times.
-            completed = shiftTimes(inputFile, outputFile, name, seconds, optionList)
+            completed = shiftTimes(inputFile, outputFile, name, seconds, args)
 
         # If we fail, we shouldn't leave a random file lying around.
         if not completed: os.remove(newname)
@@ -87,17 +87,16 @@ def openFiles(name, seconds, optionList):
     # If we got here, we couldn't open the file I guess.
     return False, 'error.srt'
 
-# Gets the next entry from our original SRT file
+# Gets a list of dicts with all the entries from our original SRT file
 def getSRTEntries(inFile):
 
     SRTEntries = []
     lastLine = ''
 
-    # Need to rewrite without using .next() for Python3 compatibility.
+    # Loop down the file, storing lines, until you find ' --> '
     for index, line in enumerate(inFile):
         entryData = {}
 
-        # Loop down the file, storing lines, until you find ' --> '
         if ' --> ' in line:
             # The line before that is the index.
             entryData['index'] = int(lastLine)
@@ -107,13 +106,13 @@ def getSRTEntries(inFile):
             # Watch out for the end of the file.
             try:
                 # The next line is text1, and the one after is text2 or maybe blank.
-                entryData['text1'] = str(inFile.next())
+                entryData['text1'] = str(inFile.readline())
                 # If text1 is blank, move on.
                 if entryData['text1'].strip() == '':
                     entryData['text2'] = ''
                     SRTEntries.append(entryData)
                     continue
-                entryData['text2'] = str(inFile.next())
+                entryData['text2'] = str(inFile.readline())
             except StopIteration:
                 pass
 
@@ -134,7 +133,7 @@ def writeEntry(outFile, entry, index):
     outFile.write('\n')
 
 # The core loop that calls the important stuff.
-def shiftTimes(inFile, outFile, name, seconds, optionList):
+def shiftTimes(inFile, outFile, name, seconds, args):
 
     # Get a list of all the entries.
     SRTEntries = getSRTEntries(inFile)
@@ -233,9 +232,7 @@ def SRTTimeShifter(args):
     if file_names == []:
         sys.exit('No file or directory found by that name.')
 
-    optionList = []
     if args.help: sys.exit(instructions)
-    if args.o: optionList.append('o')
 
     fileCount = 0
 
@@ -256,10 +253,10 @@ def SRTTimeShifter(args):
             # Make sure this is an srt file (just check extension)
             if name.lower().endswith('.srt'):
                 # Open that file and shift the times in that file
-                completed, newname = openFiles(name, seconds, optionList)
+                completed, newname = openFiles(name, seconds, args)
                 if completed:
                     # If we're not copying files, clean up the original.
-                    if 'o' in optionList:
+                    if args.o:
                         os.remove(name)
                     else:
                         os.rename(name, name + '.old')
