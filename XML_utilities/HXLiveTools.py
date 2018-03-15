@@ -40,6 +40,8 @@ if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
     print('Please run me on a course folder, not the course.xml file.')
 
 for directory in sys.argv:
+    if not os.path.exists(directory):
+        sys.exit('Directory not found.')
     if os.path.isdir(directory):
         if directory == 'course':
             print('found course folder: ' + directory)
