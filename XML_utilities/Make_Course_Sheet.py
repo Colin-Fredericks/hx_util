@@ -80,15 +80,15 @@ def secToHMS(time):
     hours = (time / 3600) % 24
 
     # Make sure we get enough zeroes.
-    if seconds == 0: seconds = '00'
-    if seconds < 10: seconds = '0' + unicode(seconds)
-    if minutes == 0: minutes = '00'
-    if minutes < 10: minutes = '0' + unicode(minutes)
-    if hours == 0: hours = '00'
-    if hours < 10: hours = '0' + unicode(hours)
+    if int(seconds) == 0: seconds = '00'
+    if int(seconds) < 10: seconds = '0' + str(seconds)
+    if int(minutes) == 0: minutes = '00'
+    if int(minutes) < 10: minutes = '0' + str(minutes)
+    if int(hours) == 0: hours = '00'
+    if int(hours) < 10: hours = '0' + str(hours)
 
     # Send back a string
-    return unicode(hours) + ':' + unicode(minutes) + ':' + unicode(seconds)
+    return str(hours) + ':' + str(minutes) + ':' + str(seconds)
 
 # Adds notes to links based on file type
 def describeLinkData(newlink):
@@ -293,7 +293,7 @@ def getComponentInfo(folder, filename, args):
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
-            temp['inner_xml'] = (root.text + ''.join(ET.tostring(e) for e in root)).encode('unicode_escape')
+            temp['inner_xml'] = root.text + ''.join(str(ET.tostring(e)) for e in root)
             soup = BeautifulSoup(temp['inner_xml'], 'xml')
             temp['links'] = getHTMLLinks(soup)
         else:
