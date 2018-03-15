@@ -47,22 +47,22 @@ def msecToHMS(time):
     # Downconvert through hours. SRTs don't handle days.
     msec = time % 1000
     time -= msec
-    seconds = (time / 1000) % 60
+    seconds = (time // 1000) % 60
     time -= (seconds * 1000)
-    minutes = (time / 60 / 1000) % 60
+    minutes = (time // 60 // 1000) % 60
     time -= (minutes * 60 * 1000)
-    hours = (time / 1000 / 3600) % 24
+    hours = (time // 1000 // 3600) % 24
 
     # Make sure we get enough zeroes.
     if int(msec) == 0: msec = '000'
     elif int(msec) < 10: msec = '00' + str(msec)
     elif int(msec) < 100: msec = '0' + str(msec)
     if int(seconds) == 0: seconds = '00'
-    if int(seconds) < 10: seconds = '0' + str(seconds)
+    elif int(seconds) < 10: seconds = '0' + str(seconds)
     if int(minutes) == 0: minutes = '00'
-    if int(minutes) < 10: minutes = '0' + str(minutes)
+    elif int(minutes) < 10: minutes = '0' + str(minutes)
     if int(hours) == 0: hours = '00'
-    if int(hours) < 10: hours = '0' + str(hours)
+    elif int(hours) < 10: hours = '0' + str(hours)
 
     # Send back a string
     return str(hours) + ':' + str(minutes) + ':' + str(seconds) + ',' + str(msec)
