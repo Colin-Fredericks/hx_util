@@ -19,6 +19,7 @@ Extract all hyperlinks from a .docx file,
 including link destination and linked text,
 and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
+Excel mangles unicode, so you will need to open the csv in Google Drive.
 
 Options:
   -h  Print this message and quit.
