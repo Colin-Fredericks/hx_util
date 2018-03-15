@@ -126,10 +126,9 @@ def SrtRename(args):
     if args.help: sys.exit(instructions)
 
     # Our script might be in the arguments. Don't run on it.
-    for i, f in enumerate(file_names):
+    for f in file_names:
         if sys.argv[0] in f:
             file_names.remove(f)
-            break
 
     for name in file_names:
 
