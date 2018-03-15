@@ -1,7 +1,7 @@
 import sys
 import os
 import json
-import HTMLParser
+import html
 import argparse
 from glob import glob
 
@@ -54,15 +54,15 @@ def msecToHMS(time):
     hours = (time / 1000 / 3600) % 24
 
     # Make sure we get enough zeroes.
-    if msec == 0: msec = '000'
+    if int(msec) == 0: msec = '000'
     elif int(msec) < 10: msec = '00' + str(msec)
     elif int(msec) < 100: msec = '0' + str(msec)
-    if seconds == 0: seconds = '00'
-    if seconds < 10: seconds = '0' + str(seconds)
-    if minutes == 0: minutes = '00'
-    if minutes < 10: minutes = '0' + str(minutes)
-    if hours == 0: hours = '00'
-    if hours < 10: hours = '0' + str(hours)
+    if int(seconds) == 0: seconds = '00'
+    if int(seconds) < 10: seconds = '0' + str(seconds)
+    if int(minutes) == 0: minutes = '00'
+    if int(minutes) < 10: minutes = '0' + str(minutes)
+    if int(hours) == 0: hours = '00'
+    if int(hours) < 10: hours = '0' + str(hours)
 
     # Send back a string
     return str(hours) + ':' + str(minutes) + ':' + str(seconds) + ',' + str(msec)
@@ -93,8 +93,7 @@ def ConvertToSRT(filename, args, dirpath):
 
         # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
         # SRT files handle unicode just fine.
-        h = HTMLParser.HTMLParser()
-        newTextList = [h.unescape(text) for text in textList]
+        newTextList = [html.unescape(text) for text in textList]
 
         # Create a file for output
         newFileName = filename.replace('.srt', '')
@@ -103,16 +102,16 @@ def ConvertToSRT(filename, args, dirpath):
         with open(os.path.join(dirpath or '', newFileName), 'wb') as outfile:
             # Step through the lists and write rows of the output file.
             for i, txt in enumerate(newTextList):
-                outfile.write(unicode(i) + '\n')
+                outfile.write(str(i) + '\n')
                 outfile.write(newStartList[i] + ' --> ' + newEndList[i] + '\n')
                 # If it's a short line or one without a space, output the whole thing.
                 if len(txt) < 45 or txt.find(' ') == -1:
-                    outfile.write(unicode(txt).encode('utf-8') + '\n')
+                    outfile.write(str(txt).encode('utf-8') + '\n')
                 # Otherwise, break it up.
                 else:
                     lineA, lineB = splitString(txt)
-                    outfile.write(unicode(lineA).encode('utf-8') + '\n')
-                    outfile.write(unicode(lineB).encode('utf-8') + '\n')
+                    outfile.write(str(lineA).encode('utf-8') + '\n')
+                    outfile.write(str(lineB).encode('utf-8') + '\n')
                 outfile.write('\n')
 
     # If the -o option is set, delete the original
