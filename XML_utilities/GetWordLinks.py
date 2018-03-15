@@ -13,7 +13,7 @@ import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 instructions = """
 Usage:
 
-python GetWordLinks.py path/to/file/ (options)
+python3 GetWordLinks.py path/to/file/ (options)
 
 Extract all hyperlinks from a .docx file,
 including link destination and linked text,
@@ -26,7 +26,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 12th, 2018
+Last update: March 15th 2018
 """
 
 # Word documents have namespaces on their XML.

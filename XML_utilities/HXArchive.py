@@ -7,11 +7,11 @@ import SrtRename
 ######################################
 # HarvardX Archive Prep Script
 #
-# Usage: python HXArchive.py path/to/course/folder
+# Usage: python3 HXArchive.py path/to/course/folder
 # Calls multiple scripts to help with the archive process for HarvardX courses.
 # Passes all arguments through to the scripts.
 #
-# Last Update: Dec 20 2017
+# Last update: March 15th 2018
 ######################################
 
 def runArchive(args):

@@ -7,7 +7,7 @@ from glob import glob
 
 instructions = """
 To use:
-python sjson2srt.py file_or_directory (options)
+python3 sjson2srt.py file_or_directory (options)
 
 Creates a new .srt file for every .srt.sjson file found.
 
@@ -16,7 +16,7 @@ Valid options:
   -r Recursive. Works on .srt.sjson files in subdirectories as well.
   -h Help. Print this message.
 
-Last update: November 16th, 2017
+Last update: March 15th 2018
 """
 
 # Split long lines on a space near the middle.

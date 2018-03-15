@@ -6,7 +6,7 @@ import argparse
 
 instructions = """
 To use:
-python SetShowAnswer.py show_answer_value path/to/problem/folder
+python3 SetShowAnswer.py show_answer_value path/to/problem/folder
 
 show_answer_value can be one of the usual edX set:
   Always
@@ -25,7 +25,7 @@ default takes over.
 Options:
   -h  Print help message and exit.
 
-Last update: September 27th, 2017
+Last update: March 15th 2018
 """
 
 # Here are all the options for show_answer values:

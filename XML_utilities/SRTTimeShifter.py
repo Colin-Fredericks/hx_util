@@ -5,7 +5,7 @@ from glob import glob
 
 instructions = """
 To use:
-python SRTTimeShifter.py filename seconds (options)
+python3 SRTTimeShifter.py filename seconds (options)
 
 Takes the given subtitle file or files, in SRT format,
 and shifts the times in each by the given number of seconds.
@@ -18,7 +18,7 @@ Valid options:
   -o Overwrite. Overwrites the old file rather than making a new one.
   -h Help. Print this message.
 
-Last update: November 16th 2017
+Last update: March 15th 2018
 """
 
 # Converts from miliseconds to hh:mm:ss,msec format

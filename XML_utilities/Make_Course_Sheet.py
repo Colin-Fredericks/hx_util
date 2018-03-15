@@ -12,7 +12,7 @@ except:
 
 instructions = """
 To use:
-python Make_Course_Sheet.py path/to/course.xml (options)
+python3 Make_Course_Sheet.py path/to/course.xml (options)
 
 Run this on a course folder, or a course.xml file inside an edX course folder (from export).
 You will get a Tab-Separated Value file that you should open with Google Drive,
@@ -29,7 +29,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 14th, 2018
+Last update: March 15th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell

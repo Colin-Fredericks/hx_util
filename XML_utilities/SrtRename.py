@@ -8,7 +8,7 @@ from glob import glob
 
 instructions = """
 To use:
-python SrtRename.py course_folder (options)
+python3 SrtRename.py course_folder (options)
 
 Renames the .srt files in a course's /static/ folder to match
 our original uploaded filenames, as described in a CourseName.tsv file.
@@ -21,7 +21,7 @@ Valid options:
   -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last updated: March 14th, 2018
+Last update: March 15th 2018
 """
 
 # Make a dictionary that shows which srt files match which original upload names

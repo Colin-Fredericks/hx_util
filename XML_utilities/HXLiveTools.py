@@ -7,11 +7,11 @@ import SrtRename
 ######################################
 # HarvardX Live Tools
 #
-# Usage: python HXLiveTools.py path/to/course/folder
+# Usage: python3 HXLiveTools.py path/to/course/folder
 # Calls multiple scripts to help with the archive process for HarvardX courses.
 # Passes all arguments through to the scripts, but you probably don't want to.
 #
-# Last Update: Mar 14 2018 (Pi day!)
+# Last update: March 15th 2018
 ######################################
 
 def runLiveTools(args):

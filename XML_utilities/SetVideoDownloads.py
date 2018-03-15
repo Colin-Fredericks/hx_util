@@ -6,7 +6,7 @@ import argparse
 
 instructions = """
 To use:
-python SetVideoDownloads.py choice path/to/video/folder -options
+python3 SetVideoDownloads.py choice path/to/video/folder -options
 
 Set your choice as...
   "true" to allow downloads of videos and transcripts for every video.
@@ -18,7 +18,7 @@ Set your choice as...
 Options:
   -h   Print this message and exit
 
-Last update: September 27th, 2017
+Last update: March 15th 2018
 """
 
 parser = argparse.ArgumentParser(usage=instructions, add_help=False)
