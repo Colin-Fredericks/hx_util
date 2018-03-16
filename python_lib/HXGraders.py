@@ -10,13 +10,18 @@ def qualtricsSurveyGrader(ans, new_options = {'survey_length': 1}):
     # Get the student's answer.
     parsed = json.loads(ans)
     answer = json.loads(parsed['answer'])
-    raw_score = float(answer['score'])
+    try:
+        raw_score = float(answer['score'])
+    except ValueError:
+        raw_score = 0.0
+
+    grade = raw_score / float(options['survey_length'])
 
     return {
         'input_list': [{
-            'ok': True,
-            'msg': 'Thank you for your response.',
-            'grade_decimal': raw_score / options['survey_length'],
+            'ok': True if grade > 0.9 else False,
+            'msg': '',
+            'grade_decimal': grade
         }]
     }
 
