@@ -6,7 +6,7 @@ import argparse
 
 instructions = """
 To use:
-python SetMaxAttempts.py number path/to/problem/folder
+python3 SetMaxAttempts.py number path/to/problem/folder
 
 Your options for the number are:
   - An actual number, which sets all problems to the same # of attempts
@@ -26,7 +26,7 @@ Your options for the number are:
 There will probably still be some issues, so you'll need to review.
 This code will help you make a first pass, not a final pass.
 
-Last update: September 28th, 2017
+Last update: March 15th 2018
 """
 
 # Here are all the problem types we work on:
@@ -116,6 +116,6 @@ for dirpath, dirnames, filenames in os.walk(args.directory):
 
 
 if numfiles == 0:
-    print 'No files found - wrong or empty directory?'
+    print('No files found - wrong or empty directory?')
 else:
-    print 'Max Attempts set for ' + str(numfiles) + ' files.'
+    print('Max Attempts set for ' + str(numfiles) + ' files.')
