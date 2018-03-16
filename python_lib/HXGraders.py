@@ -2,6 +2,24 @@ import json
 import math
 import random
 
+def qualtricsSurveyGrader(ans, new_options = {'survey_length': 1}):
+
+    options = {'survey_length': 1}
+    options.update(new_options)
+
+    # Get the student's answer.
+    parsed = json.loads(ans)
+    answer = json.loads(parsed['answer'])
+    raw_score = float(answer['score'])
+
+    return {
+        'input_list': [{
+            'ok': True,
+            'msg': 'Thank you for your response.',
+            'grade_decimal': raw_score / options['survey_length'],
+        }]
+    }
+
 def textResponseGrader(ans, new_options = {'min_length': 10}):
 
     options = {'min_length': 10}
