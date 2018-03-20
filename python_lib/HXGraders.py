@@ -4,6 +4,7 @@ import random
 
 def qualtricsSurveyGrader(ans, new_options = {'survey_length': 1}):
 
+    # Currently there are no options used in this problem type.
     options = {'survey_length': 1}
     options.update(new_options)
 
@@ -16,7 +17,7 @@ def qualtricsSurveyGrader(ans, new_options = {'survey_length': 1}):
         raw_score = 0.0
 
     grade = raw_score / float(options['survey_length'])
-    
+
     if grade > 0.9: isOK = True
     elif grade > 0.2: isOK = 'Partial'
     else: isOK = False
