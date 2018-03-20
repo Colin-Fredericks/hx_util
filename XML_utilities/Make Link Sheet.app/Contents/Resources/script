@@ -553,6 +553,8 @@ def Make_Course_Sheet(args = ['-h']):
     if args.links:
         args.problems = args.html = args.all = args.video = False
 
+    print(args)
+
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
     # Mostly important if we run this on Windows systems.
@@ -565,6 +567,8 @@ def Make_Course_Sheet(args = ['-h']):
     # Don't run the script on itself.
     if sys.argv[0] in file_names:
         file_names.remove(sys.argv[0])
+
+    print(file_names)
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
