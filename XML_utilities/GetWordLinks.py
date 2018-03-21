@@ -27,7 +27,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 15th 2018
+Last update: March 21st 2018
 """
 
 # Word documents have namespaces on their XML.
@@ -97,7 +97,7 @@ def getWordLinks(args):
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
