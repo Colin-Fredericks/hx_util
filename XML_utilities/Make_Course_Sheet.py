@@ -32,7 +32,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 15th, 2018
+Last update: March 21st, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -192,7 +192,7 @@ def getAuxLinks(rootFileDir):
                 }
 
                 if f.endswith( tuple( ['.html','.htm'] ) ):
-                    soup = BeautifulSoup(open(os.path.join(folder, f)), 'html.parser')
+                    soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'html'
                     file_temp['name'] = f
@@ -201,15 +201,14 @@ def getAuxLinks(rootFileDir):
                 if f.endswith('.xml'):
                     tree = ET.parse(folder + '/' + f)
                     root = tree.getroot()
-                    soup = BeautifulSoup(open(os.path.join(folder, f)), 'xml')
+                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'xml')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'xml'
                     file_temp['name'] = f
                     file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
-                    # Most likely to fail if GetWordLinks wasn't imported.
-                    try:
+                    if 'GetWordLinks' in sys.modules:
                         targetFile = os.path.join(folder,f)
                         file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
                         for l in file_temp['links']:
@@ -221,8 +220,6 @@ def getAuxLinks(rootFileDir):
                         file_temp['name'] = f
                         file_temp['url'] = f
                         folder_temp['contents'].append(file_temp)
-                    except:
-                        pass
 
             folder_temp['chapter'] = os.path.basename(folder)
             folder_temp['name'] = os.path.basename(folder)
@@ -313,7 +310,7 @@ def getComponentInfo(folder, filename, args):
             # In those cases, go open that file and get the links from it.
             if root.text is None:
                 innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
-                soup = BeautifulSoup(open(innerfilepath), 'html.parser')
+                soup = BeautifulSoup(open(innerfilepath, encoding='utf8'), 'html.parser')
                 temp['links'] = getHTMLLinks(soup)
             # If it's declared inline, just get the links right away.
             else:
