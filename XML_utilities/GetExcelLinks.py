@@ -19,7 +19,7 @@ Extract all hyperlinks from an .xlsx file,
 including link location, destination, and linked text/formula,
 and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
-Excel mangles unicode, so you will need to open the csv in Google Drive.
+Excel mangles UTF-8, so you will need to open the csv in Google Drive.
 
 Options:
   -h  Print this message and quit.
@@ -27,7 +27,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 21st 2018
+Last update: March 23rd 2018
 """
 
 # Returns a dictionary of all the sheets.
@@ -102,6 +102,8 @@ def getLinkText(soup, links):
 
     return links
 
+# Assembles the list of links from multiple data sources.
+# Returns a list of dicts.
 def getLinks(filename, args, dirpath):
 
     # Open the .xlsx file as if it were a zip (because it is)
@@ -144,6 +146,31 @@ def getLinks(filename, args, dirpath):
 
     # Return a list of dicts full of link info
     return complete_links
+
+# Output a file and print some info.
+def writeFile(linklist, filecount, outFileName, outFilePath, args):
+    print( '\nChecked '
+        + str(filecount)
+        + ' .xlsx file'
+        + ('s' if filecount > 1 else '')
+        +  ' for links.' )
+
+    with open(outFilePath,'wb') as outputFile:
+        # Note that we're printing formulae rather than their values.
+        # To include values, add 'value' to the list below.
+        fieldnames = ['filename','sheet_name','location','href','text']
+
+        writer = csv.DictWriter(outputFile,
+            fieldnames=fieldnames,
+            extrasaction='ignore')
+        writer.writeheader()
+
+        for row in linklist:
+            writer.writerow(row)
+
+    print('Spreadsheet created: ' + outFileName)
+    print('Location: ' + outFilePath)
+
 
 def getWordLinks(args):
 
@@ -213,40 +240,19 @@ def getWordLinks(args):
                         linklist.extend(getLinks(eachfile, args, dirpath))
                         filecount += 1
 
-    # When called by other scripts, quietly return the list and stop.
     if args.l:
+        # When asked to return a list, quietly return one and stop.
         return linklist
-
-    # Otherwise, output a file and print some info.
-    print( '\nChecked '
-        + str(filecount)
-        + ' .xlsx file'
-        + ('s' if filecount > 1 else '')
-        +  ' for links.' )
-
-    # Create output file as sibling to the original target of the script.
-    outFileName = args.o if args.o else 'Excel_Doc_Links.csv'
-    if target_is_folder:
-        outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
-        outFilePath = os.path.join(outFileFolder, outFileName)
     else:
-        outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
+        # Otherwise, create output file as sibling to the original target of the script.
+        outFileName = args.o if args.o else 'Excel_Doc_Links.csv'
+        if target_is_folder:
+            outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
+            outFilePath = os.path.join(outFileFolder, outFileName)
+        else:
+            outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
-    with open(outFilePath,'wb') as outputFile:
-        # Note that we're printing formulae rather than their values.
-        # To include values, add 'value' to the list below.
-        fieldnames = ['filename','sheet_name','location','href','text']
-
-        writer = csv.DictWriter(outputFile,
-            fieldnames=fieldnames,
-            extrasaction='ignore')
-        writer.writeheader()
-
-        for row in linklist:
-            writer.writerow(row)
-
-    print('Spreadsheet created: ' + outFileName)
-    print('Location: ' + outFilePath)
+        writeFile(linklist, filecount, outFileName, outFilePath, args)
 
 if __name__ == "__main__":
     # this won't be run when imported
