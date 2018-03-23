@@ -172,7 +172,7 @@ def writeFile(linklist, filecount, outFileName, outFilePath, args):
     print('Location: ' + outFilePath)
 
 
-def getWordLinks(args):
+def getExcelLinks(args):
 
     # Handle arguments and flags
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
@@ -256,4 +256,4 @@ def getWordLinks(args):
 
 if __name__ == "__main__":
     # this won't be run when imported
-    getWordLinks(sys.argv)
+    getExcelLinks(sys.argv)
