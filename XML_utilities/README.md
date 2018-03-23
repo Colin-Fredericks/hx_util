@@ -23,3 +23,7 @@ Because python's built-in xml parser has trouble with namespaces and xpaths, som
  * Then save that as a new TSV file and run `Outline_to_HTML.py` on it to create a linked, filterable HTML outline that you can use as alternative navigation in your course.
  * Upload `hx-collapse-nav.js` and `hx-collapse-nav.css` to your Files & Uploads folder to complete the process.
  * If you want to show student scores next to each subsection, you should also upload `hx-grade-display.css` and `hx-grade-reader.js`, and add the following line of HTML (or something similar) near the top of your page: `<div id="progressbar">(Loading your scores <span class="fa fa-spinner fa-pulse fa-fw"></span>)</div>`
+
+ ### In Progress
+ * Adding an XLSX parser
+ * Considering adding a PDF parser, perhaps using https://github.com/metachris/pdfx
