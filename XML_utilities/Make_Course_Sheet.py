@@ -12,6 +12,14 @@ try:
     import GetWordLinks
 except:
     print('Cannot find GetWordLinks.py, skipping links in .docx files.')
+try:
+    import GetExcelLinks
+except:
+    print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
+try:
+    import GetPPTLinks
+except:
+    print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
 
 instructions = """
 To use:
@@ -32,7 +40,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 21st, 2018
+Last update: March 23rd, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -161,12 +169,15 @@ def getAuxLinks(rootFileDir):
                     'links': []
                 }
 
+                # All currently accepted file types:
+                if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx'] ) ):
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+
                 if f.endswith( tuple( ['.html','.htm'] ) ):
                     soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'html'
-                    file_temp['name'] = f
-                    file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.xml'):
                     tree = ET.parse(folder + '/' + f)
@@ -174,21 +185,24 @@ def getAuxLinks(rootFileDir):
                     soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'xml')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'xml'
-                    file_temp['name'] = f
-                    file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
                     if 'GetWordLinks' in sys.modules:
                         targetFile = os.path.join(folder,f)
                         file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
-                        for l in file_temp['links']:
-                            l['text'] = l['linktext']
-                            l['href'] = l['url']
-                            del l['linktext']
-                            del l['url']
                         file_temp['type'] = 'docx'
-                        file_temp['name'] = f
-                        file_temp['url'] = f
+                        folder_temp['contents'].append(file_temp)
+                if f.endswith('.xlsx'):
+                    if 'GetExcelLinks' in sys.modules:
+                        targetFile = os.path.join(folder,f)
+                        file_temp['links'] = GetExcelLinks.getExcelLinks([targetFile, '-l'])
+                        file_temp['type'] = 'xlsx'
+                        folder_temp['contents'].append(file_temp)
+                if f.endswith('.pptx'):
+                    if 'GetPPTLinks' in sys.modules:
+                        targetFile = os.path.join(folder,f)
+                        file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
+                        file_temp['type'] = 'pptx'
                         folder_temp['contents'].append(file_temp)
 
             folder_temp['chapter'] = os.path.basename(folder)
