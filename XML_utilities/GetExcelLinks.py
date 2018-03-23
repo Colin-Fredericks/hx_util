@@ -30,56 +30,79 @@ Options:
 Last update: March 21st 2018
 """
 
-# Word documents have namespaces on their XML.
-# This is very unhelpful for us. Strip them all.
-def strip_ns_prefix(tree):
-    return tree.prettify()
-
-# Get the text that is the source for the hyperlink.
-# Not sure what this will do with image links.
-def getLinkedText(soup):
-
-    links = []
-
-    for tag in soup.findAll('hyperlink'):
-        if tag.parent.name == 'hyperlinks':
-            # try/except because some hyperlinks have no id or display.
-            try:
-                links.append({
-                    'id': tag['r:id'],
-                    'linktext': tag['display']
-                })
-            except:
-                pass
-
-    return links
-
-# URLs for .xlsx hyperlinks are stored in a different file.
-def getURLs(soup, links):
-
-    # Find every link by id and get its url.
-    for link in links:
-        for rel in soup.findAll('Relationship'):
-            if rel['Id'] == link['id']:
-                link['url'] = rel['Target']
-
-    return links
-
 # Returns a dictionary of all the sheets.
 # Form: {'filename1':'name1', 'filename2':'name2'}
 def getSheets(soup):
 
     sheets = {}
 
-    for tag in soup.findAll('sheet'):
+    for tag in soup.find_all('sheet'):
         if tag.parent.name == 'sheets':
-            sheets[tag['filename']] = tag['name']
+            filename = 'sheet' + tag['sheetId']
+            sheets[filename] = tag['name']
 
     return sheets
 
-def getLinks(filename, args, dirpath):
+# Returns a list of hyperlinks.
+def getHyperlinks(soup):
 
-    links_with_urls = []
+    links = []
+
+    for tag in soup.find_all('hyperlink'):
+        text = value = source = ''
+        if tag.parent.name == 'hyperlinks':
+            # try/except because some hyperlinks have no id.
+            try:
+                # Need the source text reference number
+                cell = soup.find_all('c', r=tag['ref'])[0]
+                # Formulae and numbers are stored here too.
+                # We're calling it all "text" for this purpose.
+                try:
+                    if cell['t'] == 's':
+                        source = cell.find('v').get_text()
+                except:
+                    # If there's no 't' attribute,
+                    # then this is a number or formula.
+                    source = False
+                    text = cell.find('f').get_text()
+                    value = cell.find('v').get_text()
+                links.append({
+                    'id': tag['r:id'],
+                    'location': tag['ref'],
+                    's': source,
+                    'value': value,
+                    'text': text
+                })
+            except:
+                pass
+
+    return links
+
+# Add URLs for .xlsx hyperlinks
+def getURLs(soup, links):
+
+    # Find every link by id and get its url.
+    for link in links:
+        for rel in soup.find_all('Relationship'):
+            if rel['Id'] == link['id']:
+                link['href'] = rel['Target']
+
+    return links
+
+# Add text for .xlsx hyperlinks, if we haven't already found it.
+def getLinkText(soup, links):
+
+    # Find every link by reference number (s) and get its url.
+    for link in links:
+        if link['s']:
+            sourceTag = soup.find_all('si')[int(link['s'])]
+            sourceText = sourceTag.find('t').get_text()
+            link['text'] = sourceText
+            link['value'] = sourceText
+
+    return links
+
+def getLinks(filename, args, dirpath):
 
     # Open the .xlsx file as if it were a zip (because it is)
     fullname = os.path.join(dirpath or '', filename)
@@ -90,25 +113,37 @@ def getLinks(filename, args, dirpath):
     workbook_soup = BeautifulSoup(workbook_data, 'xml')
     sheets = getSheets(workbook_soup)
 
-    # Open each sheet and get link text.
+    complete_links = []
+
     for sheet in sheets:
+        # Open each sheet and get the hyperlinks.
         sheet_data = archive.read('xl/worksheets/' + sheet + '.xml')
         sheet_soup = BeautifulSoup(sheet_data, 'xml')
-        linked_text = getLinkedText(sheet_soup)
+        links = getHyperlinks(sheet_soup)
+
         # URLs are stored in a different file. Cross-reference for each sheet.
         url_data = archive.read('xl/worksheets/_rels/' + sheet + '.xml.rels')
         url_soup = BeautifulSoup(url_data, 'xml')
-        links_with_urls.extend(getURLs(url_soup, linked_text))
+        links_with_urls = getURLs(url_soup, links)
+
         # Mark each line with the sheet's name.
         for link in links_with_urls:
             link['sheet_name'] = sheets[sheet]
 
+        complete_links.extend(links_with_urls)
+
+    # Text is ALSO stored in a different file, but it's the same one for every sheet.
+    string_data = archive.read('xl/sharedStrings.xml')
+    string_soup = BeautifulSoup(string_data, 'xml')
+    complete_links = getLinkText(string_soup, complete_links)
+
+
     # Mark each line with the filename in case we're processing more than one.
-    for link in links_with_urls:
+    for link in complete_links:
         link['filename'] = os.path.basename(filename)
 
     # Return a list of dicts full of link info
-    return links_with_urls
+    return complete_links
 
 def getWordLinks(args):
 
@@ -190,7 +225,7 @@ def getWordLinks(args):
         +  ' for links.' )
 
     # Create output file as sibling to the original target of the script.
-    outFileName = args.o if args.o else 'Word_Doc_Links.csv'
+    outFileName = args.o if args.o else 'Excel_Doc_Links.csv'
     if target_is_folder:
         outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
         outFilePath = os.path.join(outFileFolder, outFileName)
@@ -198,7 +233,9 @@ def getWordLinks(args):
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','url','linktext']
+        # Note that we're printing formulae rather than their values.
+        # To include values, add 'value' to the list below.
+        fieldnames = ['filename','sheet_name','location','href','text']
 
         writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,
