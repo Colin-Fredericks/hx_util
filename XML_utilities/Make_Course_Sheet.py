@@ -99,43 +99,13 @@ def describeLinkData(newlink):
         '.tiff','.tif','.bmp','.jp2','.jif','.pict']
 
     if newlink['href'].endswith(tuple(image_types)):
-        newlink['text'] += '(image link)'
-    if newlink['href'].endswith('.pdf'):    newlink['text'] += '(PDF file)'
-    if newlink['href'].endswith('.ps'):     newlink['text'] += '(PostScript file)'
-    if newlink['href'].endswith('.zip'):    newlink['text'] += '(zip file)'
-    if newlink['href'].endswith('.tar.gz'): newlink['text'] += '(tarred gzip file)'
-    if newlink['href'].endswith('.gz'):     newlink['text'] += '(gzip file)'
+        newlink['text'] += ' (image link)'
+    if newlink['href'].endswith('.pdf'):    newlink['text'] += ' (PDF file)'
+    if newlink['href'].endswith('.ps'):     newlink['text'] += ' (PostScript file)'
+    if newlink['href'].endswith('.zip'):    newlink['text'] += ' (zip file)'
+    if newlink['href'].endswith('.tar.gz'): newlink['text'] += ' (tarred gzip file)'
+    if newlink['href'].endswith('.gz'):     newlink['text'] += ' (gzip file)'
     return newlink
-
-# This function is deprecated because
-# BeautifulSoup beats lxml for my purposes.
-#
-# get links from XML pages, with href and link text
-# root_node is an ElementTree node
-# def getXMLLinks(root_node):
-#     links = []
-#
-#     for link in root_node.xpath('.//a'):
-#         try:
-#             links.append({
-#                 'href': link.attrib['href'],
-#                 'text': link.text or ''
-#             })
-#         except:
-#             pass
-#
-#     for link in root_node.xpath('.//iframe'):
-#         try:
-#             links.append({
-#                 'href': link.attrib['src'],
-#                 'text': '(iframe)'
-#             })
-#         except:
-#             pass
-#
-#     betterlinks = [describeLinkData(x) for x in links]
-#     return links
-
 
 # get list of links from HTML pages, with href and link text
 # "soup" is a BeautifulSoup object
@@ -164,7 +134,7 @@ def getHTMLLinks(soup):
             })
 
     betterlinks = [describeLinkData(x) for x in links]
-    return links
+    return betterlinks
 
 # Gets links that aren't in the courseware
 def getAuxLinks(rootFileDir):
@@ -502,7 +472,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             printable = spreadsheet
         else:
             if args.links:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx']]
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx']]
             if args.html:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if args.video:
