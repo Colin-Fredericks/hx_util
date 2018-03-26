@@ -47,34 +47,53 @@ def getSheets(soup):
 def getHyperlinks(soup):
 
     links = []
+    link_refs = {}
 
+    # Get all the hyperlinks and their cells.
     for tag in soup.find_all('hyperlink'):
-        text = value = source = ''
         if tag.parent.name == 'hyperlinks':
             # try/except because some hyperlinks have no id.
             try:
-                # Need the source text reference number
-                cell = soup.find_all('c', r=tag['ref'])[0]
-                # Formulae and numbers are stored here too.
-                # We're calling it all "text" for this purpose.
-                try:
-                    if cell['t'] == 's':
-                        source = cell.find('v').get_text()
-                except:
-                    # If there's no 't' attribute,
-                    # then this is a number or formula.
-                    source = False
-                    text = cell.find('f').get_text()
-                    value = cell.find('v').get_text()
-                links.append({
-                    'id': tag['r:id'],
-                    'location': tag['ref'],
-                    's': source,
-                    'value': value,
-                    'text': text
-                })
+                link_refs[tag['ref']] = tag['r:id']
             except:
                 pass
+
+    # Go through every cell and find the ones that have hyperlinks.
+    # Add their info to the list of links.
+    # HOWEVER, also check the 'f' tags because a =HYPERLINK formula
+    # needs to be counted as well. :(
+    for cell in soup.find_all('c'):
+        text = value = source = ''
+        cellID = False
+        is_link = False
+
+        if cell['r'] in link_refs:
+            # If it's a non-formula-based hyperlink:
+            cellID = link_refs[cell['r']]
+            is_link = True
+        elif cell.find('f') is not None:
+            # If it's a formula-based hyperlink:
+            text = cell.find('f').get_text()
+            if 'hyperlink(' in text.lower():
+                is_link = True
+
+        # As long as it's some sort of hyperlink:
+        if is_link:
+            if cell.find('v') is not None:
+                value = cell.find('v').get_text()
+            if cell.has_attr('t'):
+                if cell['t'] == 's':
+                    source = cell.find('v').get_text()
+                else:
+                    source = False
+
+            links.append({
+                'id': cellID,
+                'location': cell['r'],
+                's': source,
+                'value': value,
+                'text': text
+            })
 
     return links
 
@@ -83,9 +102,14 @@ def getURLs(soup, links):
 
     # Find every link by id and get its url.
     for link in links:
-        for rel in soup.find_all('Relationship'):
-            if rel['Id'] == link['id']:
-                link['href'] = rel['Target']
+        if link['id']:
+            for rel in soup.find_all('Relationship'):
+                if rel['Id'] == link['id']:
+                    link['href'] = rel['Target']
+        else:
+            # Splitting formula on quotes to get most likely values
+            link['href'] = link['text'].split('"')[1]
+            link['text'] = link['text'].split('"')[3]
 
     return links
 
@@ -124,9 +148,13 @@ def getLinks(filename, args, dirpath):
         links = getHyperlinks(sheet_soup)
 
         # URLs are stored in a different file. Cross-reference for each sheet.
-        url_data = archive.read('xl/worksheets/_rels/' + sheet + '.xml.rels')
-        url_soup = BeautifulSoup(url_data, 'xml')
-        links_with_urls = getURLs(url_soup, links)
+        try:
+            url_data = archive.read('xl/worksheets/_rels/' + sheet + '.xml.rels')
+            url_soup = BeautifulSoup(url_data, 'xml')
+            links_with_urls = getURLs(url_soup, links)
+        except KeyError:
+            # If there's no .xml.rels file, there are no links on that sheet.
+            links_with_urls = links
 
         # Mark each line with the sheet's name.
         for link in links_with_urls:
@@ -187,7 +215,7 @@ def getExcelLinks(args):
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
     # Mostly important if we run this on Windows systems.
-    file_names = list()
+    file_names = []
 
     for name in args.file_names:
         file_names += glob(name)
