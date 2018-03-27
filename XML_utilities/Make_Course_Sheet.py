@@ -5,7 +5,7 @@ if sys.version_info <= (3, 0):
 import os
 import argparse
 from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
+from lxml import etree
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
@@ -180,9 +180,9 @@ def getAuxLinks(rootFileDir):
                     file_temp['type'] = 'html'
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.xml'):
-                    tree = ET.parse(folder + '/' + f)
+                    tree = etree.parse(folder + '/' + f)
                     root = tree.getroot()
-                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'xml')
+                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'lxml')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'xml'
                     folder_temp['contents'].append(file_temp)
@@ -214,7 +214,7 @@ def getAuxLinks(rootFileDir):
 # Always gets the display name.
 # For video and problem files, gets other info too
 def getComponentInfo(folder, filename, args):
-    tree = ET.parse(folder + '/' + filename + '.xml')
+    tree = etree.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
     temp = {
@@ -281,8 +281,8 @@ def getComponentInfo(folder, filename, args):
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
-            temp['inner_xml'] = root.text + ''.join(str(ET.tostring(e)) for e in root)
-            soup = BeautifulSoup(temp['inner_xml'], 'xml')
+            temp['inner_xml'] = root.text + ''.join(str(etree.tostring(e)) for e in root)
+            soup = BeautifulSoup(temp['inner_xml'], 'lxml')
             temp['links'] = getHTMLLinks(soup)
         else:
             temp['inner_xml'] = 'No XML.'
@@ -312,7 +312,7 @@ def drillDown(folder, filename, args):
 
     # If there's no file here, just go back.
     try:
-        tree = ET.parse(os.path.join(folder, (filename + '.xml')))
+        tree = etree.parse(os.path.join(folder, (filename + '.xml')))
     except IOError:
         print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
         return {'contents': contents, 'parent_name': '', 'found_file': False}
@@ -561,7 +561,7 @@ def Make_Course_Sheet(args = ['-h']):
                 rootFileDir = os.path.dirname(name)
 
         rootFilePath = os.path.join(rootFileDir, 'course.xml')
-        course_tree = ET.parse(rootFilePath)
+        course_tree = etree.parse(rootFilePath)
 
         # Open course's root xml file
         # Get the current course run filename

@@ -5,7 +5,6 @@ import re
 import zipfile
 import argparse
 from glob import glob
-import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
@@ -106,6 +105,8 @@ def getURLs(soup, links):
             for rel in soup.find_all('Relationship'):
                 if rel['Id'] == link['id']:
                     link['href'] = rel['Target']
+                else:
+                    link['href'] = ''
         else:
             # Splitting formula on quotes to get most likely values
             link['href'] = link['text'].split('"')[1]

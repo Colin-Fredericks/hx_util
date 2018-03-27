@@ -5,7 +5,6 @@ import re
 import zipfile
 import argparse
 from glob import glob
-import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
@@ -157,12 +156,6 @@ def getLinks(filename, args, dirpath):
             link['slide'] = (index + 1)
 
         complete_links.extend(links_with_urls)
-
-    # Text is ALSO stored in a different file, but it's the same one for every slide.
-    # string_data = archive.read('xl/sharedStrings.xml')
-    # string_soup = BeautifulSoup(string_data, 'xml')
-    # complete_links = getLinkText(string_soup, complete_links)
-
 
     # Mark each line with the filename in case we're processing more than one.
     for link in complete_links:
