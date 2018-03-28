@@ -1,7 +1,5 @@
 import sys
-import io
 import os
-import re
 import zipfile
 import argparse
 from glob import glob
