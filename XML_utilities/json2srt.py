@@ -70,7 +70,7 @@ def msecToHMS(time):
 
 def ConvertToSRT(filename, args, dirpath):
     # Open the SJSON file
-    with open(os.path.join(dirpath or '', filename),'r') as inputfile:
+    with open(os.path.join(dirpath or '', filename),'r', encoding='utf8') as inputfile:
         # Read in the JSON as a dictionary.
         try:
             jdata = json.load(inputfile)
@@ -99,7 +99,7 @@ def ConvertToSRT(filename, args, dirpath):
         newFileName = filename.replace('.srt', '')
         newFileName = newFileName.replace('.sjson', '')
         newFileName += '.srt'
-        with open(os.path.join(dirpath or '', newFileName), 'w') as outfile:
+        with open(os.path.join(dirpath or '', newFileName), 'w', encoding='utf8') as outfile:
             # Step through the lists and write rows of the output file.
             for i, txt in enumerate(newTextList):
                 outfile.write(str(i) + '\n')
