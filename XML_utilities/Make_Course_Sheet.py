@@ -84,17 +84,17 @@ def secToHMS(time):
     time = int(round(float(time), 0))
 
     # Downconvert through hours.
-    seconds = time % 60
+    seconds = int(time % 60)
     time -= seconds
-    minutes = (time / 60) % 60
+    minutes = int((time / 60) % 60)
     time -= (minutes * 60)
-    hours = (time / 3600) % 24
+    hours = int((time / 3600) % 24)
 
     # Make sure we get enough zeroes.
     if int(seconds) == 0: seconds = '00'
-    if int(seconds) < 10: seconds = '0' + str(seconds)
+    elif int(seconds) < 10: seconds = '0' + str(seconds)
     if int(minutes) == 0: minutes = '00'
-    if int(minutes) < 10: minutes = '0' + str(minutes)
+    elif int(minutes) < 10: minutes = '0' + str(minutes)
     if int(hours) == 0: hours = '00'
     if int(hours) < 10: hours = '0' + str(hours)
 
