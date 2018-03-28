@@ -5,7 +5,6 @@ import re
 import zipfile
 import argparse
 from glob import glob
-import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
@@ -46,7 +45,7 @@ def getLinkedText(soup):
         try:
             links.append({
                 'id': tag['r:id'],
-                'linktext': tag.text
+                'text': tag.text
             })
         except:
             pass
@@ -60,7 +59,7 @@ def getURLs(soup, links):
     for link in links:
         for rel in soup.findAll('Relationship'):
             if rel['Id'] == link['id']:
-                link['url'] = rel['Target']
+                link['href'] = rel['Target']
 
     return links
 
@@ -175,7 +174,7 @@ def getWordLinks(args):
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','url','linktext']
+        fieldnames = ['filename','href','text']
 
         writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,

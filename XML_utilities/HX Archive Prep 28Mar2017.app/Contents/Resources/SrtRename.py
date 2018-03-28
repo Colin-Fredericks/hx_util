@@ -38,7 +38,7 @@ def getOriginalNames(course_folder, args):
     course_tsv_path = os.path.join(course_folder, course_outline_file)
 
     # Open the tsv file.
-    with open(course_tsv_path,'r') as tsvfile:
+    with open(course_tsv_path,'r', encoding='utf8') as tsvfile:
         reader = csv.reader(tsvfile, delimiter='\t')
 
         # Get the right columns

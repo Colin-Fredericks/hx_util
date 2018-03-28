@@ -5,13 +5,21 @@ if sys.version_info <= (3, 0):
 import os
 import argparse
 from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
+from lxml import etree
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 try:
     import GetWordLinks
 except:
     print('Cannot find GetWordLinks.py, skipping links in .docx files.')
+try:
+    import GetExcelLinks
+except:
+    print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
+try:
+    import GetPPTLinks
+except:
+    print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
 
 instructions = """
 To use:
@@ -32,7 +40,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 21st, 2018
+Last update: March 23rd, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -76,17 +84,17 @@ def secToHMS(time):
     time = int(round(float(time), 0))
 
     # Downconvert through hours.
-    seconds = time % 60
+    seconds = int(time % 60)
     time -= seconds
-    minutes = (time / 60) % 60
+    minutes = int((time / 60) % 60)
     time -= (minutes * 60)
-    hours = (time / 3600) % 24
+    hours = int((time / 3600) % 24)
 
     # Make sure we get enough zeroes.
     if int(seconds) == 0: seconds = '00'
-    if int(seconds) < 10: seconds = '0' + str(seconds)
+    elif int(seconds) < 10: seconds = '0' + str(seconds)
     if int(minutes) == 0: minutes = '00'
-    if int(minutes) < 10: minutes = '0' + str(minutes)
+    elif int(minutes) < 10: minutes = '0' + str(minutes)
     if int(hours) == 0: hours = '00'
     if int(hours) < 10: hours = '0' + str(hours)
 
@@ -99,43 +107,13 @@ def describeLinkData(newlink):
         '.tiff','.tif','.bmp','.jp2','.jif','.pict']
 
     if newlink['href'].endswith(tuple(image_types)):
-        newlink['text'] += '(image link)'
-    if newlink['href'].endswith('.pdf'):    newlink['text'] += '(PDF file)'
-    if newlink['href'].endswith('.ps'):     newlink['text'] += '(PostScript file)'
-    if newlink['href'].endswith('.zip'):    newlink['text'] += '(zip file)'
-    if newlink['href'].endswith('.tar.gz'): newlink['text'] += '(tarred gzip file)'
-    if newlink['href'].endswith('.gz'):     newlink['text'] += '(gzip file)'
+        newlink['text'] += ' (image link)'
+    if newlink['href'].endswith('.pdf'):    newlink['text'] += ' (PDF file)'
+    if newlink['href'].endswith('.ps'):     newlink['text'] += ' (PostScript file)'
+    if newlink['href'].endswith('.zip'):    newlink['text'] += ' (zip file)'
+    if newlink['href'].endswith('.tar.gz'): newlink['text'] += ' (tarred gzip file)'
+    if newlink['href'].endswith('.gz'):     newlink['text'] += ' (gzip file)'
     return newlink
-
-# This function is deprecated because
-# BeautifulSoup beats lxml for my purposes.
-#
-# get links from XML pages, with href and link text
-# root_node is an ElementTree node
-# def getXMLLinks(root_node):
-#     links = []
-#
-#     for link in root_node.xpath('.//a'):
-#         try:
-#             links.append({
-#                 'href': link.attrib['href'],
-#                 'text': link.text or ''
-#             })
-#         except:
-#             pass
-#
-#     for link in root_node.xpath('.//iframe'):
-#         try:
-#             links.append({
-#                 'href': link.attrib['src'],
-#                 'text': '(iframe)'
-#             })
-#         except:
-#             pass
-#
-#     betterlinks = [describeLinkData(x) for x in links]
-#     return links
-
 
 # get list of links from HTML pages, with href and link text
 # "soup" is a BeautifulSoup object
@@ -164,7 +142,7 @@ def getHTMLLinks(soup):
             })
 
     betterlinks = [describeLinkData(x) for x in links]
-    return links
+    return betterlinks
 
 # Gets links that aren't in the courseware
 def getAuxLinks(rootFileDir):
@@ -191,34 +169,40 @@ def getAuxLinks(rootFileDir):
                     'links': []
                 }
 
+                # All currently accepted file types:
+                if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx'] ) ):
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+
                 if f.endswith( tuple( ['.html','.htm'] ) ):
                     soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'html'
-                    file_temp['name'] = f
-                    file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.xml'):
-                    tree = ET.parse(folder + '/' + f)
+                    tree = etree.parse(folder + '/' + f)
                     root = tree.getroot()
-                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'xml')
+                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'lxml')
                     file_temp['links'] = getHTMLLinks(soup)
                     file_temp['type'] = 'xml'
-                    file_temp['name'] = f
-                    file_temp['url'] = f
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
                     if 'GetWordLinks' in sys.modules:
                         targetFile = os.path.join(folder,f)
                         file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
-                        for l in file_temp['links']:
-                            l['text'] = l['linktext']
-                            l['href'] = l['url']
-                            del l['linktext']
-                            del l['url']
                         file_temp['type'] = 'docx'
-                        file_temp['name'] = f
-                        file_temp['url'] = f
+                        folder_temp['contents'].append(file_temp)
+                if f.endswith('.xlsx'):
+                    if 'GetExcelLinks' in sys.modules:
+                        targetFile = os.path.join(folder,f)
+                        file_temp['links'] = GetExcelLinks.getExcelLinks([targetFile, '-l'])
+                        file_temp['type'] = 'xlsx'
+                        folder_temp['contents'].append(file_temp)
+                if f.endswith('.pptx'):
+                    if 'GetPPTLinks' in sys.modules:
+                        targetFile = os.path.join(folder,f)
+                        file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
+                        file_temp['type'] = 'pptx'
                         folder_temp['contents'].append(file_temp)
 
             folder_temp['chapter'] = os.path.basename(folder)
@@ -230,7 +214,7 @@ def getAuxLinks(rootFileDir):
 # Always gets the display name.
 # For video and problem files, gets other info too
 def getComponentInfo(folder, filename, args):
-    tree = ET.parse(folder + '/' + filename + '.xml')
+    tree = etree.parse(folder + '/' + filename + '.xml')
     root = tree.getroot()
 
     temp = {
@@ -297,8 +281,8 @@ def getComponentInfo(folder, filename, args):
         if 'show_reset_button' in root.attrib:
             temp['show_reset_button'] = root.attrib['show_reset_button']
         if root.text is not None:
-            temp['inner_xml'] = root.text + ''.join(str(ET.tostring(e)) for e in root)
-            soup = BeautifulSoup(temp['inner_xml'], 'xml')
+            temp['inner_xml'] = root.text + ''.join(str(etree.tostring(e)) for e in root)
+            soup = BeautifulSoup(temp['inner_xml'], 'lxml')
             temp['links'] = getHTMLLinks(soup)
         else:
             temp['inner_xml'] = 'No XML.'
@@ -328,7 +312,7 @@ def drillDown(folder, filename, args):
 
     # If there's no file here, just go back.
     try:
-        tree = ET.parse(os.path.join(folder, (filename + '.xml')))
+        tree = etree.parse(os.path.join(folder, (filename + '.xml')))
     except IOError:
         print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
         return {'contents': contents, 'parent_name': '', 'found_file': False}
@@ -502,7 +486,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             printable = spreadsheet
         else:
             if args.links:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx']]
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx']]
             if args.html:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if args.video:
@@ -577,7 +561,7 @@ def Make_Course_Sheet(args = ['-h']):
                 rootFileDir = os.path.dirname(name)
 
         rootFilePath = os.path.join(rootFileDir, 'course.xml')
-        course_tree = ET.parse(rootFilePath)
+        course_tree = etree.parse(rootFilePath)
 
         # Open course's root xml file
         # Get the current course run filename
