@@ -24,13 +24,8 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 21st 2018
+Last update: March 29th 2018
 """
-
-# Word documents have namespaces on their XML.
-# This is very unhelpful for us. Strip them all.
-def strip_ns_prefix(tree):
-    return tree.prettify()
 
 # Get the text that is the source for the hyperlink.
 # Not sure what this will do with image links.
