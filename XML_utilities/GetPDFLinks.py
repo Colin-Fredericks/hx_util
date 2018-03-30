@@ -34,8 +34,25 @@ def getLinks(filename, args, dirpath):
     fullname = os.path.join(dirpath or '', filename)
     PDFFile = open(fullname,'rb')
 
-    PDF = PyPDF2.PdfFileReader(PDFFile)
-    pages = PDF.getNumPages()
+    try:
+        PDF = PyPDF2.PdfFileReader(PDFFile)
+        pages = PDF.getNumPages()
+    except NotImplementedError:
+        print(os.path.basename(filename) + ' uses an unsupported encoding.')
+        return [{
+            'filename': os.path.basename(filename),
+            'href': 'Could not decode - unsupported encoding.',
+            'page': "n/a"
+        }]
+    except PyPDF2.utils.PdfReadError:
+        print(os.path.basename(filename) + ' could not be decoded.')
+        return [{
+            'filename': os.path.basename(filename),
+            'href': 'Could not decode - PDF Read Error.',
+            'page': "n/a"
+        }]
+
+
     key = '/Annots'
     uri = '/URI'
     ank = '/A'
@@ -49,12 +66,13 @@ def getLinks(filename, args, dirpath):
             ann = pageObject[key]
             for a in ann:
                 u = a.getObject()
-                if uri in u[ank]:
-                    links.append({
-                        'filename': os.path.basename(filename),
-                        'href': u[ank][uri],
-                        'page': (page+1)
-                    })
+                if ank in u:
+                    if uri in u[ank]:
+                        links.append({
+                            'filename': os.path.basename(filename),
+                            'href': u[ank][uri],
+                            'page': (page+1)
+                        })
 
     # Return a list of dicts full of link info
     return links
@@ -147,7 +165,7 @@ def getPDFLinks(args):
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','href','page']
+        fieldnames = ['filename','page','href']
 
         writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,
