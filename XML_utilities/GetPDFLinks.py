@@ -25,7 +25,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 29st 2018
+Last update: March 30th 2018
 """
 
 def getLinks(filename, args, dirpath):
@@ -51,7 +51,6 @@ def getLinks(filename, args, dirpath):
             'href': 'Could not decode - PDF Read Error.',
             'page': "n/a"
         }]
-
 
     key = '/Annots'
     uri = '/URI'
