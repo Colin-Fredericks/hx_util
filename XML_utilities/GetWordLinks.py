@@ -33,7 +33,8 @@ def getLinkedText(soup):
 
     links = []
 
-    for tag in soup.findAll('hyperlink'):
+    # This kind of link has a corresponding URL in the _rel file.
+    for tag in soup.find_all('hyperlink'):
         # try/except because some hyperlinks have no id.
         try:
             links.append({
@@ -43,16 +44,53 @@ def getLinkedText(soup):
         except:
             pass
 
+    # This kind does not.
+    for tag in soup.find_all('instrText'):
+        # They're identified by the word HYPERLINK
+        if 'HYPERLINK' in tag.text:
+            # Get the URL. Probably.
+            url = tag.text.split('"')[1]
+
+            # The actual linked text is stored nearby tags.
+            # Loop through the siblings starting here.
+            temp = tag.parent.next_sibling
+            text = ''
+
+            while temp is not None:
+                # Text comes in <t> tags.
+                maybe_text = temp.find('t')
+                if maybe_text is not None:
+                    # Ones that have text in them.
+                    if maybe_text.text.strip() != '':
+                        text += maybe_text.text.strip()
+
+                # Links end with <w:fldChar w:fldCharType="end" />.
+                maybe_end = temp.find('fldChar[w:fldCharType]')
+                if maybe_end is not None:
+                    if maybe_end['w:fldCharType'] == 'end':
+                        break
+
+                temp = temp.next_sibling
+
+            links.append({
+                'id': None,
+                'href': url,
+                'text': text
+            })
+
+
     return links
 
-# URLs for .docx hyperlinks are stored in a different file.
+# URLs for .docx hyperlinks are often stored in a different file.
 def getURLs(soup, links):
 
-    # Find every link by id and get its url.
+    # Find every link by id and get its url,
+    # unless we already got it.
     for link in links:
-        for rel in soup.findAll('Relationship'):
-            if rel['Id'] == link['id']:
-                link['href'] = rel['Target']
+        if 'href' not in link:
+            for rel in soup.find_all('Relationship'):
+                if rel['Id'] == link['id']:
+                    link['href'] = rel['Target']
 
     return links
 
@@ -67,7 +105,7 @@ def getLinks(filename, args, dirpath):
     doc_soup = BeautifulSoup(file_data, 'xml')
     linked_text = getLinkedText(doc_soup)
 
-    # URLs are stored in a different file. Cross-reference.
+    # URLs are often stored in a different file. Cross-reference.
     url_data = archive.read('word/_rels/document.xml.rels')
     url_soup = BeautifulSoup(url_data, 'xml')
     links_with_urls = getURLs(url_soup, linked_text)
