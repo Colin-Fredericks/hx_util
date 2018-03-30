@@ -30,6 +30,7 @@ Last update: March 29st 2018
 
 def getLinks(filename, args, dirpath):
 
+    links = []
     fullname = os.path.join(dirpath or '', filename)
     PDFFile = open(fullname,'rb')
 
@@ -44,15 +45,19 @@ def getLinks(filename, args, dirpath):
         pageSliced = PDF.getPage(page)
         pageObject = pageSliced.getObject()
 
-        if pageObject.has_key(key):
+        if key in pageObject:
             ann = pageObject[key]
             for a in ann:
                 u = a.getObject()
-                if u[ank].has_key(uri):
-                print u[ank][uri]
+                if uri in u[ank]:
+                    links.append({
+                        'filename': os.path.basename(filename),
+                        'href': u[ank][uri],
+                        'page': (page+1)
+                    })
 
     # Return a list of dicts full of link info
-    return links_with_urls
+    return links
 
 def getPDFLinks(args):
 
@@ -142,7 +147,7 @@ def getPDFLinks(args):
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','href','text']
+        fieldnames = ['filename','href','page']
 
         writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,
