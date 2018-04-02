@@ -239,9 +239,9 @@ def getExcelLinks(args):
 
         # If it's just a file...
         if os.path.isfile(name):
-            # Make sure this is an sjson file (just check extension)
+            # Make sure this is an Excel file (just check extension)
             if name.lower().endswith('.xlsx'):
-                # Convert it to an SRT file
+                # Get the links from that file.
                 linklist.extend(getLinks(name, args, False))
                 filecount += 1
 
@@ -252,7 +252,7 @@ def getExcelLinks(args):
             if args.r:
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
-                        # Convert every file in that directory.
+                        # Get links from every file in that directory.
                         if eachfile.lower().endswith('.xlsx'):
                             linklist.extend(getLinks(eachfile, args, dirpath))
                             filecount += 1

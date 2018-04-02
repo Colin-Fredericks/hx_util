@@ -4,16 +4,17 @@ import zipfile
 import argparse
 from glob import glob
 from bs4 import BeautifulSoup
+import PyPDF2
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 
 instructions = """
 Usage:
 
-python3 GetWordLinks.py path/to/file/ (options)
+python3 GetPDFLinks.py path/to/file/ (options)
 
-Extract all hyperlinks from a .docx file,
-including link destination and linked text,
+Extract all hyperlinks from a .pdf file,
+including link destination and linked text or object,
 and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
 Excel mangles unicode, so you will need to open the csv in Google Drive.
@@ -24,100 +25,58 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 29th 2018
+Last update: March 30th 2018
 """
-
-# Get the text that is the source for the hyperlink.
-# Not sure what this will do with image links.
-def getLinkedText(soup):
-
-    links = []
-
-    # This kind of link has a corresponding URL in the _rel file.
-    for tag in soup.find_all('hyperlink'):
-        # try/except because some hyperlinks have no id.
-        try:
-            links.append({
-                'id': tag['r:id'],
-                'text': tag.text
-            })
-        except:
-            pass
-
-    # This kind does not.
-    for tag in soup.find_all('instrText'):
-        # They're identified by the word HYPERLINK
-        if 'HYPERLINK' in tag.text:
-            # Get the URL. Probably.
-            url = tag.text.split('"')[1]
-
-            # The actual linked text is stored nearby tags.
-            # Loop through the siblings starting here.
-            temp = tag.parent.next_sibling
-            text = ''
-
-            while temp is not None:
-                # Text comes in <t> tags.
-                maybe_text = temp.find('t')
-                if maybe_text is not None:
-                    # Ones that have text in them.
-                    if maybe_text.text.strip() != '':
-                        text += maybe_text.text.strip()
-
-                # Links end with <w:fldChar w:fldCharType="end" />.
-                maybe_end = temp.find('fldChar[w:fldCharType]')
-                if maybe_end is not None:
-                    if maybe_end['w:fldCharType'] == 'end':
-                        break
-
-                temp = temp.next_sibling
-
-            links.append({
-                'id': None,
-                'href': url,
-                'text': text
-            })
-
-
-    return links
-
-# URLs for .docx hyperlinks are often stored in a different file.
-def getURLs(soup, links):
-
-    # Find every link by id and get its url,
-    # unless we already got it.
-    for link in links:
-        if 'href' not in link:
-            for rel in soup.find_all('Relationship'):
-                if rel['Id'] == link['id']:
-                    link['href'] = rel['Target']
-
-    return links
 
 def getLinks(filename, args, dirpath):
 
-    # Open the .docx file as if it were a zip (because it is)
+    links = []
     fullname = os.path.join(dirpath or '', filename)
-    archive = zipfile.ZipFile(fullname, 'r')
+    PDFFile = open(fullname,'rb')
 
-    # read bytes from archive for the file text and get link text
-    file_data = archive.read('word/document.xml')
-    doc_soup = BeautifulSoup(file_data, 'xml')
-    linked_text = getLinkedText(doc_soup)
+    try:
+        PDF = PyPDF2.PdfFileReader(PDFFile)
+        pages = PDF.getNumPages()
+    except NotImplementedError:
+        print(os.path.basename(filename) + ' uses an unsupported encoding.')
+        return [{
+            'filename': os.path.basename(filename),
+            'href': 'Could not decode - unsupported encoding.',
+            'page': "n/a"
+        }]
+    except PyPDF2.utils.PdfReadError:
+        print(os.path.basename(filename) + ' could not be decoded.')
+        return [{
+            'filename': os.path.basename(filename),
+            'href': 'Could not decode - PDF Read Error.',
+            'page': "n/a"
+        }]
 
-    # URLs are often stored in a different file. Cross-reference.
-    url_data = archive.read('word/_rels/document.xml.rels')
-    url_soup = BeautifulSoup(url_data, 'xml')
-    links_with_urls = getURLs(url_soup, linked_text)
+    key = '/Annots'
+    uri = '/URI'
+    ank = '/A'
 
-    # Mark each line with the filename in case we're processing more than one.
-    for link in links_with_urls:
-        link['filename'] = os.path.basename(filename)
+    for page in range(pages):
+
+        pageSliced = PDF.getPage(page)
+        pageObject = pageSliced.getObject()
+
+        if key in pageObject:
+            ann = pageObject[key]
+            for a in ann:
+                u = a.getObject()
+                if ank in u:
+                    if uri in u[ank]:
+                        links.append({
+                            'filename': os.path.basename(filename),
+                            'href': u[ank][uri],
+                            'page': (page+1)
+                        })
 
     # Return a list of dicts full of link info
-    return links_with_urls
+    return links
 
-def getWordLinks(args):
+def getPDFLinks(args):
 
     # Handle arguments and flags
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
@@ -157,9 +116,9 @@ def getWordLinks(args):
 
         # If it's just a file...
         if os.path.isfile(name):
-            # Make sure this is a Word file (just check extension)
-            if name.lower().endswith('.docx'):
-                # Get links from that file.
+            # Make sure this is a pdf file (just check extension)
+            if name.lower().endswith('.pdf'):
+                # Get the links from this file.
                 linklist.extend(getLinks(name, args, False))
                 filecount += 1
 
@@ -170,8 +129,8 @@ def getWordLinks(args):
             if args.r:
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
-                        # Get links for every file in that directory.
-                        if eachfile.lower().endswith('.docx'):
+                        # Convert every file in that directory.
+                        if eachfile.lower().endswith('.pdf'):
                             linklist.extend(getLinks(eachfile, args, dirpath))
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
@@ -181,7 +140,7 @@ def getWordLinks(args):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:
-                    if eachfile.lower().endswith('.docx'):
+                    if eachfile.lower().endswith('.pdf'):
                         linklist.extend(getLinks(eachfile, args, dirpath))
                         filecount += 1
 
@@ -197,7 +156,7 @@ def getWordLinks(args):
         +  ' for links.' )
 
     # Create output file as sibling to the original target of the script.
-    outFileName = args.o if args.o else 'Word_Doc_Links.csv'
+    outFileName = args.o if args.o else 'PDF_Links.csv'
     if target_is_folder:
         outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
         outFilePath = os.path.join(outFileFolder, outFileName)
@@ -205,7 +164,7 @@ def getWordLinks(args):
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
     with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','href','text']
+        fieldnames = ['filename','page','href']
 
         writer = csv.DictWriter(outputFile,
             fieldnames=fieldnames,
@@ -220,4 +179,4 @@ def getWordLinks(args):
 
 if __name__ == "__main__":
     # this won't be run when imported
-    getWordLinks(sys.argv)
+    getPDFLinks(sys.argv)
