@@ -20,6 +20,10 @@ try:
     import GetPPTLinks
 except:
     print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
+try:
+    import GetPDFLinks
+except:
+    print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
 
 instructions = """
 To use:
