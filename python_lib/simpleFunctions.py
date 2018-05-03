@@ -1,2 +1,0 @@
-def returnTrue():
-    return True
