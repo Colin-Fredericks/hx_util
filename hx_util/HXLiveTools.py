@@ -3,9 +3,9 @@ if sys.version_info <= (3, 0):
     sys.exit('I am a Python 3 script. Run me with python3.')
 
 import os
-import Make_Course_Sheet
-import json2srt
-import SrtRename
+from hx_util import Make_Course_Sheet
+from hx_util import json2srt
+from hx_util import SrtRename
 
 ######################################
 # HarvardX Live Tools
@@ -33,22 +33,28 @@ def runLiveTools(args):
     print('SRT archive prep complete.')
     print('Your renamed SRT files are a zip file, in the same directory as your course folder.')
 
-# Make sure we're running on the course folder, not something else.
-# Note that the course folder is not always named "course",
-# so we need to look for the course.xml file.
-if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
-    print('Please run me on a course folder, not the course.xml file.')
 
-for directory in sys.argv:
-    if not os.path.exists(directory):
-        sys.exit('Directory not found.')
-    if os.path.isdir(directory):
-        if directory == 'course':
-            print('found course folder: ' + directory)
-            runLiveTools(sys.argv)
-        else:
-            if 'course.xml' in [os.path.basename(f) for f in os.listdir(directory)]:
+def main():
+    # Make sure we're running on the course folder, not something else.
+    # Note that the course folder is not always named "course",
+    # so we need to look for the course.xml file.
+    if 'course.xml' in [os.path.basename(word) for word in sys.argv]:
+        print('Please run me on a course folder, not the course.xml file.')
+
+    for directory in sys.argv:
+        if not os.path.exists(directory):
+            sys.exit('Directory not found: ' + directory)
+        if os.path.isdir(directory):
+            if directory == 'course':
                 print('found course folder: ' + directory)
                 runLiveTools(sys.argv)
             else:
-                print('No course.xml file found in ' + directory)
+                if 'course.xml' in [os.path.basename(f) for f in os.listdir(directory)]:
+                    print('found course folder: ' + directory)
+                    runLiveTools(sys.argv)
+                else:
+                    print('No course.xml file found in ' + directory)
+
+
+if __name__ == "__main__":
+    main()
