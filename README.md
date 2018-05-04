@@ -1,6 +1,34 @@
 HX-PY XML Utilities
 ====================================
 
+
+This is a bunch of batch tools to work directly with a course export (the file structure, not the tarball) or with .srt files.
+
+Install and Use
+---------------
+
+    # clone this repo
+    $> git clone https://github.com/Colin-Fredericks/hx_util.git
+    
+    # create a virtualenv and activate it
+    $> virtualenv -p python3 hxutil
+    $> source hxutil/bin/activate
+    (hxutil) $>
+    
+    # install requirements
+    (hxutil) $> cd hx_util
+    (hxutil) $> pip install -r requirements.txt
+    
+    # install hx_util
+    (hxutil) $> pip install .
+    
+    # to generate all possible goodies
+    (hxutil) $> hx_util /path/to/the/untarred/course_export
+
+
+Readme previous to packaging hx_util, for reference
+---------------------------------------------------
+
 This is a bunch of batch tools to work directly with a course export (the file structure, not the tarball) or with .srt files. You can run `python3 filename.py` for each one to have it show a set of instructions, or just open the code with a text editor - the instructions are the first thing there.
 
 Because python's built-in xml parser has trouble with namespaces and xpaths, some XML parsing is done with BeautifulSoup instead. It's included in this folder as `bs4`. For better unicode handling, `unicodecsv` is also included. BeautifulSoup requires `lxml` for XML parsing, so you'll need to install that, probably via `sudo pip3 install lxml`.
