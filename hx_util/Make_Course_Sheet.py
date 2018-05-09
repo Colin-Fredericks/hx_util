@@ -8,22 +8,23 @@ from bs4 import BeautifulSoup
 import lxml
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
-try:
-    from hx_util import GetWordLinks
-except:
-    print('Cannot find GetWordLinks.py, skipping links in .docx files.')
-try:
-    from hx_util import GetExcelLinks
-except:
-    print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
-try:
-    from hx_util import GetPPTLinks
-except:
-    print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
-try:
-    from hx_util import GetPDFLinks
-except:
-    print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
+# You know, I'm not sure I need this part.
+# try:
+#     from hx_util import GetWordLinks
+# except:
+#     print('Cannot find GetWordLinks.py, skipping links in .docx files.')
+# try:
+#     from hx_util import GetExcelLinks
+# except:
+#     print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
+# try:
+#     from hx_util import GetPPTLinks
+# except:
+#     print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
+# try:
+#     from hx_util import GetPDFLinks
+# except:
+#     print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
 
 
 instructions = """
@@ -41,11 +42,13 @@ You can specify the following options:
     -all       Includes html, video, and problem components
     -links     Lists all links in the course.
                Not compatible with above options.
+    -alttext   Lists all images with their alt text.
+               Not compatible with above options.
     -o         Sets the output filename to the next argument.
 
 This script may fail on courses with empty containers.
 
-Last update: March 23rd, 2018
+Last update: May 9th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -149,6 +152,84 @@ def getHTMLLinks(soup):
     betterlinks = [describeLinkData(x) for x in links]
     return betterlinks
 
+
+# get list of all images from HTML pages, with alt text
+# "soup" is a BeautifulSoup object
+def getAltText(soup):
+    image_list = []
+
+    all_images = soup.findAll('img')
+    temp_alt = "No alt attribute"
+    temp_src = "No source attribute"
+
+    for img in all_images:
+        if img.has_attr('src'):
+            temp_src = img.get('src')
+        if img.has_attr('alt'):
+            temp_alt = img.get('alt')
+        image_list.append({
+            'src': temp_src,
+            'alt': temp_alt
+        })
+
+    return image_list
+
+# Gets alt text that isn't in the courseware
+def getAuxAltText(rootFileDir):
+    # Folders to check:
+    aux_folders = ['tabs','info','static']
+    aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
+    aux_images = []
+
+    for folder in aux_paths:
+        if os.path.isdir(folder):
+            folder_temp = {
+                'type': '',
+                'name': '',
+                'url': '',
+                'contents': []
+            }
+
+            # Placing all of these folders at the "chapter" level.
+            for f in os.listdir(folder):
+                file_temp = {
+                    'type': '',
+                    'name': '',
+                    'url': '',
+                    'links': [],
+                    'images': []
+                }
+
+                # All currently accepted file types:
+                if f.endswith( tuple( ['.html','.htm','xml'] ) ):
+                    file_temp['name'] = f
+                    file_temp['url'] = f
+
+                if f.endswith( tuple( ['.html','.htm'] ) ):
+                    soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
+                    file_temp['images'] = getAltText(soup)
+                    file_temp['type'] = 'html'
+                    folder_temp['contents'].append(file_temp)
+                if f.endswith('.xml'):
+                    try:
+                        tree = lxml.etree.parse(folder + '/' + f)
+                    except lxml.etree.XMLSyntaxError:
+                        # If we have broken XML, tell us and skip the file.
+                        print('Broken XML in file ' + folder + '/' + f + ', skipping.')
+                        continue
+                    root = tree.getroot()
+                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'lxml')
+                    file_temp['images'] = getAltText(soup)
+                    file_temp['type'] = 'xml'
+                    folder_temp['contents'].append(file_temp)
+
+            folder_temp['chapter'] = os.path.basename(folder)
+            folder_temp['name'] = os.path.basename(folder)
+            aux_images.append(folder_temp)
+
+    return aux_images
+
+
 # Gets links that aren't in the courseware
 def getAuxLinks(rootFileDir):
     # Folders to check:
@@ -171,11 +252,12 @@ def getAuxLinks(rootFileDir):
                     'type': '',
                     'name': '',
                     'url': '',
-                    'links': []
+                    'links': [],
+                    'images': []
                 }
 
                 # All currently accepted file types:
-                if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx'] ) ):
+                if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx','pdf'] ) ):
                     file_temp['name'] = f
                     file_temp['url'] = f
 
@@ -214,6 +296,13 @@ def getAuxLinks(rootFileDir):
                         file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
                         file_temp['type'] = 'pptx'
                         folder_temp['contents'].append(file_temp)
+                if f.endswith('.pdf'):
+                    pass
+                #     if 'GetPDFLinks' in sys.modules:
+                #         targetFile = os.path.join(folder,f)
+                #         file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
+                #         file_temp['type'] = 'pptx'
+                #         folder_temp['contents'].append(file_temp)
 
             folder_temp['chapter'] = os.path.basename(folder)
             folder_temp['name'] = os.path.basename(folder)
@@ -294,22 +383,23 @@ def getComponentInfo(folder, filename, args):
             temp['inner_xml'] = root.text + ''.join(str(lxml.etree.tostring(e)) for e in root)
             soup = BeautifulSoup(temp['inner_xml'], 'lxml')
             temp['links'] = getHTMLLinks(soup)
+            temp['images'] = getAltText(soup)
         else:
             temp['inner_xml'] = 'No XML.'
 
-    # Right now all we get from HTML is links.
+    # Right now all we get from HTML is links and images.
     if root.tag == 'html':
-        if args.links:
+        if args.links or args.alttext:
             # Most of the time our XML will just point to a separate HTML file.
             # In those cases, go open that file and get the links from it.
             if root.text is None:
                 innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
                 soup = BeautifulSoup(open(innerfilepath, encoding='utf8'), 'html.parser')
-                temp['links'] = getHTMLLinks(soup)
             # If it's declared inline, just get the links right away.
             else:
                 soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
-                temp['links'] = getHTMLLinks(soup)
+            if args.links: temp['links'] = getHTMLLinks(soup)
+            if args.alttext: temp['images'] = getAltText(soup)
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
@@ -342,7 +432,8 @@ def drillDown(folder, filename, args):
             'name': '',
             'url': '',
             'contents': [],
-            'links': []
+            'links': [],
+            'images': []
         }
 
         # get display_name or use placeholder
@@ -447,7 +538,7 @@ def courseFlattener(course_dict, new_row={}):
     else:
         # Don't include the wiki and certain other items.
         if temp_row['type'] not in skip_tags:
-            # If there are links in this row, break it into multiple entries.
+            # If there are links or images in this row, break it into multiple entries.
             if len(temp_row['links']) > 0:
                 link_rows = []
                 for link in temp_row['links']:
@@ -456,12 +547,21 @@ def courseFlattener(course_dict, new_row={}):
                     link_breakout['linktext'] = link['text']
                     link_rows.append(link_breakout)
                 return link_rows
+            if len(temp_row['images']) > 0:
+                img_rows = []
+                for img in temp_row['images']:
+                    img_breakout = temp_row.copy()
+                    img_breakout['src'] = img['src']
+                    img_breakout['alt'] = img['alt']
+                    img_rows.append(img_breakout)
+                return img_rows
             else:
                 return [temp_row]
 
 def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
     course_name = course_dict['name']
     if args.links: course_name += ' Links'
+    if args.alttext: course_name += ' Images'
     course_name += '.tsv'
 
     outFileName = args.o if args.o else course_name
@@ -473,9 +573,12 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
         # Include the XML if we're dealing with problems
         if args.problems:
                 fieldnames.append('inner_xml')
-        # Include video data if we're dealing with videos
+        # Include link data if we're dealing with links
         if args.links:
                 fieldnames = fieldnames + ['href','linktext']
+        # Include alt text data if we're dealing with images
+        if args.alttext:
+                fieldnames = fieldnames + ['src','alt']
         # Include video data if we're dealing with videos
         if args.video:
                 fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
@@ -497,6 +600,8 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
         else:
             if args.links:
                 printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx']]
+            if args.alttext:
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml']]
             if args.html:
                 printable += [row for row in spreadsheet if row['type'] == 'html']
             if args.video:
@@ -505,8 +610,13 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
                 printable += [row for row in spreadsheet if row['type'] == 'problem']
 
         for row in printable:
+            # If we're printing links, skip entries with no links.
             if args.links:
                 if row['href'] != '':
+                    writer.writerow(row)
+            # If we're printing alt text, skip entries with no images.
+            elif args.alttext:
+                if row['src'] != '':
                     writer.writerow(row)
             else:
                 writer.writerow(row)
@@ -525,6 +635,7 @@ def Make_Course_Sheet(args = ['-h']):
     parser.add_argument('-html', action='store_true')
     parser.add_argument('-video', default='True', action='store_true')
     parser.add_argument('-links', action='store_true')
+    parser.add_argument('-alttext', action='store_true')
     parser.add_argument('-o', action='store')
     parser.add_argument('file_names', nargs='*')
 
@@ -536,13 +647,16 @@ def Make_Course_Sheet(args = ['-h']):
     # Do video by default. Don't do it when we're doing other stuff,
     # unless someone intentionally turned it on.
     if not args.video:
-        if args.problems or args.html or args.all or args.links:
+        if args.problems or args.html or args.all or args.links or args.alttext:
             args.video = False
 
     # Link lister is not compatible with other options,
-    # mostly because it makes for too big a spreawdsheet.
+    # mostly because it makes for too big a spreadsheet.
+    # Ditto for the alt text option.
     if args.links:
-        args.problems = args.html = args.all = args.video = False
+        args.problems = args.html = args.all = args.video = args.alttext = False
+    elif args.alttext:
+        args.problems = args.html = args.all = args.video = args.links = False
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
@@ -594,6 +708,8 @@ def Make_Course_Sheet(args = ['-h']):
 
         if args.links:
             course_dict['contents'].extend(getAuxLinks(rootFileDir))
+        if args.alttext:
+            course_dict['contents'].extend(getAuxAltText(rootFileDir))
 
         writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
