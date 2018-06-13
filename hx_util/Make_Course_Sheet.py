@@ -386,17 +386,26 @@ def getComponentInfo(folder, filename, args):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-def drillDown(folder, filename, args):
-    contents = []
+def drillDown(folder, filename, root, args):
 
-    # If there's no file here, just go back.
+    # Try to open file.
     try:
         tree = lxml.etree.parse(os.path.join(folder, (filename + '.xml')))
+        root = tree.getroot()
     except IOError:
-        print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
-        return {'contents': contents, 'parent_name': '', 'found_file': False}
+        # If we can't get a file, try to traverse inline XML.
+        ddinfo = getXMLInfo(folder, root, args)
+        if ddinfo:
+            return ddinfo
+        else:
+            print('Possible missing file or empty XML element: ' + os.path.join(folder, (filename + '.xml')))
+            return {'contents': [], 'parent_name': '', 'found_file': False}
 
-    root = tree.getroot()
+    return getXMLInfo(folder, root, args)
+
+
+def getXMLInfo(folder, root, args):
+    contents = []
 
     # Some items are created without a display name; use their tag name instead.
     if 'display_name' in root.attrib:
@@ -430,11 +439,9 @@ def drillDown(folder, filename, args):
             temp['url'] = None
 
         # In the future: check to see whether this child is a pointer tag or inline XML.
-        # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
-        # For right now: skip all the inline stuff; assume pointer.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(nextFile, temp['url'], args)
+            child_info = drillDown(nextFile, temp['url'], child, args)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
             child_info = getComponentInfo(nextFile, temp['url'], args)
@@ -459,16 +466,6 @@ def drillDown(folder, filename, args):
         contents.append(temp)
 
     return {'contents': contents, 'parent_name': display_name, 'found_file': True}
-
-# Recursion function for inline-declared XML.
-# We're currently skipping many of the skip_tags because they're more often declared inline.
-# Need to develop that code to handle them.
-# Best suggestion to date: try to open file, and traveerse inline XML if we can't.
-def drillDownInline(arguments, stuff):
-    pass
-    # This is a placeholder.
-    # Luckily most inlines right now are leaf nodes,
-    # but they don't HAVE to be, so... let's fix this.
 
 
 # Gets the full set of data headers for the course.
@@ -684,6 +681,7 @@ def Make_Course_Sheet(args = ['-h']):
         course_info = drillDown(
             os.path.join(rootFileDir, course_dict['type']),
             course_dict['url'],
+            course_root,
             args
         )
         course_dict['name'] = course_info['parent_name']
