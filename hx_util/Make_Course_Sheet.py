@@ -8,23 +8,6 @@ from bs4 import BeautifulSoup
 import lxml
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
-# You know, I'm not sure I need this part.
-# try:
-#     from hx_util import GetWordLinks
-# except:
-#     print('Cannot find GetWordLinks.py, skipping links in .docx files.')
-# try:
-#     from hx_util import GetExcelLinks
-# except:
-#     print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
-# try:
-#     from hx_util import GetPPTLinks
-# except:
-#     print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
-# try:
-#     from hx_util import GetPDFLinks
-# except:
-#     print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
 
 
 instructions = """
@@ -48,7 +31,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: May 9th, 2018
+Last update: June 13th, 2018
 """
 
 # We need lists of container nodes and leaf nodes so we can tell
@@ -57,6 +40,7 @@ leaf_nodes = ['html','problem','video']
 branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
+# These will be moved out as we improve the parsing.
 skip_tags = [
     'annotatable',
     'discussion',
@@ -80,10 +64,6 @@ skip_tags = [
     'wiki',
     'word_cloud'
 ]
-
-# We're skipping many of the skip_tags because they're inline.
-# Need to develop that code to handle them.
-# Best suggestion to date: try to open file, and traveerse inline XML if we can't.
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -482,11 +462,15 @@ def drillDown(folder, filename, args):
     return {'contents': contents, 'parent_name': display_name, 'found_file': True}
 
 # Recursion function for inline-declared XML.
+# We're currently skipping many of the skip_tags because they're more often declared inline.
+# Need to develop that code to handle them.
+# Best suggestion to date: try to open file, and traveerse inline XML if we can't.
 def drillDownInline(arguments, stuff):
     pass
     # This is a placeholder.
     # Luckily most inlines right now are leaf nodes,
-    # but they don't HAVE to be, so... bah.
+    # but they don't HAVE to be, so... let's fix this.
+
 
 # Gets the full set of data headers for the course.
 # flat_course is a list of dictionaries.
