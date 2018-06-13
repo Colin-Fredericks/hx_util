@@ -34,10 +34,7 @@ This script may fail on courses with empty containers.
 Last update: June 13th, 2018
 """
 
-# We need lists of container nodes and leaf nodes so we can tell
-# whether we have to do more recursion.
-leaf_nodes = ['html','problem','video']
-branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
 # These will be moved out as we improve the parsing.
@@ -48,12 +45,11 @@ skip_tags = [
     'drag-and-drop-v2',
     'imageannotation',
     'library_content',
-    'lti',
+    'lti',  # This is the older, deprecated LTI component.
     'lti_consumer',
     'oppia',
     'openassessment',
-    'poll',
-    'poll_question',
+    'poll_question', # This is the older, deprecated poll component.
     'problem-builder',
     'recommender',
     'step-builder',
@@ -291,9 +287,15 @@ def getAuxLinks(rootFileDir):
 
 # Always gets the display name.
 # For video and problem files, gets other info too
-def getComponentInfo(folder, filename, args):
-    tree = lxml.etree.parse(folder + '/' + filename + '.xml')
-    root = tree.getroot()
+def getComponentInfo(folder, filename, child, args):
+
+    # Try to open file.
+    try:
+        tree = lxml.etree.parse(folder + '/' + filename + '.xml')
+        root = tree.getroot()
+    except OSError:
+        # If we can't get a file, try to traverse inline XML.
+        root = child
 
     temp = {
         'type': root.tag,
@@ -405,6 +407,12 @@ def drillDown(folder, filename, root, args):
 
 
 def getXMLInfo(folder, root, args):
+
+    # We need lists of container nodes and leaf nodes so we can tell
+    # whether we have to do more recursion.
+    leaf_nodes = ['html','problem','video','poll']
+    branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+
     contents = []
 
     # Some items are created without a display name; use their tag name instead.
@@ -444,7 +452,7 @@ def getXMLInfo(folder, root, args):
             child_info = drillDown(nextFile, temp['url'], child, args)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(nextFile, temp['url'], args)
+            child_info = getComponentInfo(nextFile, temp['url'], child, args)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info['contents'])
