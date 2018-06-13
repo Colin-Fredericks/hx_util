@@ -39,26 +39,15 @@ Last update: June 13th, 2018
 # rather than having their own unique folder in the course export.
 # These will be moved out as we improve the parsing.
 skip_tags = [
-    'annotatable',
-    'discussion',
-    'done',
-    'drag-and-drop-v2',
-    'imageannotation',
-    'library_content',
+    'annotatable', # This is the older, deprecated annotation component.
     'lti',  # This is the older, deprecated LTI component.
-    'lti_consumer',
     'oppia',
-    'openassessment',
+    'openassessment', # This is the older, deprecated ORA.
     'poll_question', # This is the older, deprecated poll component.
     'problem-builder',
     'recommender',
     'step-builder',
-    'survey',
-    'textannotation',
-    'ubcpi',
-    'videoannotation',
-    'wiki',
-    'word_cloud'
+    'wiki'
 ]
 
 # Converts from seconds to hh:mm:ss,msec format
@@ -410,7 +399,23 @@ def getXMLInfo(folder, root, args):
 
     # We need lists of container nodes and leaf nodes so we can tell
     # whether we have to do more recursion.
-    leaf_nodes = ['html','problem','video','poll']
+    leaf_nodes = [
+        'discussion',
+        'done',
+        'drag-and-drop-v2',
+        'html',
+        'imageannotation',
+        'library_content',
+        'lti_consumer',
+        'poll',
+        'problem',
+        'survey',
+        'textannotation',
+        'ubcpi',
+        'video',
+        'videoannotation',
+        'word_cloud'
+    ]
     branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
 
     contents = []
