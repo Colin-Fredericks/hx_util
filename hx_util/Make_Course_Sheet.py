@@ -277,12 +277,11 @@ def getAuxLinks(rootFileDir):
                         file_temp['type'] = 'pptx'
                         folder_temp['contents'].append(file_temp)
                 if f.endswith('.pdf'):
-                    pass
-                #     if 'GetPDFLinks' in sys.modules:
-                #         targetFile = os.path.join(folder,f)
-                #         file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
-                #         file_temp['type'] = 'pptx'
-                #         folder_temp['contents'].append(file_temp)
+                    if 'GetPDFLinks' in sys.modules:
+                        targetFile = os.path.join(folder,f)
+                        file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
+                        file_temp['type'] = 'pdf'
+                        folder_temp['contents'].append(file_temp)
 
             folder_temp['chapter'] = os.path.basename(folder)
             folder_temp['name'] = os.path.basename(folder)
@@ -583,7 +582,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             printable = spreadsheet
         else:
             if args.links:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx']]
+                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx','pdf']]
             if args.alttext:
                 printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml']]
             if args.html:
