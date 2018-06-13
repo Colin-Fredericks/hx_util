@@ -22,7 +22,8 @@ You can specify the following options:
     -problems  Includes problems AND problem XML instead of videos
     -html      Includes just HTML components
     -video     Forces inclusion of video with html or problems
-    -all       Includes html, video, and problem components
+    -all       Includes most components, including problem,
+               html, video, discussion, poll, etc.
     -links     Lists all links in the course.
                Not compatible with above options.
     -alttext   Lists all images with their alt text.
