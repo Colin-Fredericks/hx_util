@@ -39,7 +39,8 @@ You can specify the following options:
     -problems  Includes problems AND problem XML instead of videos
     -html      Includes just HTML components
     -video     Forces inclusion of video with html or problems
-    -all       Includes html, video, and problem components
+    -all       Includes most components, including problem,
+               html, video, discussion, poll, etc.
     -links     Lists all links in the course.
                Not compatible with above options.
     -alttext   Lists all images with their alt text.
@@ -48,42 +49,24 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: May 9th, 2018
+Last update: June 14th, 2018
 """
 
-# We need lists of container nodes and leaf nodes so we can tell
-# whether we have to do more recursion.
-leaf_nodes = ['html','problem','video']
-branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+
 # Many of these are being skipped because they're currently expressed in inline XML
 # rather than having their own unique folder in the course export.
+# These will be moved out as we improve the parsing.
 skip_tags = [
-    'annotatable',
-    'discussion',
-    'done',
-    'drag-and-drop-v2',
-    'imageannotation',
-    'library_content',
-    'lti',
-    'lti_consumer',
+    'annotatable', # This is the older, deprecated annotation component.
+    'lti',  # This is the older, deprecated LTI component.
     'oppia',
-    'openassessment',
-    'poll',
-    'poll_question',
+    'openassessment', # This is the older, deprecated ORA.
+    'poll_question', # This is the older, deprecated poll component.
     'problem-builder',
     'recommender',
     'step-builder',
-    'survey',
-    'textannotation',
-    'ubcpi',
-    'videoannotation',
-    'wiki',
-    'word_cloud'
+    'wiki'
 ]
-
-# We're skipping many of the skip_tags because they're inline.
-# Need to develop that code to handle them.
-# Best suggestion to date: try to open file, and traveerse inline XML if we can't.
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -307,9 +290,15 @@ def getAuxLinks(rootFileDir):
 
 # Always gets the display name.
 # For video and problem files, gets other info too
-def getComponentInfo(folder, filename, args):
-    tree = lxml.etree.parse(folder + '/' + filename + '.xml')
-    root = tree.getroot()
+def getComponentInfo(folder, filename, child, args):
+
+    # Try to open file.
+    try:
+        tree = lxml.etree.parse(folder + '/' + filename + '.xml')
+        root = tree.getroot()
+    except OSError:
+        # If we can't get a file, try to traverse inline XML.
+        root = child
 
     temp = {
         'type': root.tag,
@@ -402,17 +391,48 @@ def getComponentInfo(folder, filename, args):
     return {'contents': temp, 'parent_name': temp['name']}
 
 # Recursion function for outline-declared xml files
-def drillDown(folder, filename, args):
-    contents = []
+def drillDown(folder, filename, root, args):
 
-    # If there's no file here, just go back.
+    # Try to open file.
     try:
         tree = lxml.etree.parse(os.path.join(folder, (filename + '.xml')))
+        root = tree.getroot()
     except IOError:
-        print('Possible missing file: ' + os.path.join(folder, (filename + '.xml')))
-        return {'contents': contents, 'parent_name': '', 'found_file': False}
+        # If we can't get a file, try to traverse inline XML.
+        ddinfo = getXMLInfo(folder, root, args)
+        if ddinfo:
+            return ddinfo
+        else:
+            print('Possible missing file or empty XML element: ' + os.path.join(folder, (filename + '.xml')))
+            return {'contents': [], 'parent_name': '', 'found_file': False}
 
-    root = tree.getroot()
+    return getXMLInfo(folder, root, args)
+
+
+def getXMLInfo(folder, root, args):
+
+    # We need lists of container nodes and leaf nodes so we can tell
+    # whether we have to do more recursion.
+    leaf_nodes = [
+        'discussion',
+        'done',
+        'drag-and-drop-v2',
+        'html',
+        'imageannotation',
+        'library_content',
+        'lti_consumer',
+        'poll',
+        'problem',
+        'survey',
+        'textannotation',
+        'ubcpi',
+        'video',
+        'videoannotation',
+        'word_cloud'
+    ]
+    branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+
+    contents = []
 
     # Some items are created without a display name; use their tag name instead.
     if 'display_name' in root.attrib:
@@ -446,14 +466,12 @@ def drillDown(folder, filename, args):
             temp['url'] = None
 
         # In the future: check to see whether this child is a pointer tag or inline XML.
-        # Perhaps by seeing no text in tag and no child tags? (Update: no, this doesn't work.)
-        # For right now: skip all the inline stuff; assume pointer.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(nextFile, temp['url'], args)
+            child_info = drillDown(nextFile, temp['url'], child, args)
             temp['contents'] = child_info['contents']
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(nextFile, temp['url'], args)
+            child_info = getComponentInfo(nextFile, temp['url'], child, args)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info['contents'])
@@ -476,12 +494,6 @@ def drillDown(folder, filename, args):
 
     return {'contents': contents, 'parent_name': display_name, 'found_file': True}
 
-# Recursion function for inline-declared XML.
-def drillDownInline(arguments, stuff):
-    pass
-    # This is a placeholder.
-    # Luckily most inlines right now are leaf nodes,
-    # but they don't HAVE to be, so... bah.
 
 # Gets the full set of data headers for the course.
 # flat_course is a list of dictionaries.
@@ -696,6 +708,7 @@ def Make_Course_Sheet(args = ['-h']):
         course_info = drillDown(
             os.path.join(rootFileDir, course_dict['type']),
             course_dict['url'],
+            course_root,
             args
         )
         course_dict['name'] = course_info['parent_name']

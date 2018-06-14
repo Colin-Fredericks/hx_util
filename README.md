@@ -45,4 +45,4 @@ Because python's built-in xml parser has trouble with namespaces and xpaths, som
 If you're looking for `outline_maker`, `SetMaxAttempts.py`, and other course-run rools, they're now in [hx-xml](https://github.com/Colin-Fredericks/hx-xml). `PrepAdaptiveProblems.py` has been moved to [hx-adaptive](https://github.com/Colin-Fredericks/hx-adaptive).
 
  ### In Progress
- * Testing PDF parser
+ * Improving the XML parsing to handle components declared inline.
