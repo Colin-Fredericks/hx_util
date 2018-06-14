@@ -34,6 +34,7 @@ def getLinks(filename, args, dirpath):
     fil = os.path.basename(filename)
     href = 'Unknown error opening this file.'
     page = 'n/a'
+    text = ''
 
     try:
         PDF = pdfrw.PdfReader(fullname)
@@ -45,7 +46,7 @@ def getLinks(filename, args, dirpath):
         except FileNotFoundError:
             print('qpdf is not installed. Could not attempt to decrypt ' + filename)
             href = 'Could not open - possibly encrypted file.'
-            return [{'filename': fil, 'href': href, 'page': page}]
+            return [{'filename': fil, 'href': href, 'page': page, 'text': text}]
 
         # Read in and then delete the new unencrypted file
         PDF = pdfrw.PdfReader(fullname + '.new')
@@ -57,12 +58,12 @@ def getLinks(filename, args, dirpath):
 
     except:
         print('Unknown error opening ' + os.path.basename(filename) )
-        return [{'filename': fil, 'href': href, 'page': page}]
+        return [{'filename': fil, 'href': href, 'page': page, 'text': text}]
 
     if PDF.Encrypt:
         print('Could not decrypt ' + filename)
         href = 'Cannot get URLs from encrypted file.'
-        return [{'filename': fil, 'href': href, 'page': page}]
+        return [{'filename': fil, 'href': href, 'page': page, 'text': text}]
 
     for index, page in enumerate(pages):
         if '/Annots' in page:
