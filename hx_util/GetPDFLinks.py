@@ -74,13 +74,15 @@ def getLinks(filename, args, dirpath):
                             links.append({
                                 'filename': os.path.basename(filename),
                                 'href': a['/A']['/URI'][1:-1],
-                                'page': (index+1)
+                                'page': (index+1),
+                                'text': 'Location: page ' + str(index+1)
                             })
                         else:
                             links.append({
                                 'filename': os.path.basename(filename),
                                 'href': 'Cannot get URL from encrypted file.',
-                                'page': (index+1)
+                                'page': (index+1),
+                                'text': 'Location: page ' + str(index+1)
                             })
 
 
