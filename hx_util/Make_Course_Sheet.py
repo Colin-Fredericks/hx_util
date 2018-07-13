@@ -377,7 +377,7 @@ def getComponentInfo(folder, filename, child, args):
             if args.alttext: temp['images'] = getAltText(soup)
 
     # special handlers for other xml:
-    if root.tag = 'drag-and-drop-v2'
+    if root.tag == 'drag-and-drop-v2':
         temp['links'] = []
         temp['images'] = [{
             'src': 'Drag-and-drop problem (v2)',
