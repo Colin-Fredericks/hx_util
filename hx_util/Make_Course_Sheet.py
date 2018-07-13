@@ -141,15 +141,19 @@ def getHTMLLinks(soup):
 def getAltText(soup):
     image_list = []
 
-    all_images = soup.findAll('img')
-    temp_alt = "No alt attribute"
-    temp_src = "No source attribute"
+    all_images = soup.findAll(['img','drag_and_drop_input'])
+    temp_alt = 'No alt attribute'
+    temp_src = 'No source attribute'
 
     for img in all_images:
-        if img.has_attr('src'):
+        if img.has_attr('img'):
+            # This is a version-1 drag-and-drop problem.
+            temp_src = '¡Drag-and-drop v1 problem, replace!'
+            temp_alt = '¡Drag-and-drop v1 problem, replace!'
+        elif img.has_attr('src'):
             temp_src = img.get('src')
-        if img.has_attr('alt'):
-            temp_alt = img.get('alt')
+            if img.has_attr('alt'):
+                temp_alt = img.get('alt')
         image_list.append({
             'src': temp_src,
             'alt': temp_alt
@@ -384,6 +388,14 @@ def getComponentInfo(folder, filename, child, args):
                 soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
             if args.links: temp['links'] = getHTMLLinks(soup)
             if args.alttext: temp['images'] = getAltText(soup)
+
+    # special handlers for other xml:
+    if root.tag == 'drag-and-drop-v2':
+        temp['links'] = []
+        temp['images'] = [{
+            'src': 'Drag-and-drop problem (v2)',
+            'alt': '¡Check manually for alt text!'
+        }]
 
     # Label all of them as components regardless of type.
     temp['component'] = temp['name']
