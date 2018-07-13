@@ -9,6 +9,23 @@ import lxml
 from glob import glob
 import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
+try:
+    from hx_util import GetWordLinks
+except:
+    print('Cannot find GetWordLinks.py, skipping links in .docx files.')
+try:
+    from hx_util import GetExcelLinks
+except:
+    print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
+try:
+    from hx_util import GetPPTLinks
+except:
+    print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
+try:
+    from hx_util import GetPDFLinks
+except:
+    print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
+
 
 instructions = """
 To use:
@@ -32,7 +49,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: June 13th, 2018
+Last update: June 14th, 2018
 """
 
 
@@ -249,29 +266,25 @@ def getAuxLinks(rootFileDir):
                     file_temp['type'] = 'xml'
                     folder_temp['contents'].append(file_temp)
                 if f.endswith('.docx'):
-                    if 'GetWordLinks' in sys.modules:
-                        targetFile = os.path.join(folder,f)
-                        file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
-                        file_temp['type'] = 'docx'
-                        folder_temp['contents'].append(file_temp)
+                    targetFile = os.path.join(folder,f)
+                    file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
+                    file_temp['type'] = 'docx'
+                    folder_temp['contents'].append(file_temp)
                 if f.endswith('.xlsx'):
-                    if 'GetExcelLinks' in sys.modules:
-                        targetFile = os.path.join(folder,f)
-                        file_temp['links'] = GetExcelLinks.getExcelLinks([targetFile, '-l'])
-                        file_temp['type'] = 'xlsx'
-                        folder_temp['contents'].append(file_temp)
+                    targetFile = os.path.join(folder,f)
+                    file_temp['links'] = GetExcelLinks.getExcelLinks([targetFile, '-l'])
+                    file_temp['type'] = 'xlsx'
+                    folder_temp['contents'].append(file_temp)
                 if f.endswith('.pptx'):
-                    if 'GetPPTLinks' in sys.modules:
-                        targetFile = os.path.join(folder,f)
-                        file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
-                        file_temp['type'] = 'pptx'
-                        folder_temp['contents'].append(file_temp)
+                    targetFile = os.path.join(folder,f)
+                    file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
+                    file_temp['type'] = 'pptx'
+                    folder_temp['contents'].append(file_temp)
                 if f.endswith('.pdf'):
-                    if 'GetPDFLinks' in sys.modules:
-                        targetFile = os.path.join(folder,f)
-                        file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
-                        file_temp['type'] = 'pdf'
-                        folder_temp['contents'].append(file_temp)
+                    targetFile = os.path.join(folder,f)
+                    file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
+                    file_temp['type'] = 'pdf'
+                    folder_temp['contents'].append(file_temp)
 
             folder_temp['chapter'] = os.path.basename(folder)
             folder_temp['name'] = os.path.basename(folder)
