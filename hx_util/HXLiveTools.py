@@ -14,7 +14,7 @@ from hx_util import SrtRename
 # Calls multiple scripts to help with the archive process for HarvardX courses.
 # Passes all arguments through to the scripts, but you probably don't want to.
 #
-# Last update: June 6th 2018
+# Last update: Sept 26th 2018
 ######################################
 
 def runLiveTools(args):
@@ -24,7 +24,7 @@ def runLiveTools(args):
     json2srt.json2srt(args + ['-r'])
     # Rename (copy) the SRT files to match our upload names and make a zip file.
     # Put this in the course folder.
-    SrtRename.SrtRename(args + ['-n', '-z', '-i', 'Course_Video_Sheet.tsv', '-o', 'Course_SRT_Files.zip'])
+    SrtRename.SrtRename(args + ['-c', '-n', '-z', '-i', 'Course_Video_Sheet.tsv', '-o', 'Course_SRT_Files.zip'])
     # Make the link spreadsheet.
     Make_Course_Sheet.Make_Course_Sheet(args + ['-links', '-o', 'Course_Link_Sheet.tsv'])
     # Make the image spreadsheet.

@@ -162,7 +162,12 @@ def getLinks(filename, args, dirpath):
         complete_links.extend(links_with_urls)
 
     # Text is ALSO stored in a different file, but it's the same one for every sheet.
-    string_data = archive.read('xl/sharedStrings.xml')
+    try:
+        string_data = archive.read('xl/sharedStrings.xml')
+    except KeyError:
+        # If that file doesn't exist, just skip it and move on.
+        return complete_links
+
     string_soup = BeautifulSoup(string_data, 'xml')
     complete_links = getLinkText(string_soup, complete_links)
 
@@ -242,8 +247,10 @@ def getExcelLinks(args):
             # Make sure this is an Excel file (just check extension)
             if name.lower().endswith('.xlsx'):
                 # Get the links from that file.
-                linklist.extend(getLinks(name, args, False))
-                filecount += 1
+                newlinks = getLinks(name, args, False)
+                if(newlinks != []):
+                    linklist.extend()
+                    filecount += 1
 
         # If it's a directory:
         if os.path.isdir(name):
