@@ -49,7 +49,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: June 14th, 2018
+Last update: September 26th, 2018
 """
 
 
@@ -318,10 +318,23 @@ def getComponentInfo(folder, filename, child, args):
 
     # get video information
     if root.tag == 'video' and args.video:
+
+        temp['sub'] = 'No subtitles found.'
+
+        # Old-style course exports have non-blank 'sub' attributes.
         if 'sub' in root.attrib:
-            temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
-        else:
-            temp['sub'] = 'No subtitles found.'
+            if root.attrib['sub'] != '':
+                temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
+
+        # New-style course exports (Aug 15 2018) have a different hierarchy.
+        for va in root.iter('video_asset'):
+            for trs in va.iter('transcripts'):
+                for transcript in trs.iter('transcript'):
+                    if transcript.attrib['language_code'] == 'en':
+                        temp['sub'] = root.attrib['edx_video_id'] + '-en.srt'
+                        break
+                    else:
+                        temp['sub'] = 'No English subtitles found.'
 
         if 'youtube_id_1_0' in root.attrib:
             temp['youtube'] = root.attrib['youtube_id_1_0']

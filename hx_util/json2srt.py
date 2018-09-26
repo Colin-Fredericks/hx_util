@@ -10,13 +10,14 @@ To use:
 python3 sjson2srt.py file_or_directory (options)
 
 Creates a new .srt file for every .srt.sjson file found.
+If it's a new-style export and there are no .sjson files, move on gracefully.
 
 Valid options:
   -o Overwrite. Deletes the .srt.sjson file after it has been converted.
   -r Recursive. Works on .srt.sjson files in subdirectories as well.
   -h Help. Print this message.
 
-Last update: March 15th 2018
+Last update: September 26th 2018
 """
 
 # Split long lines on a space near the middle.
