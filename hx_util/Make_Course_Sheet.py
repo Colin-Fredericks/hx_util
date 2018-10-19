@@ -68,6 +68,16 @@ skip_tags = [
     'wiki'
 ]
 
+# Canonical leaf node. Only for copying.
+canon_leaf = {
+    'type': '',
+    'name': '',
+    'url': '',
+    'links': [],
+    'images': [],
+    'sub': []
+}
+
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
 def secToHMS(time):
@@ -179,14 +189,7 @@ def getAuxAltText(rootFileDir):
 
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
-                file_temp = {
-                    'type': '',
-                    'name': '',
-                    'url': '',
-                    'links': [],
-                    'images': [],
-                    'sub': []
-                }
+                file_temp = canon_leaf.copy()
 
                 # All currently accepted file types:
                 if f.endswith( tuple( ['.html','.htm','xml'] ) ):
@@ -236,14 +239,7 @@ def getAuxLinks(rootFileDir):
 
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
-                file_temp = {
-                    'type': '',
-                    'name': '',
-                    'url': '',
-                    'links': [],
-                    'images': [],
-                    'sub': []
-                }
+                file_temp = canon_leaf.copy()
 
                 # All currently accepted file types:
                 if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx','pdf'] ) ):
