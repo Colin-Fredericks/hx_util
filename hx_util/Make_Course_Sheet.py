@@ -184,7 +184,8 @@ def getAuxAltText(rootFileDir):
                     'name': '',
                     'url': '',
                     'links': [],
-                    'images': []
+                    'images': [],
+                    'sub': []
                 }
 
                 # All currently accepted file types:
@@ -240,7 +241,8 @@ def getAuxLinks(rootFileDir):
                     'name': '',
                     'url': '',
                     'links': [],
-                    'images': []
+                    'images': [],
+                    'sub': []
                 }
 
                 # All currently accepted file types:
@@ -319,22 +321,20 @@ def getComponentInfo(folder, filename, child, args):
     # get video information
     if root.tag == 'video' and args.video:
 
-        temp['sub'] = 'No subtitles found.'
+        # List of subscripts because multiple languages.
+        temp['sub'] = ['No subtitles found.']
 
         # Old-style course exports have non-blank 'sub' attributes.
         if 'sub' in root.attrib:
             if root.attrib['sub'] != '':
-                temp['sub'] = 'subs_' + root.attrib['sub'] + '.srt.sjson'
+                temp['sub'] = ['subs_' + root.attrib['sub'] + '.srt.sjson']
 
         # New-style course exports (Aug 15 2018) have a different hierarchy.
+        # Use this preferentially over the old-style formatting.
         for va in root.iter('video_asset'):
             for trs in va.iter('transcripts'):
                 for transcript in trs.iter('transcript'):
-                    if transcript.attrib['language_code'] == 'en':
-                        temp['sub'] = root.attrib['edx_video_id'] + '-en.srt'
-                        break
-                    else:
-                        temp['sub'] = 'No English subtitles found.'
+                    temp['sub'].append(root.attrib['edx_video_id'] + '-' + transcript.attrib['language_code'] + '.srt')
 
         if 'youtube_id_1_0' in root.attrib:
             temp['youtube'] = root.attrib['youtube_id_1_0']
@@ -473,7 +473,8 @@ def getXMLInfo(folder, root, args):
             'url': '',
             'contents': [],
             'links': [],
-            'images': []
+            'images': [],
+            'sub': []
         }
 
         # get display_name or use placeholder
@@ -570,7 +571,15 @@ def courseFlattener(course_dict, new_row={}):
     else:
         # Don't include the wiki and certain other items.
         if temp_row['type'] not in skip_tags:
-            # If there are links or images in this row, break it into multiple entries.
+            # If there are links, images, or transcripts in this row,
+            # break it into multiple entries.
+            if len(temp_row['sub']) > 0:
+                transcript_rows = []
+                for sub in temp_row['sub']:
+                    transcript_breakout = temp_row.copy()
+                    transcript_breakout['sub'] = sub
+                    transcript_rows.append(transcript_breakout)
+                return transcript_rows
             if len(temp_row['links']) > 0:
                 link_rows = []
                 for link in temp_row['links']:
