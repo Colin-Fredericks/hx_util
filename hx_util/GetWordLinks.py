@@ -24,7 +24,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: March 29th 2018
+Last update: December 13th 2018
 """
 
 # Get the text that is the source for the hyperlink.
