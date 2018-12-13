@@ -12,7 +12,7 @@ Usage:
 
 python3 GetWordLinks.py path/to/file/ (options)
 
-Extract all hyperlinks from a .docx file,
+Extract all hyperlinks from a .docx or .docm file,
 including link destination and linked text,
 and store them in a .csv file.
 If you feed it a folder, it includes all the files in the folder.
@@ -110,6 +110,26 @@ def getLinks(filename, args, dirpath):
     url_soup = BeautifulSoup(url_data, 'xml')
     links_with_urls = getURLs(url_soup, linked_text)
 
+    # read bytes from archive for the footnote text (if any) and get link text
+    try:
+        footnote_file_data = archive.read('word/footnotes.xml')
+        footnote_doc_soup = BeautifulSoup(footnote_file_data, 'xml')
+        footnote_linked_text = getLinkedText(footnote_doc_soup)
+    except:
+        pass
+
+    # URLs for footnotes are stored in a different file. Cross-reference.
+    try:
+        footnote_url_data = archive.read('word/_rels/footnotes.xml.rels')
+        footnote_url_soup = BeautifulSoup(footnote_url_data, 'xml')
+        footnote_links_with_urls = getURLs(footnote_url_soup, footnote_linked_text)
+    except:
+        pass
+
+    if footnote_links_with_urls:
+        linked_text += footnote_linked_text
+        links_with_urls += footnote_links_with_urls
+
     # Mark each line with the filename in case we're processing more than one.
     for link in links_with_urls:
         link['filename'] = os.path.basename(filename)
@@ -158,7 +178,7 @@ def getWordLinks(args):
         # If it's just a file...
         if os.path.isfile(name):
             # Make sure this is a Word file (just check extension)
-            if name.lower().endswith('.docx'):
+            if name.lower().endswith('.docx') or name.lower().endswith('.docm'):
                 # Get links from that file.
                 linklist.extend(getLinks(name, args, False))
                 filecount += 1
@@ -171,7 +191,7 @@ def getWordLinks(args):
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
                         # Get links for every file in that directory.
-                        if eachfile.lower().endswith('.docx'):
+                        if eachfile.lower().endswith('.docx') or eachfile.lower().endswith('.docm'):
                             linklist.extend(getLinks(eachfile, args, dirpath))
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
@@ -181,7 +201,7 @@ def getWordLinks(args):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:
-                    if eachfile.lower().endswith('.docx'):
+                    if eachfile.lower().endswith('.docx') or eachfile.lower().endswith('.docm'):
                         linklist.extend(getLinks(eachfile, args, dirpath))
                         filecount += 1
 
