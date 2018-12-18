@@ -318,7 +318,7 @@ def getComponentInfo(folder, filename, child, args):
     if root.tag == 'video' and args.video:
 
         # List of subscripts because multiple languages.
-        temp['sub'] = ['No subtitles found.']
+        temp['sub'] = []
 
         # Old-style course exports have non-blank 'sub' attributes.
         if 'sub' in root.attrib:
@@ -331,6 +331,9 @@ def getComponentInfo(folder, filename, child, args):
             for trs in va.iter('transcripts'):
                 for transcript in trs.iter('transcript'):
                     temp['sub'].append(root.attrib['edx_video_id'] + '-' + transcript.attrib['language_code'] + '.srt')
+
+        if len(temp['sub']) == 0:
+            temp['sub'] = ['No subtitles found.']
 
         if 'youtube_id_1_0' in root.attrib:
             temp['youtube'] = root.attrib['youtube_id_1_0']
