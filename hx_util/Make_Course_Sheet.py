@@ -49,7 +49,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: September 26th, 2018
+Last update: December 18th, 2018
 """
 
 
