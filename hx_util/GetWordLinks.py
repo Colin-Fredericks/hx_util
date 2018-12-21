@@ -126,9 +126,11 @@ def getLinks(filename, args, dirpath):
     except:
         pass
 
-    if footnote_links_with_urls:
+    try:
         linked_text += footnote_linked_text
         links_with_urls += footnote_links_with_urls
+    except:
+        pass
 
     # Mark each line with the filename in case we're processing more than one.
     for link in links_with_urls:
