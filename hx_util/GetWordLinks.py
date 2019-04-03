@@ -2,9 +2,9 @@ import sys
 import os
 import zipfile
 import argparse
-from glob import glob
+import glob
 from bs4 import BeautifulSoup
-import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
+import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 
 instructions = """
@@ -24,7 +24,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: December 13th 2018
+Last update: April 3rd 2019
 """
 
 # Get the text that is the source for the hyperlink.
@@ -34,52 +34,45 @@ def getLinkedText(soup):
     links = []
 
     # This kind of link has a corresponding URL in the _rel file.
-    for tag in soup.find_all('hyperlink'):
+    for tag in soup.find_all("hyperlink"):
         # try/except because some hyperlinks have no id.
         try:
-            links.append({
-                'id': tag['r:id'],
-                'text': tag.text
-            })
+            links.append({"id": tag["r:id"], "text": tag.text})
         except:
             pass
 
     # This kind does not.
-    for tag in soup.find_all('instrText'):
+    for tag in soup.find_all("instrText"):
         # They're identified by the word HYPERLINK
-        if 'HYPERLINK' in tag.text:
+        if "HYPERLINK" in tag.text:
             # Get the URL. Probably.
             url = tag.text.split('"')[1]
 
             # The actual linked text is stored nearby tags.
             # Loop through the siblings starting here.
             temp = tag.parent.next_sibling
-            text = ''
+            text = ""
 
             while temp is not None:
                 # Text comes in <t> tags.
-                maybe_text = temp.find('t')
+                maybe_text = temp.find("t")
                 if maybe_text is not None:
                     # Ones that have text in them.
-                    if maybe_text.text.strip() != '':
+                    if maybe_text.text.strip() != "":
                         text += maybe_text.text.strip()
 
                 # Links end with <w:fldChar w:fldCharType="end" />.
-                maybe_end = temp.find('fldChar[w:fldCharType]')
+                maybe_end = temp.find("fldChar[w:fldCharType]")
                 if maybe_end is not None:
-                    if maybe_end['w:fldCharType'] == 'end':
+                    if maybe_end["w:fldCharType"] == "end":
                         break
 
                 temp = temp.next_sibling
 
-            links.append({
-                'id': None,
-                'href': url,
-                'text': text
-            })
-
+            links.append({"id": None, "href": url, "text": text})
 
     return links
+
 
 # URLs for .docx hyperlinks are often stored in a different file.
 def getURLs(soup, links):
@@ -87,41 +80,42 @@ def getURLs(soup, links):
     # Find every link by id and get its url,
     # unless we already got it.
     for link in links:
-        if 'href' not in link:
-            for rel in soup.find_all('Relationship'):
-                if rel['Id'] == link['id']:
-                    link['href'] = rel['Target']
+        if "href" not in link:
+            for rel in soup.find_all("Relationship"):
+                if rel["Id"] == link["id"]:
+                    link["href"] = rel["Target"]
 
     return links
+
 
 def getLinks(filename, args, dirpath):
 
     # Open the .docx file as if it were a zip (because it is)
-    fullname = os.path.join(dirpath or '', filename)
-    archive = zipfile.ZipFile(fullname, 'r')
+    fullname = os.path.join(dirpath or "", filename)
+    archive = zipfile.ZipFile(fullname, "r")
 
     # read bytes from archive for the file text and get link text
-    file_data = archive.read('word/document.xml')
-    doc_soup = BeautifulSoup(file_data, 'xml')
+    file_data = archive.read("word/document.xml")
+    doc_soup = BeautifulSoup(file_data, "xml")
     linked_text = getLinkedText(doc_soup)
 
     # URLs are often stored in a different file. Cross-reference.
-    url_data = archive.read('word/_rels/document.xml.rels')
-    url_soup = BeautifulSoup(url_data, 'xml')
+    url_data = archive.read("word/_rels/document.xml.rels")
+    url_soup = BeautifulSoup(url_data, "xml")
     links_with_urls = getURLs(url_soup, linked_text)
 
     # read bytes from archive for the footnote text (if any) and get link text
     try:
-        footnote_file_data = archive.read('word/footnotes.xml')
-        footnote_doc_soup = BeautifulSoup(footnote_file_data, 'xml')
+        footnote_file_data = archive.read("word/footnotes.xml")
+        footnote_doc_soup = BeautifulSoup(footnote_file_data, "xml")
         footnote_linked_text = getLinkedText(footnote_doc_soup)
     except:
         pass
 
     # URLs for footnotes are stored in a different file. Cross-reference.
     try:
-        footnote_url_data = archive.read('word/_rels/footnotes.xml.rels')
-        footnote_url_soup = BeautifulSoup(footnote_url_data, 'xml')
+        footnote_url_data = archive.read("word/_rels/footnotes.xml.rels")
+        footnote_url_soup = BeautifulSoup(footnote_url_data, "xml")
         footnote_links_with_urls = getURLs(footnote_url_soup, footnote_linked_text)
     except:
         pass
@@ -134,20 +128,23 @@ def getLinks(filename, args, dirpath):
 
     # Mark each line with the filename in case we're processing more than one.
     for link in links_with_urls:
-        link['filename'] = os.path.basename(filename)
+        link["filename"] = os.path.basename(filename)
 
     # Return a list of dicts full of link info
     return links_with_urls
 
+
 def getWordLinks(args):
+
+    print("Getting .docx Links")
 
     # Handle arguments and flags
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
-    parser.add_argument('--help', '-h', action='store_true')
-    parser.add_argument('-r', action='store_true')
-    parser.add_argument('-l', action='store_true')
-    parser.add_argument('-o', action='store')
-    parser.add_argument('file_names', nargs='*')
+    parser.add_argument("--help", "-h", action="store_true")
+    parser.add_argument("-r", action="store_true")
+    parser.add_argument("-l", action="store_true")
+    parser.add_argument("-o", action="store")
+    parser.add_argument("file_names", nargs="*")
 
     args = parser.parse_args(args)
 
@@ -157,17 +154,18 @@ def getWordLinks(args):
     file_names = list()
 
     for name in args.file_names:
-        file_names += glob(name)
+        file_names += glob.glob(glob.escape(name))
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
-        sys.exit('No file or directory found by that name.')
+        sys.exit("No file or directory found by that name.")
 
     # Don't run the script on itself.
     if sys.argv[0] in file_names:
         file_names.remove(sys.argv[0])
 
-    if args.help: sys.exit(instructions)
+    if args.help:
+        sys.exit(instructions)
 
     filecount = 0
     linklist = []
@@ -180,7 +178,7 @@ def getWordLinks(args):
         # If it's just a file...
         if os.path.isfile(name):
             # Make sure this is a Word file (just check extension)
-            if name.lower().endswith('.docx') or name.lower().endswith('.docm'):
+            if name.lower().endswith(".docx") or name.lower().endswith(".docm"):
                 # Get links from that file.
                 linklist.extend(getLinks(name, args, False))
                 filecount += 1
@@ -193,7 +191,9 @@ def getWordLinks(args):
                 for dirpath, dirnames, files in os.walk(name):
                     for eachfile in files:
                         # Get links for every file in that directory.
-                        if eachfile.lower().endswith('.docx') or eachfile.lower().endswith('.docm'):
+                        if eachfile.lower().endswith(
+                            ".docx"
+                        ) or eachfile.lower().endswith(".docm"):
                             linklist.extend(getLinks(eachfile, args, dirpath))
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
@@ -203,7 +203,9 @@ def getWordLinks(args):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:
-                    if eachfile.lower().endswith('.docx') or eachfile.lower().endswith('.docm'):
+                    if eachfile.lower().endswith(".docx") or eachfile.lower().endswith(
+                        ".docm"
+                    ):
                         linklist.extend(getLinks(eachfile, args, dirpath))
                         filecount += 1
 
@@ -212,33 +214,36 @@ def getWordLinks(args):
         return linklist
 
     # Otherwise, output a file and print some info.
-    print( '\nChecked '
+    print(
+        "\nChecked "
         + str(filecount)
-        + ' .docx file'
-        + ('s' if filecount > 1 else '')
-        +  ' for links.' )
+        + " .docx file"
+        + ("s" if filecount > 1 else "")
+        + " for links."
+    )
 
     # Create output file as sibling to the original target of the script.
-    outFileName = args.o if args.o else 'Word_Doc_Links.csv'
+    outFileName = args.o if args.o else "Word_Doc_Links.csv"
     if target_is_folder:
         outFileFolder = os.path.abspath(os.path.join(file_names[0], os.pardir))
         outFilePath = os.path.join(outFileFolder, outFileName)
     else:
         outFilePath = os.path.join(os.path.dirname(file_names[0]), outFileName)
 
-    with open(outFilePath,'wb') as outputFile:
-        fieldnames = ['filename','href','text']
+    with open(outFilePath, "wb") as outputFile:
+        fieldnames = ["filename", "href", "text"]
 
-        writer = csv.DictWriter(outputFile,
-            fieldnames=fieldnames,
-            extrasaction='ignore')
+        writer = csv.DictWriter(
+            outputFile, fieldnames=fieldnames, extrasaction="ignore"
+        )
         writer.writeheader()
 
         for row in linklist:
             writer.writerow(row)
 
-    print('Spreadsheet created: ' + outFileName)
-    print('Location: ' + outFilePath)
+    print("Spreadsheet created: " + outFileName)
+    print("Location: " + outFilePath)
+
 
 if __name__ == "__main__":
     # this won't be run when imported

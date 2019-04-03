@@ -1,30 +1,31 @@
 import sys
+
 if sys.version_info <= (3, 0):
-    sys.exit('I am a Python 3 script. Run me with python3.')
+    sys.exit("I am a Python 3 script. Run me with python3.")
 
 import os
 import argparse
 from bs4 import BeautifulSoup
 import lxml
-from glob import glob
-import unicodecsv as csv # https://pypi.python.org/pypi/unicodecsv/0.14.1
+import glob
+import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 try:
     from hx_util import GetWordLinks
 except:
-    print('Cannot find GetWordLinks.py, skipping links in .docx files.')
+    print("Cannot find GetWordLinks.py, skipping links in .docx files.")
 try:
     from hx_util import GetExcelLinks
 except:
-    print('Cannot find GetExcelLinks.py, skipping links in .xlsx files.')
+    print("Cannot find GetExcelLinks.py, skipping links in .xlsx files.")
 try:
     from hx_util import GetPPTLinks
 except:
-    print('Cannot find GetPPTLinks.py, skipping links in .pptx files.')
+    print("Cannot find GetPPTLinks.py, skipping links in .pptx files.")
 try:
     from hx_util import GetPDFLinks
 except:
-    print('Cannot find GetPDFLinks.py, skipping links in .pdf files.')
+    print("Cannot find GetPDFLinks.py, skipping links in .pdf files.")
 
 
 instructions = """
@@ -49,7 +50,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: December 18th, 2018
+Last update: April 3rd 2019
 """
 
 
@@ -57,26 +58,20 @@ Last update: December 18th, 2018
 # rather than having their own unique folder in the course export.
 # These will be moved out as we improve the parsing.
 skip_tags = [
-    'annotatable', # This is the older, deprecated annotation component.
-    'lti',  # This is the older, deprecated LTI component.
-    'oppia',
-    'openassessment', # This is the older, deprecated ORA.
-    'poll_question', # This is the older, deprecated poll component.
-    'problem-builder',
-    'recommender',
-    'step-builder',
-    'wiki'
+    "annotatable",  # This is the older, deprecated annotation component.
+    "google-document",
+    "lti",  # This is the older, deprecated LTI component.
+    "oppia",
+    "openassessment",  # This is the older, deprecated ORA.
+    "poll_question",  # This is the older, deprecated poll component.
+    "problem-builder",
+    "recommender",
+    "step-builder",
+    "wiki",
 ]
 
 # Canonical leaf node. Only for copying.
-canon_leaf = {
-    'type': '',
-    'name': '',
-    'url': '',
-    'links': [],
-    'images': [],
-    'sub': []
-}
+canon_leaf = {"type": "", "name": "", "url": "", "links": [], "images": [], "sub": []}
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -88,59 +83,77 @@ def secToHMS(time):
     seconds = int(time % 60)
     time -= seconds
     minutes = int((time / 60) % 60)
-    time -= (minutes * 60)
+    time -= minutes * 60
     hours = int((time / 3600) % 24)
 
     # Make sure we get enough zeroes.
-    if int(seconds) == 0: seconds = '00'
-    elif int(seconds) < 10: seconds = '0' + str(seconds)
-    if int(minutes) == 0: minutes = '00'
-    elif int(minutes) < 10: minutes = '0' + str(minutes)
-    if int(hours) == 0: hours = '00'
-    if int(hours) < 10: hours = '0' + str(hours)
+    if int(seconds) == 0:
+        seconds = "00"
+    elif int(seconds) < 10:
+        seconds = "0" + str(seconds)
+    if int(minutes) == 0:
+        minutes = "00"
+    elif int(minutes) < 10:
+        minutes = "0" + str(minutes)
+    if int(hours) == 0:
+        hours = "00"
+    if int(hours) < 10:
+        hours = "0" + str(hours)
 
     # Send back a string
-    return str(hours) + ':' + str(minutes) + ':' + str(seconds)
+    return str(hours) + ":" + str(minutes) + ":" + str(seconds)
+
 
 # Adds notes to links based on file type
 def describeLinkData(newlink):
-    image_types = ['.png','.gif','.jpg','.jpeg','.svg',
-        '.tiff','.tif','.bmp','.jp2','.jif','.pict']
+    image_types = [
+        ".png",
+        ".gif",
+        ".jpg",
+        ".jpeg",
+        ".svg",
+        ".tiff",
+        ".tif",
+        ".bmp",
+        ".jp2",
+        ".jif",
+        ".pict",
+    ]
 
-    if newlink['href'].endswith(tuple(image_types)):
-        newlink['text'] += ' (image link)'
-    if newlink['href'].endswith('.pdf'):    newlink['text'] += ' (PDF file)'
-    if newlink['href'].endswith('.ps'):     newlink['text'] += ' (PostScript file)'
-    if newlink['href'].endswith('.zip'):    newlink['text'] += ' (zip file)'
-    if newlink['href'].endswith('.tar.gz'): newlink['text'] += ' (tarred gzip file)'
-    if newlink['href'].endswith('.gz'):     newlink['text'] += ' (gzip file)'
+    if newlink["href"].endswith(tuple(image_types)):
+        newlink["text"] += " (image link)"
+    if newlink["href"].endswith(".pdf"):
+        newlink["text"] += " (PDF file)"
+    if newlink["href"].endswith(".ps"):
+        newlink["text"] += " (PostScript file)"
+    if newlink["href"].endswith(".zip"):
+        newlink["text"] += " (zip file)"
+    if newlink["href"].endswith(".tar.gz"):
+        newlink["text"] += " (tarred gzip file)"
+    if newlink["href"].endswith(".gz"):
+        newlink["text"] += " (gzip file)"
     return newlink
+
 
 # get list of links from HTML pages, with href and link text
 # "soup" is a BeautifulSoup object
 def getHTMLLinks(soup):
     links = []
 
-    all_links = soup.findAll(['a','iframe'])
+    all_links = soup.findAll(["a", "iframe"])
 
     for link in all_links:
-        if link.has_attr('href'):
+        if link.has_attr("href"):
             # It's a link and not just an anchor.
             if len(link.contents) > 0:
-                link_text = ''.join(link.findAll(text=True))
+                link_text = "".join(link.findAll(text=True))
             else:
-                link_text = ''
-            links.append({
-                'href': link.get('href'),
-                'text': link_text
-            })
+                link_text = ""
+            links.append({"href": link.get("href"), "text": link_text})
 
-        if link.has_attr('src'):
-            #It's an iframe.
-            links.append({
-                'href': link.get('src'),
-                'text': '(iframe)'
-            })
+        if link.has_attr("src"):
+            # It's an iframe.
+            links.append({"href": link.get("src"), "text": "(iframe)"})
 
     betterlinks = [describeLinkData(x) for x in links]
     return betterlinks
@@ -151,71 +164,68 @@ def getHTMLLinks(soup):
 def getAltText(soup):
     image_list = []
 
-    all_images = soup.findAll(['img','drag_and_drop_input'])
-    temp_alt = 'No alt attribute'
-    temp_src = 'No source attribute'
+    all_images = soup.findAll(["img", "drag_and_drop_input"])
+    temp_alt = "No alt attribute"
+    temp_src = "No source attribute"
 
     for img in all_images:
-        if img.has_attr('img'):
+        if img.has_attr("img"):
             # This is a version-1 drag-and-drop problem.
-            temp_src = '¡Drag-and-drop v1 problem, replace!'
-            temp_alt = '¡Drag-and-drop v1 problem, replace!'
-        elif img.has_attr('src'):
-            temp_src = img.get('src')
-            if img.has_attr('alt'):
-                temp_alt = img.get('alt')
-        image_list.append({
-            'src': temp_src,
-            'alt': temp_alt
-        })
+            temp_src = "¡Drag-and-drop v1 problem, replace!"
+            temp_alt = "¡Drag-and-drop v1 problem, replace!"
+        elif img.has_attr("src"):
+            temp_src = img.get("src")
+            if img.has_attr("alt"):
+                temp_alt = img.get("alt")
+        image_list.append({"src": temp_src, "alt": temp_alt})
 
     return image_list
+
 
 # Gets alt text that isn't in the courseware
 def getAuxAltText(rootFileDir):
     # Folders to check:
-    aux_folders = ['tabs','info','static']
+    aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
     aux_images = []
 
     for folder in aux_paths:
         if os.path.isdir(folder):
-            folder_temp = {
-                'type': '',
-                'name': '',
-                'url': '',
-                'contents': []
-            }
+            folder_temp = {"type": "", "name": "", "url": "", "contents": []}
 
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
 
                 # All currently accepted file types:
-                if f.endswith( tuple( ['.html','.htm','xml'] ) ):
-                    file_temp['name'] = f
-                    file_temp['url'] = f
+                if f.endswith(tuple([".html", ".htm", "xml"])):
+                    file_temp["name"] = f
+                    file_temp["url"] = f
 
-                if f.endswith( tuple( ['.html','.htm'] ) ):
-                    soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
-                    file_temp['images'] = getAltText(soup)
-                    file_temp['type'] = 'html'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.xml'):
+                if f.endswith(tuple([".html", ".htm"])):
+                    soup = BeautifulSoup(
+                        open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                    )
+                    file_temp["images"] = getAltText(soup)
+                    file_temp["type"] = "html"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".xml"):
                     try:
-                        tree = lxml.etree.parse(folder + '/' + f)
+                        tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
                         # If we have broken XML, tell us and skip the file.
-                        print('Broken XML in file ' + folder + '/' + f + ', skipping.')
+                        print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
                     root = tree.getroot()
-                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'lxml')
-                    file_temp['images'] = getAltText(soup)
-                    file_temp['type'] = 'xml'
-                    folder_temp['contents'].append(file_temp)
+                    soup = BeautifulSoup(
+                        open(os.path.join(folder, f), encoding="utf8"), "lxml"
+                    )
+                    file_temp["images"] = getAltText(soup)
+                    file_temp["type"] = "xml"
+                    folder_temp["contents"].append(file_temp)
 
-            folder_temp['chapter'] = os.path.basename(folder)
-            folder_temp['name'] = os.path.basename(folder)
+            folder_temp["chapter"] = os.path.basename(folder)
+            folder_temp["name"] = os.path.basename(folder)
             aux_images.append(folder_temp)
 
     return aux_images
@@ -224,71 +234,73 @@ def getAuxAltText(rootFileDir):
 # Gets links that aren't in the courseware
 def getAuxLinks(rootFileDir):
     # Folders to check:
-    aux_folders = ['tabs','info','static']
+    aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
     aux_links = []
 
     for folder in aux_paths:
         if os.path.isdir(folder):
-            folder_temp = {
-                'type': '',
-                'name': '',
-                'url': '',
-                'contents': []
-            }
+            folder_temp = {"type": "", "name": "", "url": "", "contents": []}
 
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
 
                 # All currently accepted file types:
-                if f.endswith( tuple( ['.html','.htm','xml','docx','xlsx','pptx','pdf'] ) ):
-                    file_temp['name'] = f
-                    file_temp['url'] = f
+                if f.endswith(
+                    tuple([".html", ".htm", "xml", "docx", "xlsx", "pptx", "pdf"])
+                ):
+                    file_temp["name"] = f
+                    file_temp["url"] = f
 
-                if f.endswith( tuple( ['.html','.htm'] ) ):
-                    soup = BeautifulSoup(open(os.path.join(folder, f), encoding='utf8'), 'html.parser')
-                    file_temp['links'] = getHTMLLinks(soup)
-                    file_temp['type'] = 'html'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.xml'):
+                if f.endswith(tuple([".html", ".htm"])):
+                    soup = BeautifulSoup(
+                        open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                    )
+                    file_temp["links"] = getHTMLLinks(soup)
+                    file_temp["type"] = "html"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".xml"):
                     try:
-                        tree = lxml.etree.parse(folder + '/' + f)
+                        tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
                         # If we have broken XML, tell us and skip the file.
-                        print('Broken XML in file ' + folder + '/' + f + ', skipping.')
+                        print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
                     root = tree.getroot()
-                    soup = BeautifulSoup(open(os.path.join(folder, f),  encoding='utf8'), 'lxml')
-                    file_temp['links'] = getHTMLLinks(soup)
-                    file_temp['type'] = 'xml'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.docx'):
-                    targetFile = os.path.join(folder,f)
-                    file_temp['links'] = GetWordLinks.getWordLinks([targetFile, '-l'])
-                    file_temp['type'] = 'docx'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.xlsx'):
-                    targetFile = os.path.join(folder,f)
-                    file_temp['links'] = GetExcelLinks.getExcelLinks([targetFile, '-l'])
-                    file_temp['type'] = 'xlsx'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.pptx'):
-                    targetFile = os.path.join(folder,f)
-                    file_temp['links'] = GetPPTLinks.getPPTLinks([targetFile, '-l'])
-                    file_temp['type'] = 'pptx'
-                    folder_temp['contents'].append(file_temp)
-                if f.endswith('.pdf'):
-                    targetFile = os.path.join(folder,f)
-                    file_temp['links'] = GetPDFLinks.getPDFLinks([targetFile, '-l'])
-                    file_temp['type'] = 'pdf'
-                    folder_temp['contents'].append(file_temp)
+                    soup = BeautifulSoup(
+                        open(os.path.join(folder, f), encoding="utf8"), "lxml"
+                    )
+                    file_temp["links"] = getHTMLLinks(soup)
+                    file_temp["type"] = "xml"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".docx"):
+                    targetFile = os.path.join(folder, f)
+                    file_temp["links"] = GetWordLinks.getWordLinks([targetFile, "-l"])
+                    file_temp["type"] = "docx"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".xlsx"):
+                    targetFile = os.path.join(folder, f)
+                    file_temp["links"] = GetExcelLinks.getExcelLinks([targetFile, "-l"])
+                    file_temp["type"] = "xlsx"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".pptx"):
+                    targetFile = os.path.join(folder, f)
+                    file_temp["links"] = GetPPTLinks.getPPTLinks([targetFile, "-l"])
+                    file_temp["type"] = "pptx"
+                    folder_temp["contents"].append(file_temp)
+                if f.endswith(".pdf"):
+                    targetFile = os.path.join(folder, f)
+                    file_temp["links"] = GetPDFLinks.getPDFLinks([targetFile, "-l"])
+                    file_temp["type"] = "pdf"
+                    folder_temp["contents"].append(file_temp)
 
-            folder_temp['chapter'] = os.path.basename(folder)
-            folder_temp['name'] = os.path.basename(folder)
+            folder_temp["chapter"] = os.path.basename(folder)
+            folder_temp["name"] = os.path.basename(folder)
             aux_links.append(folder_temp)
 
     return aux_links
+
 
 # Always gets the display name.
 # For video and problem files, gets other info too
@@ -296,130 +308,149 @@ def getComponentInfo(folder, filename, child, args):
 
     # Try to open file.
     try:
-        tree = lxml.etree.parse(folder + '/' + filename + '.xml')
+        tree = lxml.etree.parse(folder + "/" + filename + ".xml")
         root = tree.getroot()
     except OSError:
         # If we can't get a file, try to traverse inline XML.
         root = child
 
     temp = {
-        'type': root.tag,
-        'name': '',
+        "type": root.tag,
+        "name": "",
         # space for other info
     }
 
     # get display_name or use placeholder
-    if 'display_name' in root.attrib:
-        temp['name'] = root.attrib['display_name']
+    if "display_name" in root.attrib:
+        temp["name"] = root.attrib["display_name"]
     else:
-        temp['name'] = root.tag
+        temp["name"] = root.tag
 
     # get video information
-    if root.tag == 'video' and args.video:
+    if root.tag == "video" and args.video:
 
         # List of subscripts because multiple languages.
-        temp['sub'] = []
+        temp["sub"] = []
 
         # Old-style course exports have non-blank 'sub' attributes.
-        if 'sub' in root.attrib:
-            if root.attrib['sub'] != '':
-                temp['sub'] = ['subs_' + root.attrib['sub'] + '.srt.sjson']
+        if "sub" in root.attrib:
+            if root.attrib["sub"] != "":
+                temp["sub"] = ["subs_" + root.attrib["sub"] + ".srt.sjson"]
 
         # New-style course exports (Aug 15 2018) have a different hierarchy.
         # Use this preferentially over the old-style formatting.
-        for va in root.iter('video_asset'):
-            for trs in va.iter('transcripts'):
-                for transcript in trs.iter('transcript'):
-                    temp['sub'].append(root.attrib['edx_video_id'] + '-' + transcript.attrib['language_code'] + '.srt')
+        for va in root.iter("video_asset"):
+            for trs in va.iter("transcripts"):
+                for transcript in trs.iter("transcript"):
+                    temp["sub"].append(
+                        root.attrib["edx_video_id"]
+                        + "-"
+                        + transcript.attrib["language_code"]
+                        + ".srt"
+                    )
 
-        if len(temp['sub']) == 0:
-            temp['sub'] = ['No subtitles found.']
+        if len(temp["sub"]) == 0:
+            temp["sub"] = ["No subtitles found."]
 
-        if 'youtube_id_1_0' in root.attrib:
-            temp['youtube'] = root.attrib['youtube_id_1_0']
-        elif 'youtube' in root.attrib:
+        if "youtube_id_1_0" in root.attrib:
+            temp["youtube"] = root.attrib["youtube_id_1_0"]
+        elif "youtube" in root.attrib:
             # slice to remove the '1.00:' from the start of the ID
-            temp['youtube'] = root.attrib['youtube'][5:]
+            temp["youtube"] = root.attrib["youtube"][5:]
         else:
-            temp['youtube'] = 'No YouTube ID found.'
+            temp["youtube"] = "No YouTube ID found."
 
-        if 'edx_video_id' in root.attrib:
-            temp['edx_video_id'] = root.attrib['edx_video_id']
+        if "edx_video_id" in root.attrib:
+            temp["edx_video_id"] = root.attrib["edx_video_id"]
 
         # We need our original uploaded filename.
         # It's not present in the old XML. :(
         # In new XML, it's in a video_asset tag.
         found_video_asset = False
         for child in root:
-            if child.tag == 'video_asset':
-                if 'client_video_id' in child.attrib:
+            if child.tag == "video_asset":
+                if "client_video_id" in child.attrib:
                     found_video_asset = True
-                    src = child.attrib['client_video_id']
+                    src = child.attrib["client_video_id"]
                     # Stripping the host and folders
-                    src = src[src.rfind("/")+1:]
+                    src = src[src.rfind("/") + 1 :]
                     # Stripping the extension, if there is one.
-                    if src.rfind('.') > 0: src = src[:src.rfind('.')]
-                    if src == '': temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
-                    temp['upload_name'] = src
+                    if src.rfind(".") > 0:
+                        src = src[: src.rfind(".")]
+                    if src == "":
+                        temp["upload_name"] = (
+                            "No_Upload_Name_" + root.attrib["url_name"]
+                        )
+                    temp["upload_name"] = src
 
-                if 'duration' in child.attrib:
+                if "duration" in child.attrib:
                     # Get duration in seconds
-                    duration = child.attrib['duration']
-                    temp['duration'] = secToHMS(duration)
+                    duration = child.attrib["duration"]
+                    temp["duration"] = secToHMS(duration)
 
         # Need a placeholder if there's no video_asset tag or if it's less than informative.
         if not found_video_asset:
-            temp['upload_name'] = 'No_Upload_Name_' + root.attrib['url_name']
-            temp['duration'] = 'unknown'
-
+            temp["upload_name"] = "No_Upload_Name_" + root.attrib["url_name"]
+            temp["duration"] = "unknown"
 
     # get problem information
-    if root.tag == 'problem':
-        if 'rerandomize' in root.attrib:
-            temp['rerandomize'] = root.attrib['rerandomize']
-        if 'show_reset_button' in root.attrib:
-            temp['show_reset_button'] = root.attrib['show_reset_button']
+    if root.tag == "problem":
+        if "rerandomize" in root.attrib:
+            temp["rerandomize"] = root.attrib["rerandomize"]
+        if "show_reset_button" in root.attrib:
+            temp["show_reset_button"] = root.attrib["show_reset_button"]
         if root.text is not None:
-            temp['inner_xml'] = root.text + ''.join(str(lxml.etree.tostring(e)) for e in root)
-            soup = BeautifulSoup(temp['inner_xml'], 'lxml')
-            temp['links'] = getHTMLLinks(soup)
-            temp['images'] = getAltText(soup)
+            temp["inner_xml"] = root.text + "".join(
+                str(lxml.etree.tostring(e)) for e in root
+            )
+            soup = BeautifulSoup(temp["inner_xml"], "lxml")
+            temp["links"] = getHTMLLinks(soup)
+            temp["images"] = getAltText(soup)
         else:
-            temp['inner_xml'] = 'No XML.'
+            temp["inner_xml"] = "No XML."
 
     # Right now all we get from HTML is links and images.
-    if root.tag == 'html':
+    if root.tag == "html":
         if args.links or args.alttext:
             # Most of the time our XML will just point to a separate HTML file.
             # In those cases, go open that file and get the links from it.
             if root.text is None:
-                innerfilepath = os.path.join(os.path.dirname(folder), 'html', (root.attrib['filename'] + '.html'))
-                soup = BeautifulSoup(open(innerfilepath, encoding='utf8'), 'html.parser')
+                innerfilepath = os.path.join(
+                    os.path.dirname(folder), "html", (root.attrib["filename"] + ".html")
+                )
+                soup = BeautifulSoup(
+                    open(innerfilepath, encoding="utf8"), "html.parser"
+                )
             # If it's declared inline, just get the links right away.
             else:
-                soup = BeautifulSoup("".join(root.itertext()), 'html.parser')
-            if args.links: temp['links'] = getHTMLLinks(soup)
-            if args.alttext: temp['images'] = getAltText(soup)
+                soup = BeautifulSoup("".join(root.itertext()), "html.parser")
+            if args.links:
+                temp["links"] = getHTMLLinks(soup)
+            if args.alttext:
+                temp["images"] = getAltText(soup)
 
     # special handlers for other xml:
-    if root.tag == 'drag-and-drop-v2':
-        temp['links'] = []
-        temp['images'] = [{
-            'src': 'Drag-and-drop problem (v2)',
-            'alt': '¡Check manually for alt text!'
-        }]
+    if root.tag == "drag-and-drop-v2":
+        temp["links"] = []
+        temp["images"] = [
+            {
+                "src": "Drag-and-drop problem (v2)",
+                "alt": "¡Check manually for alt text!",
+            }
+        ]
 
     # Label all of them as components regardless of type.
-    temp['component'] = temp['name']
+    temp["component"] = temp["name"]
 
-    return {'contents': temp, 'parent_name': temp['name']}
+    return {"contents": temp, "parent_name": temp["name"]}
+
 
 # Recursion function for outline-declared xml files
 def drillDown(folder, filename, root, args):
 
     # Try to open file.
     try:
-        tree = lxml.etree.parse(os.path.join(folder, (filename + '.xml')))
+        tree = lxml.etree.parse(os.path.join(folder, (filename + ".xml")))
         root = tree.getroot()
     except IOError:
         # If we can't get a file, try to traverse inline XML.
@@ -427,8 +458,11 @@ def drillDown(folder, filename, root, args):
         if ddinfo:
             return ddinfo
         else:
-            print('Possible missing file or empty XML element: ' + os.path.join(folder, (filename + '.xml')))
-            return {'contents': [], 'parent_name': '', 'found_file': False}
+            print(
+                "Possible missing file or empty XML element: "
+                + os.path.join(folder, (filename + ".xml"))
+            )
+            return {"contents": [], "parent_name": "", "found_file": False}
 
     return getXMLInfo(folder, root, args)
 
@@ -438,87 +472,94 @@ def getXMLInfo(folder, root, args):
     # We need lists of container nodes and leaf nodes so we can tell
     # whether we have to do more recursion.
     leaf_nodes = [
-        'discussion',
-        'done',
-        'drag-and-drop-v2',
-        'html',
-        'imageannotation',
-        'library_content',
-        'lti_consumer',
-        'pb-dashboard', # This is currently unique to HarvardX DataWise 
-        'poll',
-        'problem',
-        'survey',
-        'textannotation',
-        'ubcpi',
-        'video',
-        'videoannotation',
-        'word_cloud'
+        "discussion",
+        "done",
+        "drag-and-drop-v2",
+        "html",
+        "imageannotation",
+        "library_content",
+        "lti_consumer",
+        "pb-dashboard",  # This is currently unique to HarvardX DataWise
+        "poll",
+        "problem",
+        "survey",
+        "textannotation",
+        "ubcpi",
+        "video",
+        "videoannotation",
+        "word_cloud",
     ]
-    branch_nodes = ['course','chapter','sequential','vertical','split_test','conditional']
+    branch_nodes = [
+        "course",
+        "chapter",
+        "sequential",
+        "vertical",
+        "split_test",
+        "conditional",
+    ]
 
     contents = []
 
     # Some items are created without a display name; use their tag name instead.
-    if 'display_name' in root.attrib:
-        display_name = root.attrib['display_name']
+    if "display_name" in root.attrib:
+        display_name = root.attrib["display_name"]
     else:
         display_name = root.tag
 
     for index, child in enumerate(root):
         temp = {
-            'index': index,
-            'type': child.tag,
-            'name': '',
-            'url': '',
-            'contents': [],
-            'links': [],
-            'images': [],
-            'sub': []
+            "index": index,
+            "type": child.tag,
+            "name": "",
+            "url": "",
+            "contents": [],
+            "links": [],
+            "images": [],
+            "sub": [],
         }
 
         # get display_name or use placeholder
-        if 'display_name' in child.attrib:
-            temp['name'] = child.attrib['display_name']
+        if "display_name" in child.attrib:
+            temp["name"] = child.attrib["display_name"]
         else:
-            temp['name'] = child.tag + str(index)
-            temp['tempname'] = True
+            temp["name"] = child.tag + str(index)
+            temp["tempname"] = True
 
         # get url_name but there are no placeholders
         # Note that even some inline XML have url_names.
-        if 'url_name' in child.attrib:
-            temp['url'] = child.attrib['url_name']
+        if "url_name" in child.attrib:
+            temp["url"] = child.attrib["url_name"]
         else:
-            temp['url'] = None
+            temp["url"] = None
 
         # In the future: check to see whether this child is a pointer tag or inline XML.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(nextFile, temp['url'], child, args)
-            temp['contents'] = child_info['contents']
+            child_info = drillDown(nextFile, temp["url"], child, args)
+            temp["contents"] = child_info["contents"]
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(nextFile, temp['url'], child, args)
+            child_info = getComponentInfo(nextFile, temp["url"], child, args)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
-            temp.update(child_info['contents'])
-            del temp['contents']
+            temp.update(child_info["contents"])
+            del temp["contents"]
         elif child.tag in skip_tags:
-            child_info = {'contents': False, 'parent_name': child.tag}
-            del temp['contents']
+            child_info = {"contents": False, "parent_name": child.tag}
+            del temp["contents"]
         else:
-            sys.exit('New tag type found: ' + child.tag)
+            sys.exit("New tag type found: " + child.tag)
 
         # If the display name was temporary, replace it.
-        if 'tempname' in temp:
-            temp['name'] = child_info['parent_name']
-            del temp['tempname']
+        if "tempname" in temp:
+            temp["name"] = child_info["parent_name"]
+            del temp["tempname"]
 
         # We need not only a name, but a custom key with that name.
-        temp[temp['type']] = temp['name']
+        temp[temp["type"]] = temp["name"]
 
         contents.append(temp)
 
-    return {'contents': contents, 'parent_name': display_name, 'found_file': True}
+    return {"contents": contents, "parent_name": display_name, "found_file": True}
 
 
 # Gets the full set of data headers for the course.
@@ -543,9 +584,10 @@ def fillInRows(flat_course):
     for row in flat_course:
         for key in key_set:
             if key not in row:
-                row[key]=''
+                row[key] = ""
 
     return flat_course
+
 
 # Takes a nested structure of lists and dicts that represents the course
 # and returns a single list of dicts where each dict is a component
@@ -555,13 +597,13 @@ def courseFlattener(course_dict, new_row={}):
 
     # Add all the data from the current level to the current row except 'contents'.
     for key in course_dict:
-        if key is not 'contents':
+        if key is not "contents":
             temp_row[key] = course_dict[key]
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
-    if 'contents' in course_dict:
+    if "contents" in course_dict:
         # Go down into each item in "contents" and add its contents to the course.
-        for entry in course_dict['contents']:
+        for entry in course_dict["contents"]:
             temp = courseFlattener(entry, temp_row)
             if temp:
                 flat_course = flat_course + temp
@@ -570,64 +612,72 @@ def courseFlattener(course_dict, new_row={}):
     # If there are no contents, we're at the bottom.
     else:
         # Don't include the wiki and certain other items.
-        if temp_row['type'] not in skip_tags:
+        if temp_row["type"] not in skip_tags:
             # If there are links, images, or transcripts in this row,
             # break it into multiple entries.
-            if len(temp_row['sub']) > 0:
+            if len(temp_row["sub"]) > 0:
                 transcript_rows = []
-                for sub in temp_row['sub']:
+                for sub in temp_row["sub"]:
                     transcript_breakout = temp_row.copy()
-                    transcript_breakout['sub'] = sub
+                    transcript_breakout["sub"] = sub
                     transcript_rows.append(transcript_breakout)
                 return transcript_rows
-            if len(temp_row['links']) > 0:
+            if len(temp_row["links"]) > 0:
                 link_rows = []
-                for link in temp_row['links']:
+                for link in temp_row["links"]:
                     link_breakout = temp_row.copy()
-                    link_breakout['href'] = link['href']
-                    link_breakout['linktext'] = link['text']
+                    link_breakout["href"] = link["href"]
+                    link_breakout["linktext"] = link["text"]
                     link_rows.append(link_breakout)
                 return link_rows
-            if len(temp_row['images']) > 0:
+            if len(temp_row["images"]) > 0:
                 img_rows = []
-                for img in temp_row['images']:
+                for img in temp_row["images"]:
                     img_breakout = temp_row.copy()
-                    img_breakout['src'] = img['src']
-                    img_breakout['alt'] = img['alt']
+                    img_breakout["src"] = img["src"]
+                    img_breakout["alt"] = img["alt"]
                     img_rows.append(img_breakout)
                 return img_rows
             else:
                 return [temp_row]
 
+
 def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
-    course_name = course_dict['name']
-    if args.links: course_name += ' Links'
-    if args.alttext: course_name += ' Images'
-    course_name += '.tsv'
+    course_name = course_dict["name"]
+    if args.links:
+        course_name += " Links"
+    if args.alttext:
+        course_name += " Images"
+    course_name += ".tsv"
 
     outFileName = args.o if args.o else course_name
 
     # Create a "csv" file with tabs as delimiters
-    with open(os.path.join(rootFileDir, outFileName),'wb') as outputfile:
-        fieldnames = ['chapter','sequential','vertical','component','type','url']
+    with open(os.path.join(rootFileDir, outFileName), "wb") as outputfile:
+        fieldnames = ["chapter", "sequential", "vertical", "component", "type", "url"]
 
         # Include the XML if we're dealing with problems
         if args.problems:
-                fieldnames.append('inner_xml')
+            fieldnames.append("inner_xml")
         # Include link data if we're dealing with links
         if args.links:
-                fieldnames = fieldnames + ['href','linktext']
+            fieldnames = fieldnames + ["href", "linktext"]
         # Include alt text data if we're dealing with images
         if args.alttext:
-                fieldnames = fieldnames + ['src','alt']
+            fieldnames = fieldnames + ["src", "alt"]
         # Include video data if we're dealing with videos
         if args.video:
-                fieldnames = fieldnames + ['duration','sub','youtube','edx_video_id','upload_name']
+            fieldnames = fieldnames + [
+                "duration",
+                "sub",
+                "youtube",
+                "edx_video_id",
+                "upload_name",
+            ]
 
-        writer = csv.DictWriter(outputfile,
-            delimiter='\t',
-            fieldnames=fieldnames,
-            extrasaction='ignore')
+        writer = csv.DictWriter(
+            outputfile, delimiter="\t", fieldnames=fieldnames, extrasaction="ignore"
+        )
         writer.writeheader()
 
         spreadsheet = fillInRows(courseFlattener(course_dict))
@@ -640,50 +690,65 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
             printable = spreadsheet
         else:
             if args.links:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml','docx','pptx','xlsx','pdf']]
+                printable += [
+                    row
+                    for row in spreadsheet
+                    if row["type"]
+                    in ["html", "problem", "xml", "docx", "pptx", "xlsx", "pdf"]
+                ]
             if args.alttext:
-                printable += [row for row in spreadsheet if row['type'] in ['html','problem','xml']]
+                printable += [
+                    row
+                    for row in spreadsheet
+                    if row["type"] in ["html", "problem", "xml"]
+                ]
             if args.html:
-                printable += [row for row in spreadsheet if row['type'] == 'html']
+                printable += [row for row in spreadsheet if row["type"] == "html"]
             if args.video:
-                printable += [row for row in spreadsheet if row['type'] == 'video']
+                printable += [row for row in spreadsheet if row["type"] == "video"]
             if args.problems:
-                printable += [row for row in spreadsheet if row['type'] == 'problem']
+                printable += [row for row in spreadsheet if row["type"] == "problem"]
 
         for row in printable:
             # If we're printing links, skip entries with no links.
             if args.links:
-                if row['href'] != '':
+                if row["href"] != "":
                     writer.writerow(row)
             # If we're printing alt text, skip entries with no images.
             elif args.alttext:
-                if row['src'] != '':
+                if row["src"] != "":
                     writer.writerow(row)
             else:
                 writer.writerow(row)
 
-        print('Spreadsheet created for ' + course_dict['name'] + '.')
-        print('Location: ' + outFileName)
+        print("Spreadsheet created for " + course_dict["name"] + ".")
+        print("Location: " + outFileName)
+
 
 # Main function
-def Make_Course_Sheet(args = ['-h']):
+def Make_Course_Sheet(args=["-h"]):
+
+    print("Creating course sheet")
 
     # Handle arguments and flags
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
-    parser.add_argument('--help', '-h', action='store_true')
-    parser.add_argument('-all', action='store_true')
-    parser.add_argument('-problems', action='store_true')
-    parser.add_argument('-html', action='store_true')
-    parser.add_argument('-video', default='True', action='store_true')
-    parser.add_argument('-links', action='store_true')
-    parser.add_argument('-alttext', action='store_true')
-    parser.add_argument('-o', action='store')
-    parser.add_argument('file_names', nargs='*')
+    parser.add_argument("--help", "-h", action="store_true")
+    parser.add_argument("-all", action="store_true")
+    parser.add_argument("-problems", action="store_true")
+    parser.add_argument("-html", action="store_true")
+    parser.add_argument("-video", default="True", action="store_true")
+    parser.add_argument("-links", action="store_true")
+    parser.add_argument("-alttext", action="store_true")
+    parser.add_argument("-o", action="store")
+    parser.add_argument("file_names", nargs="*")
 
     # "extra" will help us deal with out-of-order arguments.
     args, extra = parser.parse_known_args(args)
+    print("Arguments:")
+    print(args, extra)
 
-    if args.help: sys.exit(instructions)
+    if args.help:
+        sys.exit(instructions)
 
     # Do video by default. Don't do it when we're doing other stuff,
     # unless someone intentionally turned it on.
@@ -704,9 +769,9 @@ def Make_Course_Sheet(args = ['-h']):
     # Mostly important if we run this on Windows systems.
     file_names = list()
     for arg in args.file_names:
-        file_names += glob(arg)
+        file_names += glob.glob(glob.escape(arg))
     for item in extra:
-        file_names += glob(item)
+        file_names += glob.glob(glob.escape(item))
 
     # Don't run the script on itself.
     if sys.argv[0] in file_names:
@@ -714,18 +779,18 @@ def Make_Course_Sheet(args = ['-h']):
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
-        sys.exit('No file or directory found by that name.')
+        sys.exit("No file or directory found by that name.")
 
     # Get the course.xml file and root directory
     for name in file_names:
         if os.path.isdir(name):
-            if os.path.exists( os.path.join(name, 'course.xml')):
+            if os.path.exists(os.path.join(name, "course.xml")):
                 rootFileDir = name
         else:
-            if 'course.xml' in name:
+            if "course.xml" in name:
                 rootFileDir = os.path.dirname(name)
 
-        rootFilePath = os.path.join(rootFileDir, 'course.xml')
+        rootFilePath = os.path.join(rootFileDir, "course.xml")
         course_tree = lxml.etree.parse(rootFilePath)
 
         # Open course's root xml file
@@ -733,25 +798,25 @@ def Make_Course_Sheet(args = ['-h']):
         course_root = course_tree.getroot()
 
         course_dict = {
-            'type': course_root.tag,
-            'name': '',
-            'url': course_root.attrib['url_name'],
-            'contents': []
+            "type": course_root.tag,
+            "name": "",
+            "url": course_root.attrib["url_name"],
+            "contents": [],
         }
 
         course_info = drillDown(
-            os.path.join(rootFileDir, course_dict['type']),
-            course_dict['url'],
+            os.path.join(rootFileDir, course_dict["type"]),
+            course_dict["url"],
             course_root,
-            args
+            args,
         )
-        course_dict['name'] = course_info['parent_name']
-        course_dict['contents'] = course_info['contents']
+        course_dict["name"] = course_info["parent_name"]
+        course_dict["contents"] = course_info["contents"]
 
         if args.links:
-            course_dict['contents'].extend(getAuxLinks(rootFileDir))
+            course_dict["contents"].extend(getAuxLinks(rootFileDir))
         if args.alttext:
-            course_dict['contents'].extend(getAuxAltText(rootFileDir))
+            course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
         writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
