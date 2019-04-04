@@ -130,7 +130,7 @@ def SrtRename(args):
     # Mostly important if we run this on Windows systems.
     file_names = list()
     for arg in args.file_names:
-        file_names += glob.glob(glob.escape(name))
+        file_names += glob.glob(glob.escape(arg))
 
     # If the filenames don't exist, say so and quit.
     if file_names == []:
