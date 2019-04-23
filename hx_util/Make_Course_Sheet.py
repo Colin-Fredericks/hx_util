@@ -643,6 +643,7 @@ def courseFlattener(course_dict, new_row={}):
 
 
 def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
+
     course_name = course_dict["name"]
     if args.links:
         course_name += " Links"
@@ -711,13 +712,17 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
 
         for row in printable:
             # If we're printing links, skip entries with no links.
+            # Checking if "href" attrib exists. Case: course has no links at all.
             if args.links:
-                if row["href"] != "":
-                    writer.writerow(row)
+                if "href" in row:
+                    if row["href"] != "":
+                        writer.writerow(row)
             # If we're printing alt text, skip entries with no images.
+            # Checking if "src" attrib exists. Case: course has no images at all.
             elif args.alttext:
-                if row["src"] != "":
-                    writer.writerow(row)
+                if "src" in row:
+                    if row["src"] != "":
+                        writer.writerow(row)
             else:
                 writer.writerow(row)
 
@@ -736,7 +741,7 @@ def Make_Course_Sheet(args=["-h"]):
     parser.add_argument("-all", action="store_true")
     parser.add_argument("-problems", action="store_true")
     parser.add_argument("-html", action="store_true")
-    parser.add_argument("-video", default="True", action="store_true")
+    parser.add_argument("-video", default=True, action="store_true")
     parser.add_argument("-links", action="store_true")
     parser.add_argument("-alttext", action="store_true")
     parser.add_argument("-o", action="store")
@@ -744,6 +749,7 @@ def Make_Course_Sheet(args=["-h"]):
 
     # "extra" will help us deal with out-of-order arguments.
     args, extra = parser.parse_known_args(args)
+
     print("Arguments:")
     print(args, extra)
 
