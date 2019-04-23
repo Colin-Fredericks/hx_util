@@ -97,8 +97,8 @@ def getLinks(filename, args, dirpath):
 
 def getPDFLinks(args):
 
-    print("Getting PDF Links")
-    print(args)
+    # print("Getting PDF Links")
+    # print(args)
 
     # Handle arguments and flags
     parser = argparse.ArgumentParser(usage=instructions, add_help=False)
@@ -118,7 +118,7 @@ def getPDFLinks(args):
     for name in args.file_names:
         file_names += glob.glob(glob.escape(name))
 
-    print(file_names)
+    # print(file_names)
     # If the filenames don't exist, say so and quit.
     if file_names == []:
         sys.exit("No file or directory found by that name.")
