@@ -46,11 +46,12 @@ You can specify the following options:
                Not compatible with above options.
     -alttext   Lists all images with their alt text.
                Not compatible with above options.
+    -wordcount Get a full-course word count. No output file.
     -o         Sets the output filename to the next argument.
 
 This script may fail on courses with empty containers.
 
-Last update: April 3rd 2019
+Last update: November 20th 2019
 """
 
 
@@ -133,6 +134,17 @@ def describeLinkData(newlink):
     if newlink["href"].endswith(".gz"):
         newlink["text"] += " (gzip file)"
     return newlink
+
+
+# get the word count of all text from a file.
+# "soup" is a BeautifulSoup object
+def getWordCount(soup):
+    wordcount = []
+
+    all_text = soup.get_text()
+    print(text)
+
+    return wordcount
 
 
 # get list of links from HTML pages, with href and link text
@@ -317,6 +329,7 @@ def getComponentInfo(folder, filename, child, args):
     temp = {
         "type": root.tag,
         "name": "",
+        "wordcount": 0,
         # space for other info
     }
 
@@ -406,6 +419,7 @@ def getComponentInfo(folder, filename, child, args):
             soup = BeautifulSoup(temp["inner_xml"], "lxml")
             temp["links"] = getHTMLLinks(soup)
             temp["images"] = getAltText(soup)
+            temp["wordcount"] += getWordCount(soup)
         else:
             temp["inner_xml"] = "No XML."
 
@@ -429,7 +443,10 @@ def getComponentInfo(folder, filename, child, args):
             if args.alttext:
                 temp["images"] = getAltText(soup)
 
+            temp["wordcount"] += getWordCount(soup)
+
     # special handlers for other xml:
+    # drag-and-drop
     if root.tag == "drag-and-drop-v2":
         temp["links"] = []
         temp["images"] = [
@@ -438,6 +455,18 @@ def getComponentInfo(folder, filename, child, args):
                 "alt": "¡Check manually for alt text!",
             }
         ]
+    # ORA
+    elif root.tag == "openassessment":
+        pass
+    # UBCPI
+    elif root.tag == "ubcpi":
+        pass
+    # Surveys and Polls - unfortunately kept in escaped markdown, not xml.
+    elif root.tag == "survey":
+        pass
+    # Surveys and Polls - unfortunately kept in escaped markdown, not xml.
+    elif root.tag == "poll":
+        pass
 
     # Label all of them as components regardless of type.
     temp["component"] = temp["name"]
@@ -516,6 +545,7 @@ def getXMLInfo(folder, root, args):
             "links": [],
             "images": [],
             "sub": [],
+            "wordcount": [],
         }
 
         # get display_name or use placeholder
@@ -744,6 +774,7 @@ def Make_Course_Sheet(args=["-h"]):
     parser.add_argument("-video", default=True, action="store_true")
     parser.add_argument("-links", action="store_true")
     parser.add_argument("-alttext", action="store_true")
+    parser.add_argument("-wordcount", action="store_true")
     parser.add_argument("-o", action="store")
     parser.add_argument("file_names", nargs="*")
 
@@ -824,7 +855,10 @@ def Make_Course_Sheet(args=["-h"]):
         if args.alttext:
             course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
-        writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
+        if args.wordcount:
+            print(course_info["wordcount"])
+        else:
+            writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
 
 if __name__ == "__main__":
