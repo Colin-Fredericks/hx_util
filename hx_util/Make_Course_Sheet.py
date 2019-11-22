@@ -64,7 +64,6 @@ skip_tags = [
     "google-document",
     "lti",  # This is the older, deprecated LTI component.
     "oppia",
-    "openassessment",  # This is the older, deprecated ORA.
     "poll_question",  # This is the older, deprecated poll component.
     "problem-builder",
     "recommender",
@@ -466,7 +465,23 @@ def getComponentInfo(folder, filename, child, args):
         ]
     # ORA
     elif root.tag == "openassessment":
-        pass
+        # Right now we're ONLY getting word counts for ORA.
+        # Should get more for them later.
+        if args.wordcount:
+            # Most of the time our XML will be inline, but try to open external just in case.
+            if root.text is None:
+                innerfilepath = os.path.join(
+                    os.path.dirname(folder), "html", (root.attrib["filename"] + ".html")
+                )
+                soup = BeautifulSoup(
+                    open(innerfilepath, encoding="utf8"), "html.parser"
+                )
+            # If it's declared inline, just get the links right away.
+            else:
+                soup = BeautifulSoup("".join(root.itertext()), "html.parser")
+
+            temp["wordcount"] += getWordCount(soup)
+
     # UBCPI
     elif root.tag == "ubcpi":
         pass
@@ -517,6 +532,7 @@ def getXMLInfo(folder, root, args):
         "imageannotation",
         "library_content",
         "lti_consumer",
+        "openassessment",
         "pb-dashboard",  # This is currently unique to HarvardX DataWise
         "poll",
         "problem",
