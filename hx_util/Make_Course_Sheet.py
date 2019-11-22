@@ -8,6 +8,7 @@ import argparse
 from bs4 import BeautifulSoup
 import lxml
 import glob
+import string
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 try:
@@ -136,15 +137,23 @@ def describeLinkData(newlink):
     return newlink
 
 
-# get the word count of all text from a file.
+# Get the word count of all text from a file.
+# Still missing polls, ORA2, drag_and_drop_2, and other markdown schtuff
 # "soup" is a BeautifulSoup object
 def getWordCount(soup):
-    wordcount = []
+    words_no_one_likes = ["a", "the", "of", "an"]
+
+    # Remove script and style tags.
+    for script in soup(["script", "style"]):
+        script.decompose()
 
     all_text = soup.get_text()
-    print(text)
+    depunctuated = all_text.translate(str.maketrans("", "", string.punctuation))
+    word_list = depunctuated.split()
+    reduced_text = [x for x in word_list if x not in words_no_one_likes]
+    word_count = len(reduced_text)
 
-    return wordcount
+    return word_count
 
 
 # get list of links from HTML pages, with href and link text
@@ -425,7 +434,7 @@ def getComponentInfo(folder, filename, child, args):
 
     # Right now all we get from HTML is links and images.
     if root.tag == "html":
-        if args.links or args.alttext:
+        if args.links or args.alttext or args.wordcount:
             # Most of the time our XML will just point to a separate HTML file.
             # In those cases, go open that file and get the links from it.
             if root.text is None:
@@ -545,7 +554,7 @@ def getXMLInfo(folder, root, args):
             "links": [],
             "images": [],
             "sub": [],
-            "wordcount": [],
+            "wordcount": 0,
         }
 
         # get display_name or use placeholder
@@ -567,6 +576,9 @@ def getXMLInfo(folder, root, args):
         if child.tag in branch_nodes:
             child_info = drillDown(nextFile, temp["url"], child, args)
             temp["contents"] = child_info["contents"]
+            # For branch nodes, set word count to the sum of their children.
+            for x in child_info["contents"]:
+                temp["wordcount"] += x["wordcount"]
         elif child.tag in leaf_nodes:
             child_info = getComponentInfo(nextFile, temp["url"], child, args)
             # For leaf nodes, add item info to the dict
@@ -583,6 +595,15 @@ def getXMLInfo(folder, root, args):
         if "tempname" in temp:
             temp["name"] = child_info["parent_name"]
             del temp["tempname"]
+
+        print(
+            "Word count for "
+            + temp["name"]
+            + " "
+            + child.tag
+            + ": "
+            + str(temp["wordcount"])
+        )
 
         # We need not only a name, but a custom key with that name.
         temp[temp["type"]] = temp["name"]
@@ -856,7 +877,7 @@ def Make_Course_Sheet(args=["-h"]):
             course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
         if args.wordcount:
-            print(course_info["wordcount"])
+            print(course_info["contents"][0]["wordcount"])
         else:
             writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
