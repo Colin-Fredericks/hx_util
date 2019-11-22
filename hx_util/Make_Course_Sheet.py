@@ -893,7 +893,10 @@ def Make_Course_Sheet(args=["-h"]):
             course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
         if args.wordcount:
-            print(course_info["contents"][0]["wordcount"])
+            total_word_count = 0
+            for x in course_info["contents"]:
+                total_word_count += x["wordcount"]
+            print("Total word count: " + str(total_word_count))
         else:
             writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
