@@ -471,14 +471,14 @@ def getComponentInfo(folder, filename, child, args):
             # Most of the time our XML will be inline, but try to open external just in case.
             if root.text is None:
                 innerfilepath = os.path.join(
-                    os.path.dirname(folder), "html", (root.attrib["filename"] + ".html")
+                    os.path.dirname(folder),
+                    "openassessment",
+                    (root.attrib["filename"] + ".xml"),
                 )
-                soup = BeautifulSoup(
-                    open(innerfilepath, encoding="utf8"), "html.parser"
-                )
-            # If it's declared inline, just get the links right away.
+                soup = BeautifulSoup(open(innerfilepath, encoding="utf8"), "lxml")
+            # If it's declared inline, just get the soup right away.
             else:
-                soup = BeautifulSoup("".join(root.itertext()), "html.parser")
+                soup = BeautifulSoup("".join(root.itertext()), "lxml")
 
             temp["wordcount"] += getWordCount(soup)
 
