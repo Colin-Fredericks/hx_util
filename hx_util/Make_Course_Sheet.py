@@ -482,7 +482,7 @@ def getComponentInfo(folder, filename, child, args):
 
             temp["wordcount"] += getWordCount(soup)
 
-    # UBCPI
+    # UBCPI - unfortunately kept in escaped markdown, not xml.
     elif root.tag == "ubcpi":
         pass
     # Surveys and Polls - unfortunately kept in escaped markdown, not xml.
