@@ -395,11 +395,8 @@ def getComponentInfo(folder, filename, child, args):
         # space for other info
     }
 
-    # get display_name or use placeholder
-    if "display_name" in root.attrib:
-        temp["name"] = root.attrib["display_name"]
-    else:
-        temp["name"] = root.tag
+    # get display_name or use tag name as placeholder
+    temp["name"] = root.get("display_name", root.tag)
 
     # get video information
     if root.tag == "video" and args.video:
@@ -435,8 +432,7 @@ def getComponentInfo(folder, filename, child, args):
         else:
             temp["youtube"] = "No YouTube ID found."
 
-        if "edx_video_id" in root.attrib:
-            temp["edx_video_id"] = root.attrib["edx_video_id"]
+        temp["edx_video_id"] = root.get("edx_video_id", "")
 
         # We need our original uploaded filename.
         # It's not present in the old XML. :(
@@ -605,10 +601,7 @@ def getXMLInfo(folder, root, args):
     contents = []
 
     # Some items are created without a display name; use their tag name instead.
-    if "display_name" in root.attrib:
-        display_name = root.attrib["display_name"]
-    else:
-        display_name = root.tag
+    display_name = root.get("display_name", root.tag)
 
     for index, child in enumerate(root):
         temp = {
@@ -632,10 +625,7 @@ def getXMLInfo(folder, root, args):
 
         # get url_name but there are no placeholders
         # Note that even some inline XML have url_names.
-        if "url_name" in child.attrib:
-            temp["url"] = child.attrib["url_name"]
-        else:
-            temp["url"] = None
+        temp["url"] = child.get("url_name", None)
 
         # In the future: check to see whether this child is a pointer tag or inline XML.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
