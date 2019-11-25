@@ -7,6 +7,7 @@ import os
 import argparse
 from bs4 import BeautifulSoup
 import lxml
+import html
 import glob
 import string
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
@@ -136,23 +137,76 @@ def describeLinkData(newlink):
     return newlink
 
 
+# Takes a big ol' string and returns the word count.
+def getWordCount(text, filter_list=[]):
+    words_no_one_likes = ["a", "the", "of", "an"]
+    words_no_one_likes.extend(filter_list)
+
+    # Strip punctuation, break into words, and remove any words we don't like.
+    depunctuated = text.translate(str.maketrans("", "", string.punctuation))
+    word_list = depunctuated.split()
+    reduced_text = [x for x in word_list if x not in words_no_one_likes]
+    word_count = len(reduced_text)
+
+    return word_count
+
+
 # Get the word count of all text from a file.
 # Still missing polls, ORA2, drag_and_drop_2, and other markdown schtuff
 # "soup" is a BeautifulSoup object
-def getWordCount(soup):
-    words_no_one_likes = ["a", "the", "of", "an"]
+def getWordCountFromXML(soup):
 
     # Remove script and style tags.
     for script in soup(["script", "style"]):
         script.decompose()
 
     all_text = soup.get_text()
-    depunctuated = all_text.translate(str.maketrans("", "", string.punctuation))
-    word_list = depunctuated.split()
-    reduced_text = [x for x in word_list if x not in words_no_one_likes]
-    word_count = len(reduced_text)
 
-    return word_count
+    return getWordCount(all_text)
+
+
+# Get the word count from some markdown.
+# "root" is the tag in question as a BeautifulSoup object.
+def getWordCountFromMD(root):
+
+    all_text = ""
+    bad_words = []
+
+    # Handle each tag type differently.
+    if root.tag == "poll":
+        bad_words = ["img", "img_alt"]
+        raw_text = (
+            root.get("question", "")
+            + root.get("answers", "")
+            + root.get("display_name", "")
+        )
+        all_text = html.unescape(raw_text)
+    elif root.tag == "survey":
+        bad_words = ["img", "img_alt"]
+        raw_text = (
+            root.get("questions", "")
+            + root.get("answers", "")
+            + root.get("feedback", "")
+            + root.get("block_name", "")
+        )
+        all_text = html.unescape(raw_text)
+    elif root.tag == "drag-and-drop-v2":
+        bad_words = [
+            "displayLabels",
+            "displayName",
+            "feedback",
+            "imageURL",
+            "imageDescription",
+            "targetImg",
+            "targetImgDescription",
+            "x",
+            "y",
+            "uid",
+        ]
+        raw_text = root.get("question_text", "") + root.get("data", "")
+        all_text = html.unescape(raw_text)
+
+    return getWordCount(all_text, bad_words)
 
 
 # get list of links from HTML pages, with href and link text
@@ -427,7 +481,7 @@ def getComponentInfo(folder, filename, child, args):
             soup = BeautifulSoup(temp["inner_xml"], "lxml")
             temp["links"] = getHTMLLinks(soup)
             temp["images"] = getAltText(soup)
-            temp["wordcount"] += getWordCount(soup)
+            temp["wordcount"] += getWordCountFromXML(soup)
         else:
             temp["inner_xml"] = "No XML."
 
@@ -451,10 +505,10 @@ def getComponentInfo(folder, filename, child, args):
             if args.alttext:
                 temp["images"] = getAltText(soup)
 
-            temp["wordcount"] += getWordCount(soup)
+            temp["wordcount"] += getWordCountFromXML(soup)
 
-    # special handlers for other xml:
-    # drag-and-drop
+    # special handlers for other tags:
+    # drag-and-drop v2 stores some text in Markdown.
     if root.tag == "drag-and-drop-v2":
         temp["links"] = []
         temp["images"] = [
@@ -463,8 +517,10 @@ def getComponentInfo(folder, filename, child, args):
                 "alt": "¡Check manually for alt text!",
             }
         ]
-    # ORA
-    elif root.tag == "openassessment":
+        temp["wordcount"] += getWordCountFromMD(root)
+
+    # ORA and UBCPI store text in XML.
+    elif root.tag in ["openassessment", "ubcpi"]:
         # Right now we're ONLY getting word counts for ORA.
         # Should get more for them later.
         if args.wordcount:
@@ -480,17 +536,11 @@ def getComponentInfo(folder, filename, child, args):
             else:
                 soup = BeautifulSoup("".join(root.itertext()), "lxml")
 
-            temp["wordcount"] += getWordCount(soup)
+            temp["wordcount"] += getWordCountFromXML(soup)
 
-    # UBCPI - unfortunately kept in escaped markdown, not xml.
-    elif root.tag == "ubcpi":
-        pass
-    # Surveys and Polls - unfortunately kept in escaped markdown, not xml.
-    elif root.tag == "survey":
-        pass
-    # Surveys and Polls - unfortunately kept in escaped markdown, not xml.
-    elif root.tag == "poll":
-        pass
+    # Poll, survey, and some others keep their code in escaped markdown, not xml.
+    elif root.tag in ["survey", "poll"]:
+        temp["wordcount"] += getWordCountFromMD(root)
 
     # Label all of them as components regardless of type.
     temp["component"] = temp["name"]
@@ -612,14 +662,14 @@ def getXMLInfo(folder, root, args):
             temp["name"] = child_info["parent_name"]
             del temp["tempname"]
 
-        print(
-            "Word count for "
-            + temp["name"]
-            + " "
-            + child.tag
-            + ": "
-            + str(temp["wordcount"])
-        )
+        #         print(
+        #             "Word count for "
+        #             + temp["name"]
+        #             + " "
+        #             + child.tag
+        #             + ": "
+        #             + str(temp["wordcount"])
+        #         )
 
         # We need not only a name, but a custom key with that name.
         temp[temp["type"]] = temp["name"]
