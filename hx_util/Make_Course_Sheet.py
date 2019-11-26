@@ -652,14 +652,8 @@ def getXMLInfo(folder, root, args):
             temp["name"] = child_info["parent_name"]
             del temp["tempname"]
 
-        #         print(
-        #             "Word count for "
-        #             + temp["name"]
-        #             + " "
-        #             + child.tag
-        #             + ": "
-        #             + str(temp["wordcount"])
-        #         )
+            if child.tag == "chapter":
+                print(str(temp["wordcount"]) + " words in " + temp["name"])
 
         # We need not only a name, but a custom key with that name.
         temp[temp["type"]] = temp["name"]
