@@ -35,6 +35,7 @@ Because python's built-in xml parser has trouble with namespaces and xpaths, som
 
 * `Make_Course_Sheet.py`, which creates a spreadsheet showing which SRT file is for which video. It'll also make lists of other things in your course, such as problems or html components.
  * You can also run this with the `-links` argument to get a list of all the links in your course, including those in .html, .xml, .docx, .pptx, and .xlsx files in your Files & Uploads. If you do this, you will want to grab the bs4 and unicodecsv folders, and you might want `GetWordLinks.py` (or another appropriate item) to handle the word docs.
+ * If you don't want a spreadsheet, just a word count, run it with the `-wordcount` argument. It'll print on the screen.
  * You can also run this with the `-alttext` argument to get a list of all the images in your course and their alt text. That cell will be blank if the alt attribute is blank, and will say "No alt attribute" if there is no alt attribute.
 * `Make_Link_Spreadsheet.zip`, which contains a Mac executable that runs `Make_Course_Sheet.py` with some helpers to create a csv of all the links in the course for quick checking. This executable is behind the rest of them because of some sort of incompatibility between python3, BeautifulSoup, and Platypus that keeps bs4 from opening files with unicode characters. Trying to figure out a good way to handle this without having a thousand try/except clauses.
 * `json2srt.py`, which converts the .srt.sjson files that edX uses into .srt files that more other things use.
@@ -43,6 +44,3 @@ Because python's built-in xml parser has trouble with namespaces and xpaths, som
 
 
 If you're looking for `outline_maker`, `SetMaxAttempts.py`, and other course-run rools, they're now in [hx-xml](https://github.com/Colin-Fredericks/hx-xml). `PrepAdaptiveProblems.py` has been moved to [hx-adaptive](https://github.com/Colin-Fredericks/hx-adaptive).
-
- ### In Progress
- * Improving the XML parsing to handle components declared inline.
