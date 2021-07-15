@@ -50,7 +50,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: April 3rd 2019
+Last update: July 15th 2021
 """
 
 
@@ -60,7 +60,6 @@ Last update: April 3rd 2019
 skip_tags = [
     "annotatable",  # This is the older, deprecated annotation component.
     "google-document",
-    "lti",  # This is the older, deprecated LTI component.
     "oppia",
     "openassessment",  # This is the older, deprecated ORA.
     "poll_question",  # This is the older, deprecated poll component.
@@ -478,7 +477,7 @@ def getXMLInfo(folder, root, args):
         "html",
         "imageannotation",
         "library_content",
-        "lti_consumer",
+        "lti",
         "pb-dashboard",  # This is currently unique to HarvardX DataWise
         "poll",
         "problem",

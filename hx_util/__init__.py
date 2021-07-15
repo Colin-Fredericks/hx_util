@@ -2,4 +2,4 @@
 
 __author__ = "Colin Fredericks"
 __email__ = "colin_frederecks"
-__version__ = "1.1.0"  # update version lxml dependency
+__version__ = "1.1.1"  # catch LTI tags
