@@ -478,6 +478,7 @@ def getXMLInfo(folder, root, args):
         "imageannotation",
         "library_content",
         "lti",
+        "lti_consumer",
         "pb-dashboard",  # This is currently unique to HarvardX DataWise
         "poll",
         "problem",
