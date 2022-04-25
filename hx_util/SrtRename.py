@@ -58,7 +58,9 @@ def getOriginalNames(course_folder, args):
     return nameDict, course_title
 
 
-# Set all the srt filenames to be
+# Set all the srt filenames to be the upload names
+# TODO: What happens when two transcripts have the same upload name?
+#       Can we pull the language identifier and append to the name?
 def setNewNames(course_folder, nameDict, args, course_title):
     static_folder = os.path.join(os.path.abspath(course_folder), "static")
 
