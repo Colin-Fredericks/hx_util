@@ -21,7 +21,7 @@ Valid options:
   -i Open a specific named .tsv file using the following argument.
   -o Name the zip file using the following argument. Only works with -z.
 
-Last update: April 3rd 2019
+Last update: April 25th 2022
 """
 
 # Make a dictionary that shows which srt files match which original upload names
@@ -80,8 +80,13 @@ def setNewNames(course_folder, nameDict, args, course_title):
     for srt in nameDict:
         # Strip off the .sjson extension (if any) since we're renaming only SRTs.
         oldname = os.path.join(static_folder, srt.replace(".sjson", ""))
-        # Add .mp4 to the upload filenames because they're videos
-        newname = os.path.join(target_folder, nameDict[srt] + ".srt")
+
+        # Language identifier should be included so we don't overwrite things.
+        # It's normally at the end of the transcript name:
+        # 123-456-789-xx.srt, where xx is the 2-letter country code.
+        extension = srt.split(".")[0][-3:]
+
+        newname = os.path.join(target_folder, nameDict[srt] + extension + ".srt")
 
         # Rename the files.
         if os.path.exists(oldname):
