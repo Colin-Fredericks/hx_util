@@ -50,7 +50,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: July 15th 2021
+Version 1.1.2, last update: Apr 25th 2022
 """
 
 
