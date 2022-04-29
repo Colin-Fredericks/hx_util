@@ -28,7 +28,8 @@ except:
     print("Cannot find GetPDFLinks.py, skipping links in .pdf files.")
 
 
-instructions = """
+instructions = (
+    """
 To use:
 python3 Make_Course_Sheet.py path/to/course.xml (options)
 
@@ -50,8 +51,9 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Version 1.1.2, last update: Apr 25th 2022
-"""
+Last update: Apr 25th 2022, Version """
+    + sys.modules[__package__].__version__
+)
 
 
 # Many of these are being skipped because they're currently expressed in inline XML
