@@ -101,9 +101,11 @@ def ConvertToSRT(filename, args, dirpath):
         newStartList = [msecToHMS(time) for time in startList]
         newEndList = [msecToHMS(time) for time in endList]
 
+        # Throw out any null entries.
+        textWithoutNull = [x if type(x) is type('string') else "" for x in textList]
         # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
         # SRT files handle unicode just fine.
-        newTextList = [html.unescape(text) for text in textList]
+        newTextList = [html.unescape(text) for text in textWithoutNull]
 
         # Create a file for output
         newFileName = filename.replace(".srt", "")
