@@ -1,5 +1,5 @@
 beautifulsoup4==4.6.0
 bs4==0.0.1
-lxml==4.6.5
+lxml==4.9.1
 pdfrw==0.4
 unicodecsv==0.14.1
