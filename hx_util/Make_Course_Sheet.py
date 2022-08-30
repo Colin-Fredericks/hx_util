@@ -599,7 +599,7 @@ def courseFlattener(course_dict, new_row={}):
 
     # Add all the data from the current level to the current row except 'contents'.
     for key in course_dict:
-        if key is not "contents":
+        if key != "contents":
             temp_row[key] = course_dict[key]
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
