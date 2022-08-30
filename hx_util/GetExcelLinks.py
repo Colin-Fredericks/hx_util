@@ -148,7 +148,11 @@ def getLinks(filename, args, dirpath):
 
     for sheet in sheets:
         # Open each sheet and get the hyperlinks.
-        sheet_data = archive.read("xl/worksheets/" + sheet + ".xml")
+        # If we can't open one, skip it.
+        try:
+            sheet_data = archive.read("xl/worksheets/" + sheet + ".xml")
+        except KeyError:
+            continue
         sheet_soup = BeautifulSoup(sheet_data, "xml")
         links = getHyperlinks(sheet_soup)
 
@@ -260,7 +264,7 @@ def getExcelLinks(args):
                 # Get the links from that file.
                 newlinks = getLinks(name, args, False)
                 if newlinks != []:
-                    linklist.extend()
+                    linklist.extend(newlinks)
                     filecount += 1
 
         # If it's a directory:
