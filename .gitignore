@@ -3,3 +3,5 @@
 *.pyc
 XML_utilities/unicodecsv/__init__.pyc
 XML_utilities/unicodecsv/py2.pyc
+build/
+hx_util.egg-info/
