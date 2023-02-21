@@ -8,6 +8,7 @@ import argparse
 from bs4 import BeautifulSoup
 import lxml
 import glob
+import json
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 try:
@@ -239,6 +240,29 @@ def getAuxLinks(rootFileDir):
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
     aux_links = []
 
+    # Ignore any links from tabs that aren't currently in use.
+    # Get the list of tabs from all policies/???/policy.json files
+    policy_files = []
+    tab_files = []
+    policy_folders = [os.path.join(rootFileDir, "policies", x) for x in os.listdir(os.path.join(rootFileDir, "policies"))]
+    for folder in policy_folders:
+        if os.path.isdir(folder):
+            for f in os.listdir(folder):
+                if f == "policy.json":
+                    policy_files.append(os.path.join(folder, f))
+    
+    for f in policy_files:
+        with open(f, "r") as policy:
+            policy_data = json.load(policy)
+            # Strip off the outer object wrapper.
+            policy_data = policy_data[list(policy_data.keys())[0]]
+            # If there's a URL slug, add it to the list of tabs.
+            for tab in policy_data["tabs"]:
+                if "url_slug" in tab:
+                    tab_files.append(tab["url_slug"] + ".html")
+    
+    print("Tabs found in policy files: " + str(tab_files))
+
     for folder in aux_paths:
         if os.path.isdir(folder):
             folder_temp = {"type": "", "name": "", "url": "", "contents": []}
@@ -255,6 +279,10 @@ def getAuxLinks(rootFileDir):
                     file_temp["url"] = f
 
                 if f.endswith(tuple([".html", ".htm"])):
+                    if "tabs" in folder:
+                        # Skip tabs that aren't in use.
+                        if os.path.basename(f) not in tab_files:
+                            continue
                     soup = BeautifulSoup(
                         open(os.path.join(folder, f), encoding="utf8"), "html.parser"
                     )
