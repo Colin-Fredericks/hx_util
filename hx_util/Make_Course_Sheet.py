@@ -618,23 +618,37 @@ def fillInRows(flat_course):
 
     return flat_course
 
+# Returns a usable URL for verticals and components, and just filenames for other types.
+def makeURL(component_type, filename, org, nickname, run):
+    url = ""
+    if component_type == "vertical":
+        url = "https://studio.edx.org/container/block-v1:" + org + "+" + nickname + "+" + run + "+type@vertical+block@" + filename
+    elif component_type in ["html", "problem", "video"]:
+        url = "https://studio.edx.org/container/block-v1:" + org + "+" + nickname + "+" + run + "+type@" + component_type + "+block@" + filename
+    else:
+        url = filename
+    return url
+
 
 # Takes a nested structure of lists and dicts that represents the course
 # and returns a single list of dicts where each dict is a component
-def courseFlattener(course_dict, new_row={}):
+def courseFlattener(course_dict, filename, org, nickname, run, new_row={}):
     flat_course = []
     temp_row = new_row.copy()
 
     # Add all the data from the current level to the current row except 'contents'.
+    # For the "url" key, turn it into an actual URL.
     for key in course_dict:
-        if key != "contents":
+        if key == "url":
+            temp_row["url"] = makeURL(course_dict["type"], filename, org, nickname, run)
+        elif key != "contents":
             temp_row[key] = course_dict[key]
 
     # If the current structure has "contents", we're not at the bottom of the hierarchy.
     if "contents" in course_dict:
         # Go down into each item in "contents" and add its contents to the course.
         for entry in course_dict["contents"]:
-            temp = courseFlattener(entry, temp_row)
+            temp = courseFlattener(entry, temp_row["url"], org, nickname, run, temp_row)
             if temp:
                 flat_course = flat_course + temp
         return flat_course
@@ -711,7 +725,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
         )
         writer.writeheader()
 
-        spreadsheet = fillInRows(courseFlattener(course_dict))
+        spreadsheet = fillInRows(courseFlattener(course_dict, rootFileName, course_dict["org"], course_dict["nickname"], course_dict["url"]))
         for index, row in enumerate(spreadsheet):
             for key in row:
                 spreadsheet[index][key] = spreadsheet[index][key]
@@ -837,6 +851,8 @@ def Make_Course_Sheet(args=["-h"]):
             "type": course_root.tag,
             "name": "",
             "url": course_root.attrib["url_name"],
+            "nickname": course_root.attrib["course"],
+            "org": course_root.attrib["org"],
             "contents": [],
         }
 
