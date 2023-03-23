@@ -2,4 +2,4 @@
 
 __author__ = "Colin Fredericks"
 __email__ = "colin_frederecks"
-__version__ = "1.2.0"  # skips unused tabs
+__version__ = "1.3.0"  # adds actual URL
