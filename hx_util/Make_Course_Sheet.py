@@ -73,7 +73,7 @@ skip_tags = [
 ]
 
 # Canonical leaf node. Only for copying.
-canon_leaf = {"type": "", "name": "", "url": "", "links": [], "images": [], "sub": []}
+canon_leaf = {"type": "", "name": "", "url": "", "filename": "", "links": [], "images": [], "sub": []}
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -198,32 +198,29 @@ def getAuxAltText(rootFileDir):
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
-
-                # All currently accepted file types:
-                if f.endswith(tuple([".html", ".htm", "xml"])):
-                    file_temp["name"] = f
-                    file_temp["url"] = f
+                file_temp["filename"] = os.path.join(folder, f)
+                # Use the file's extension as its type.
+                file_temp["type"] = os.path.splitext(f)[1]
+                file_temp["name"] = f
+                file_temp["url"] = f
 
                 if f.endswith(tuple([".html", ".htm"])):
                     soup = BeautifulSoup(
                         open(os.path.join(folder, f), encoding="utf8"), "html.parser"
                     )
                     file_temp["images"] = getAltText(soup)
-                    file_temp["type"] = "html"
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".xml"):
+                elif f.endswith(".xml"):
                     try:
                         tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
                         # If we have broken XML, tell us and skip the file.
                         print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
-                    root = tree.getroot()
                     soup = BeautifulSoup(
                         open(os.path.join(folder, f), encoding="utf8"), "lxml"
                     )
                     file_temp["images"] = getAltText(soup)
-                    file_temp["type"] = "xml"
                     folder_temp["contents"].append(file_temp)
 
             folder_temp["chapter"] = os.path.basename(folder)
@@ -273,13 +270,11 @@ def getAuxLinks(rootFileDir):
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
-
-                # All currently accepted file types:
-                if f.endswith(
-                    tuple([".html", ".htm", "xml", "docx", "xlsx", "pptx", "pdf"])
-                ):
-                    file_temp["name"] = f
-                    file_temp["url"] = f
+                file_temp["name"] = f
+                file_temp["url"] = f
+                file_temp["filename"] = os.path.join(folder, f)
+                # Use the file's extension as its type.
+                file_temp["type"] = os.path.splitext(f)[1]
 
                 if f.endswith(tuple([".html", ".htm"])):
                     if "tabs" in folder:
@@ -290,7 +285,6 @@ def getAuxLinks(rootFileDir):
                         open(os.path.join(folder, f), encoding="utf8"), "html.parser"
                     )
                     file_temp["links"] = getHTMLLinks(soup)
-                    file_temp["type"] = "html"
                     folder_temp["contents"].append(file_temp)
                 if f.endswith(".xml"):
                     try:
@@ -304,27 +298,22 @@ def getAuxLinks(rootFileDir):
                         open(os.path.join(folder, f), encoding="utf8"), "lxml"
                     )
                     file_temp["links"] = getHTMLLinks(soup)
-                    file_temp["type"] = "xml"
                     folder_temp["contents"].append(file_temp)
                 if f.endswith(".docx"):
                     targetFile = os.path.join(folder, f)
                     file_temp["links"] = GetWordLinks.getWordLinks([targetFile, "-l"])
-                    file_temp["type"] = "docx"
                     folder_temp["contents"].append(file_temp)
                 if f.endswith(".xlsx"):
                     targetFile = os.path.join(folder, f)
                     file_temp["links"] = GetExcelLinks.getExcelLinks([targetFile, "-l"])
-                    file_temp["type"] = "xlsx"
                     folder_temp["contents"].append(file_temp)
                 if f.endswith(".pptx"):
                     targetFile = os.path.join(folder, f)
                     file_temp["links"] = GetPPTLinks.getPPTLinks([targetFile, "-l"])
-                    file_temp["type"] = "pptx"
                     folder_temp["contents"].append(file_temp)
                 if f.endswith(".pdf"):
                     targetFile = os.path.join(folder, f)
                     file_temp["links"] = GetPDFLinks.getPDFLinks([targetFile, "-l"])
-                    file_temp["type"] = "pdf"
                     folder_temp["contents"].append(file_temp)
 
             folder_temp["chapter"] = os.path.basename(folder)
