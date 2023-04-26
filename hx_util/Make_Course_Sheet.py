@@ -198,7 +198,7 @@ def getAuxAltText(rootFileDir):
             # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
-                file_temp["filename"] = os.path.join(folder, f)
+                file_temp["filename"] = os.path.join(os.path.basename(folder), f)
                 # Use the file's extension as its type.
                 file_temp["type"] = os.path.splitext(f)[1]
                 file_temp["name"] = f
@@ -272,11 +272,11 @@ def getAuxLinks(rootFileDir):
                 file_temp = canon_leaf.copy()
                 file_temp["name"] = f
                 file_temp["url"] = f
-                file_temp["filename"] = os.path.join(folder, f)
+                file_temp["filename"] = os.path.join(os.path.basename(folder), f)
                 # Use the file's extension as its type.
                 file_temp["type"] = os.path.splitext(f)[1]
 
-                if f.endswith(tuple([".html", ".htm"])):
+                if file_temp["type"] == ".html" or file_temp["type"] == ".htm":
                     if "tabs" in folder:
                         # Skip tabs that aren't in use.
                         if os.path.basename(f) not in tab_files:
@@ -286,7 +286,7 @@ def getAuxLinks(rootFileDir):
                     )
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".xml"):
+                if file_temp["type"] == ".xml":
                     try:
                         tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
@@ -299,27 +299,24 @@ def getAuxLinks(rootFileDir):
                     )
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".docx"):
-                    targetFile = os.path.join(folder, f)
-                    file_temp["links"] = GetWordLinks.getWordLinks([targetFile, "-l"])
+                if file_temp["type"] == ".docx":
+                    file_temp["links"] = GetWordLinks.getWordLinks([file_temp["filename"], "-l"])
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".xlsx"):
-                    targetFile = os.path.join(folder, f)
-                    file_temp["links"] = GetExcelLinks.getExcelLinks([targetFile, "-l"])
+                if file_temp["type"] == ".xlsx":
+                    file_temp["links"] = GetExcelLinks.getExcelLinks([file_temp["filename"], "-l"])
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".pptx"):
-                    targetFile = os.path.join(folder, f)
-                    file_temp["links"] = GetPPTLinks.getPPTLinks([targetFile, "-l"])
+                if file_temp["type"] == ".pptx":
+                    file_temp["links"] = GetPPTLinks.getPPTLinks([file_temp["filename"], "-l"])
                     folder_temp["contents"].append(file_temp)
-                if f.endswith(".pdf"):
-                    targetFile = os.path.join(folder, f)
-                    file_temp["links"] = GetPDFLinks.getPDFLinks([targetFile, "-l"])
+                if file_temp["type"] == ".pdf":
+                    file_temp["links"] = GetPDFLinks.getPDFLinks([file_temp["filename"], "-l"])
                     folder_temp["contents"].append(file_temp)
 
             folder_temp["chapter"] = os.path.basename(folder)
             folder_temp["name"] = os.path.basename(folder)
             aux_links.append(folder_temp)
 
+    print(aux_links)
     return aux_links
 
 
