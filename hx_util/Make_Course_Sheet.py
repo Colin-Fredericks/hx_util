@@ -73,7 +73,16 @@ skip_tags = [
 ]
 
 # Canonical leaf node. Only for copying.
-canon_leaf = {"type": "", "name": "", "url": "", "filename": "", "links": [], "images": [], "sub": []}
+canon_leaf = {
+    "type": "",
+    "name": "",
+    "url": "",
+    "filename": "",
+    "links": [],
+    "images": [],
+    "sub": [],
+}
+
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
@@ -301,16 +310,24 @@ def getAuxLinks(rootFileDir):
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "docx":
-                    file_temp["links"] = GetWordLinks.getWordLinks([os.path.join(folder, f), "-l"])
+                    file_temp["links"] = GetWordLinks.getWordLinks(
+                        [os.path.join(folder, f), "-l"]
+                    )
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "xlsx":
-                    file_temp["links"] = GetExcelLinks.getExcelLinks([os.path.join(folder, f), "-l"])
+                    file_temp["links"] = GetExcelLinks.getExcelLinks(
+                        [os.path.join(folder, f), "-l"]
+                    )
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "pptx":
-                    file_temp["links"] = GetPPTLinks.getPPTLinks([os.path.join(folder, f), "-l"])
+                    file_temp["links"] = GetPPTLinks.getPPTLinks(
+                        [os.path.join(folder, f), "-l"]
+                    )
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "pdf":
-                    file_temp["links"] = GetPDFLinks.getPDFLinks([os.path.join(folder, f), "-l"])
+                    file_temp["links"] = GetPDFLinks.getPDFLinks(
+                        [os.path.join(folder, f), "-l"]
+                    )
                     folder_temp["contents"].append(file_temp)
 
             # Placing all of these folders at the "chapter" level.
@@ -324,7 +341,6 @@ def getAuxLinks(rootFileDir):
 # Always gets the display name.
 # For video and problem files, gets other info too
 def getComponentInfo(folder, filename, child, args):
-
     # Try to open file.
     try:
         tree = lxml.etree.parse(folder + "/" + filename + ".xml")
@@ -347,7 +363,6 @@ def getComponentInfo(folder, filename, child, args):
 
     # get video information
     if root.tag == "video" and args.video:
-
         # List of subscripts because multiple languages.
         temp["sub"] = []
 
@@ -466,7 +481,6 @@ def getComponentInfo(folder, filename, child, args):
 
 # Recursion function for outline-declared xml files
 def drillDown(folder, filename, root, args):
-
     # Try to open file.
     try:
         tree = lxml.etree.parse(os.path.join(folder, (filename + ".xml")))
@@ -487,7 +501,6 @@ def drillDown(folder, filename, root, args):
 
 
 def getXMLInfo(folder, root, args):
-
     # We need lists of container nodes and leaf nodes so we can tell
     # whether we have to do more recursion.
     leaf_nodes = [
@@ -587,7 +600,6 @@ def getXMLInfo(folder, root, args):
 # Gets the full set of data headers for the course.
 # flat_course is a list of dictionaries.
 def getAllKeys(flat_course, key_set=set()):
-
     for row in flat_course:
         for key in row:
             key_set.add(key)
@@ -598,7 +610,6 @@ def getAllKeys(flat_course, key_set=set()):
 # Ensure that all dicts have the same entries, adding blanks if needed.
 # flat_course is a list of dictionaries.
 def fillInRows(flat_course):
-
     # Get a list of all dict keys from the entire nested structure and store it in a set.
     key_set = getAllKeys(flat_course)
 
@@ -617,7 +628,7 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
         return filename
 
     course_id = org + "+" + nickname + "+" + run
-    no_extension = '.'.join(filename.split("/")[-1].split(".")[0:-1])
+    no_extension = ".".join(filename.split("/")[-1].split(".")[0:-1])
     if filename.startswith("tabs"):
         url = (
             "https://courses.edx.org/courses/course-v1:"
@@ -642,6 +653,7 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
 
     return url
 
+
 # Takes a nested structure of lists and dicts that represents the course
 # and returns a single list of dicts where each dict is a component
 def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
@@ -653,9 +665,23 @@ def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
     for key in course_dict:
         if key == "url":
             if "filename" in course_dict:
-                temp_row["url"] = makeURL(course_dict["type"], course_dict["filename"], parent_url, org, nickname, run)
+                temp_row["url"] = makeURL(
+                    course_dict["type"],
+                    course_dict["filename"],
+                    parent_url,
+                    org,
+                    nickname,
+                    run,
+                )
             else:
-                temp_row["url"] = makeURL(course_dict["type"], course_dict["url"], parent_url, org, nickname, run)
+                temp_row["url"] = makeURL(
+                    course_dict["type"],
+                    course_dict["url"],
+                    parent_url,
+                    org,
+                    nickname,
+                    run,
+                )
         elif key != "contents":
             temp_row[key] = course_dict[key]
 
@@ -702,7 +728,6 @@ def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
 
 
 def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
-
     course_name = course_dict["name"]
     if args.links:
         course_name += " Links"
@@ -714,7 +739,15 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
 
     # Create a "csv" file with tabs as delimiters
     with open(os.path.join(rootFileDir, outFileName), "wb") as outputfile:
-        fieldnames = ["chapter", "sequential", "vertical", "component", "type", "url", "filename"]
+        fieldnames = [
+            "chapter",
+            "sequential",
+            "vertical",
+            "component",
+            "type",
+            "url",
+            "filename",
+        ]
 
         # Include the XML if we're dealing with problems
         if args.problems:
@@ -799,7 +832,6 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
 
 # Main function
 def Make_Course_Sheet(args=["-h"]):
-
     print("Creating course sheet")
 
     # Handle arguments and flags
@@ -893,7 +925,7 @@ def Make_Course_Sheet(args=["-h"]):
         if args.alttext:
             course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
-        with(open (os.path.join(rootFileDir, "course.json"), "w")) as course_json:
+        with open(os.path.join(rootFileDir, "course.json"), "w") as course_json:
             course_json.write(json.dumps(course_dict, indent=4))
         writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
