@@ -120,6 +120,7 @@ def describeLinkData(newlink):
         ".jp2",
         ".jif",
         ".pict",
+        ".webp",
     ]
 
     if newlink["href"].endswith(tuple(image_types)):
@@ -200,17 +201,18 @@ def getAuxAltText(rootFileDir):
                 file_temp = canon_leaf.copy()
                 file_temp["filename"] = os.path.join(os.path.basename(folder), f)
                 # Use the file's extension as its type.
-                file_temp["type"] = os.path.splitext(f)[1]
+                file_temp["type"] = os.path.splitext(f)[1][1:]
+                # Remove the leftmost character
                 file_temp["name"] = f
                 file_temp["url"] = f
 
-                if f.endswith(tuple([".html", ".htm"])):
+                if file_temp["type"] == "html" or file_temp["type"] == "htm":
                     soup = BeautifulSoup(
                         open(os.path.join(folder, f), encoding="utf8"), "html.parser"
                     )
                     file_temp["images"] = getAltText(soup)
                     folder_temp["contents"].append(file_temp)
-                elif f.endswith(".xml"):
+                elif file_temp["type"] == "xml":
                     try:
                         tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
@@ -267,16 +269,15 @@ def getAuxLinks(rootFileDir):
         if os.path.isdir(folder):
             folder_temp = {"type": "", "name": "", "url": "", "contents": []}
 
-            # Placing all of these folders at the "chapter" level.
             for f in os.listdir(folder):
                 file_temp = canon_leaf.copy()
                 file_temp["name"] = f
                 file_temp["url"] = f
                 file_temp["filename"] = os.path.join(os.path.basename(folder), f)
                 # Use the file's extension as its type.
-                file_temp["type"] = os.path.splitext(f)[1]
+                file_temp["type"] = os.path.splitext(f)[1][1:]
 
-                if file_temp["type"] == ".html" or file_temp["type"] == ".htm":
+                if file_temp["type"] == "html" or file_temp["type"] == "htm":
                     if "tabs" in folder:
                         # Skip tabs that aren't in use.
                         if os.path.basename(f) not in tab_files:
@@ -286,7 +287,7 @@ def getAuxLinks(rootFileDir):
                     )
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
-                if file_temp["type"] == ".xml":
+                if file_temp["type"] == "xml":
                     try:
                         tree = lxml.etree.parse(folder + "/" + f)
                     except lxml.etree.XMLSyntaxError:
@@ -299,24 +300,24 @@ def getAuxLinks(rootFileDir):
                     )
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
-                if file_temp["type"] == ".docx":
-                    file_temp["links"] = GetWordLinks.getWordLinks([file_temp["filename"], "-l"])
+                if file_temp["type"] == "docx":
+                    file_temp["links"] = GetWordLinks.getWordLinks([os.path.join(folder, f), "-l"])
                     folder_temp["contents"].append(file_temp)
-                if file_temp["type"] == ".xlsx":
-                    file_temp["links"] = GetExcelLinks.getExcelLinks([file_temp["filename"], "-l"])
+                if file_temp["type"] == "xlsx":
+                    file_temp["links"] = GetExcelLinks.getExcelLinks([os.path.join(folder, f), "-l"])
                     folder_temp["contents"].append(file_temp)
-                if file_temp["type"] == ".pptx":
-                    file_temp["links"] = GetPPTLinks.getPPTLinks([file_temp["filename"], "-l"])
+                if file_temp["type"] == "pptx":
+                    file_temp["links"] = GetPPTLinks.getPPTLinks([os.path.join(folder, f), "-l"])
                     folder_temp["contents"].append(file_temp)
-                if file_temp["type"] == ".pdf":
-                    file_temp["links"] = GetPDFLinks.getPDFLinks([file_temp["filename"], "-l"])
+                if file_temp["type"] == "pdf":
+                    file_temp["links"] = GetPDFLinks.getPDFLinks([os.path.join(folder, f), "-l"])
                     folder_temp["contents"].append(file_temp)
 
+            # Placing all of these folders at the "chapter" level.
             folder_temp["chapter"] = os.path.basename(folder)
             folder_temp["name"] = os.path.basename(folder)
             aux_links.append(folder_temp)
 
-    print(aux_links)
     return aux_links
 
 
@@ -612,19 +613,32 @@ def fillInRows(flat_course):
 
 # Returns a usable URL for verticals and components, and just filenames for other types.
 def makeURL(component_type, filename, parent_url, org, nickname, run):
-    if component_type in ["course", "chapter", "sequential", "vertical"]:
+    if component_type in ["course", "chapter", "sequential", "vertical", "wiki", run]:
         return filename
-    
-    url = (
-        "https://studio.edx.org/container/block-v1:"
-        + org
-        + "+"
-        + nickname
-        + "+"
-        + run
-        + "+type@vertical+block@"
-        + os.path.basename(parent_url)
-    )
+
+    course_id = org + "+" + nickname + "+" + run
+    no_extension = '.'.join(filename.split("/")[-1].split(".")[0:-1])
+    if filename.startswith("tabs"):
+        url = (
+            "https://courses.edx.org/courses/course-v1:"
+            + course_id
+            + "/"
+            + no_extension
+        )
+    elif filename.startswith("static"):
+        url = (
+            "https://courses.edx.org/asset-v1:"
+            + course_id
+            + "+type@asset+block@"
+            + no_extension
+        )
+    else:
+        url = (
+            "https://studio.edx.org/container/block-v1:"
+            + course_id
+            + "+type@vertical+block@"
+            + no_extension
+        )
 
     return url
 
@@ -638,7 +652,10 @@ def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
     # For the "url" key, turn it into an actual URL.
     for key in course_dict:
         if key == "url":
-            temp_row["url"] = makeURL(course_dict["type"], course_dict["url"], parent_url, org, nickname, run)
+            if "filename" in course_dict:
+                temp_row["url"] = makeURL(course_dict["type"], course_dict["filename"], parent_url, org, nickname, run)
+            else:
+                temp_row["url"] = makeURL(course_dict["type"], course_dict["url"], parent_url, org, nickname, run)
         elif key != "contents":
             temp_row[key] = course_dict[key]
 
@@ -876,6 +893,8 @@ def Make_Course_Sheet(args=["-h"]):
         if args.alttext:
             course_dict["contents"].extend(getAuxAltText(rootFileDir))
 
+        with(open (os.path.join(rootFileDir, "course.json"), "w")) as course_json:
+            course_json.write(json.dumps(course_dict, indent=4))
         writeCourseSheet(rootFileDir, rootFilePath, course_dict, args)
 
 
