@@ -137,7 +137,12 @@ def getLinks(filename, args, dirpath):
 
     # Open the .xlsx file as if it were a zip (because it is)
     fullname = os.path.join(dirpath or "", filename)
-    archive = zipfile.ZipFile(fullname, "r")
+    try:
+        archive = zipfile.ZipFile(fullname, "r")
+    except zipfile.BadZipFile:
+        print("'Bad zip' for Excel file: " + fullname)
+        return []
+    
 
     # Read bytes from archive for the workbook to get the sheets.
     workbook_data = archive.read("xl/workbook.xml")

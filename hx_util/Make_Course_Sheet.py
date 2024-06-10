@@ -216,9 +216,18 @@ def getAuxAltText(rootFileDir):
                 file_temp["url"] = f
 
                 if file_temp["type"] == "html" or file_temp["type"] == "htm":
-                    soup = BeautifulSoup(
-                        open(os.path.join(folder, f), encoding="utf8"), "html.parser"
-                    )
+                    try:
+                        soup = BeautifulSoup(
+                            open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                        )
+                    except UnicodeDecodeError:
+                        # If we have a Unicode error, skip the file.
+                        print(
+                            "Unicode error in file "
+                            + os.path.join(folder, f)
+                            + ", skipping."
+                        )
+                        continue
                     file_temp["images"] = getAltText(soup)
                     folder_temp["contents"].append(file_temp)
                 elif file_temp["type"] == "xml":
@@ -291,9 +300,18 @@ def getAuxLinks(rootFileDir):
                         # Skip tabs that aren't in use.
                         if os.path.basename(f) not in tab_files:
                             continue
-                    soup = BeautifulSoup(
-                        open(os.path.join(folder, f), encoding="utf8"), "html.parser"
-                    )
+                    try:
+                        soup = BeautifulSoup(
+                            open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                        )
+                    except UnicodeDecodeError:
+                        # If we have a Unicode error, skip the file.
+                        print(
+                            "Unicode error in file "
+                            + os.path.join(folder, f)
+                            + ", skipping."
+                        )
+                        continue
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "xml":

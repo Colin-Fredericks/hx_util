@@ -92,7 +92,11 @@ def getLinks(filename, args, dirpath):
 
     # Open the .docx file as if it were a zip (because it is)
     fullname = os.path.join(dirpath or "", filename)
-    archive = zipfile.ZipFile(fullname, "r")
+    try:
+        archive = zipfile.ZipFile(fullname, "r")
+    except zipfile.BadZipFile:
+        print("'Bad zip' for Excel file: " + fullname)
+        return []
 
     # read bytes from archive for the file text and get link text
     file_data = archive.read("word/document.xml")
