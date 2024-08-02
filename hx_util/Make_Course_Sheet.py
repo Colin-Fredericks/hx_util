@@ -400,6 +400,13 @@ def getComponentInfo(folder, filename, child, args):
                         + transcript.attrib["language_code"]
                         + ".srt"
                     )
+            # The download URL looks a lot like the cloudfront URL.
+            # Guess we'll find out if we have a lot of courses without that.
+            for ev in va.iter("encoded_video"):
+                if ev.attrib["profile"] == "desktop_mp4":
+                    cloudfront_url = ev.attrib["url"]
+                    cloudfront_filename = cloudfront_url.split(".net")[-1]
+                    temp["download_url"] = "https://edx-video.net" + cloudfront_filename
 
         if len(temp["sub"]) == 0:
             temp["sub"] = ["No subtitles found."]
@@ -784,6 +791,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
                 "youtube",
                 "edx_video_id",
                 "upload_name",
+                "download_url",
             ]
 
         writer = csv.DictWriter(
