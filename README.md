@@ -11,7 +11,7 @@ Install and Use
     $> git clone https://github.com/Colin-Fredericks/hx_util.git
 
     # create a virtualenv and activate it
-    $> virtualenv -p python3 hxutil
+    $> python3 -m venv hxutil
     $> source hxutil/bin/activate
     (hxutil) $>
 
