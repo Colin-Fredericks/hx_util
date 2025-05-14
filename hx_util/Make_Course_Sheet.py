@@ -53,7 +53,7 @@ You can specify the following options:
 This script may fail on courses with empty containers.
 
 Last update: April 27th 2023, Version """
-    + sys.modules[__package__].__version__
+
 )
 
 
@@ -152,13 +152,13 @@ def describeLinkData(newlink):
 def getHTMLLinks(soup):
     links = []
 
-    all_links = soup.findAll(["a", "iframe"])
+    all_links = soup.find_all(["a", "iframe"])
 
     for link in all_links:
         if link.has_attr("href"):
             # It's a link and not just an anchor.
             if len(link.contents) > 0:
-                link_text = "".join(link.findAll(text=True))
+                link_text = "".join(link.find_all(string=True))
             else:
                 link_text = ""
             links.append({"href": link.get("href"), "text": link_text})
@@ -176,7 +176,7 @@ def getHTMLLinks(soup):
 def getAltText(soup):
     image_list = []
 
-    all_images = soup.findAll(["img", "drag_and_drop_input"])
+    all_images = soup.find_all(["img", "drag_and_drop_input"])
     temp_alt = "No alt attribute"
     temp_src = "No source attribute"
 
