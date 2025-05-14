@@ -52,8 +52,8 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: April 27th 2023, Version """
-
+Last update: May 14th 2025, Version """
+    + sys.modules[__package__].__version__
 )
 
 
