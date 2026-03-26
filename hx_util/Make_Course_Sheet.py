@@ -52,7 +52,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: May 14th 2025, Version """
+Last update: March 26th 2026, Version """
     + sys.modules[__package__].__version__
 )
 
@@ -653,7 +653,14 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
         return filename
 
     course_id = org + "+" + nickname + "+" + run
+    print(component_type + ": " + filename)
+    # Strip the extension and folders off the filename if it has them.
     no_extension = ".".join(filename.split("/")[-1].split(".")[0:-1])
+    if no_extension == "":
+        #  For filenames without extensions, we need the vertical's filename instead.
+        no_extension = filename
+    print("Parent URL: " + parent_url)
+    print("Filename: " + no_extension)
     if filename.startswith("tabs"):
         url = (
             "https://courses.edx.org/courses/course-v1:"
@@ -673,7 +680,7 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
             "https://studio.edx.org/container/block-v1:"
             + course_id
             + "+type@vertical+block@"
-            + no_extension
+            + parent_url
         )
 
     return url

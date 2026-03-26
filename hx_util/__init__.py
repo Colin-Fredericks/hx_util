@@ -2,4 +2,4 @@
 
 __author__ = "Colin Fredericks"
 __email__ = "colin_frederecks"
-__version__ = "1.4.1"  # Replace deprecated calls
+__version__ = "1.4.2"  # Finally fix URL column
