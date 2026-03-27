@@ -6,11 +6,20 @@ if sys.version_info <= (3, 0):
 import os
 import argparse
 from bs4 import BeautifulSoup
-import lxml
+from lxml import etree
 import glob
 import json
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
+import GetWordLinks
+import GetExcelLinks
+import GetPPTLinks
+import GetPDFLinks
+
+if __package__ is None:
+    version = "unknown version"
+else:
+    version = sys.modules[__package__].__version__
 instructions = (
     """
 To use:
@@ -35,7 +44,7 @@ You can specify the following options:
 This script may fail on courses with empty containers.
 
 Last update: March 26th 2026, Version """
-    + sys.modules[__package__].__version__
+    + version
 )
 
 
@@ -214,8 +223,8 @@ def getAuxAltText(rootFileDir):
                     folder_temp["contents"].append(file_temp)
                 elif file_temp["type"] == "xml":
                     try:
-                        tree = lxml.etree.parse(folder + "/" + f)
-                    except lxml.etree.XMLSyntaxError:
+                        etree.parse(folder + "/" + f)
+                    except etree.XMLSyntaxError:
                         # If we have broken XML, tell us and skip the file.
                         print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
@@ -298,12 +307,11 @@ def getAuxLinks(rootFileDir):
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "xml":
                     try:
-                        tree = lxml.etree.parse(folder + "/" + f)
-                    except lxml.etree.XMLSyntaxError:
+                        etree.parse(folder + "/" + f)
+                    except etree.XMLSyntaxError:
                         # If we have broken XML, tell us and skip the file.
                         print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
-                    root = tree.getroot()
                     soup = BeautifulSoup(
                         open(os.path.join(folder, f), encoding="utf8"), "lxml"
                     )
@@ -343,7 +351,7 @@ def getAuxLinks(rootFileDir):
 def getComponentInfo(folder, filename, child, args):
     # Try to open file.
     try:
-        tree = lxml.etree.parse(folder + "/" + filename + ".xml")
+        tree = etree.parse(folder + "/" + filename + ".xml")
         root = tree.getroot()
     except OSError:
         # If we can't get a file, try to traverse inline XML.
@@ -442,7 +450,7 @@ def getComponentInfo(folder, filename, child, args):
             temp["show_reset_button"] = root.attrib["show_reset_button"]
         if root.text is not None:
             temp["inner_xml"] = root.text + "".join(
-                str(lxml.etree.tostring(e)) for e in root
+                str(etree.tostring(e)) for e in root
             )
             soup = BeautifulSoup(temp["inner_xml"], "lxml")
             temp["links"] = getHTMLLinks(soup)
@@ -490,7 +498,7 @@ def getComponentInfo(folder, filename, child, args):
 def drillDown(folder, filename, root, args):
     # Try to open file.
     try:
-        tree = lxml.etree.parse(os.path.join(folder, (filename + ".xml")))
+        tree = etree.parse(os.path.join(folder, (filename + ".xml")))
         root = tree.getroot()
     except IOError:
         # If we can't get a file, try to traverse inline XML.
@@ -794,6 +802,8 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
                 course_dict["url"],
             )
         )
+        if not spreadsheet:
+            return
         for index, row in enumerate(spreadsheet):
             for key in row:
                 spreadsheet[index][key] = spreadsheet[index][key]
@@ -900,6 +910,7 @@ def Make_Course_Sheet(args=["-h"]):
 
     # Get the course.xml file and root directory
     for name in file_names:
+        rootFileDir = ""
         if os.path.isdir(name):
             if os.path.exists(os.path.join(name, "course.xml")):
                 rootFileDir = name
@@ -908,7 +919,7 @@ def Make_Course_Sheet(args=["-h"]):
                 rootFileDir = os.path.dirname(name)
 
         rootFilePath = os.path.join(rootFileDir, "course.xml")
-        course_tree = lxml.etree.parse(rootFilePath)
+        course_tree = etree.parse(rootFilePath)
 
         # Open course's root xml file
         # Get the current course run filename
