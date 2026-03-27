@@ -11,24 +11,6 @@ import glob
 import json
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
-try:
-    from hx_util import GetWordLinks
-except:
-    print("Cannot find GetWordLinks.py, skipping links in .docx files.")
-try:
-    from hx_util import GetExcelLinks
-except:
-    print("Cannot find GetExcelLinks.py, skipping links in .xlsx files.")
-try:
-    from hx_util import GetPPTLinks
-except:
-    print("Cannot find GetPPTLinks.py, skipping links in .pptx files.")
-try:
-    from hx_util import GetPDFLinks
-except:
-    print("Cannot find GetPDFLinks.py, skipping links in .pdf files.")
-
-
 instructions = (
     """
 To use:
