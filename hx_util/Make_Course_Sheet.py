@@ -209,7 +209,8 @@ def getAuxAltText(rootFileDir):
                 if file_temp["type"] == "html" or file_temp["type"] == "htm":
                     try:
                         soup = BeautifulSoup(
-                            open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                            open(os.path.join(folder, f), encoding="utf8"),
+                            "html.parser",
                         )
                     except UnicodeDecodeError:
                         # If we have a Unicode error, skip the file.
@@ -293,7 +294,8 @@ def getAuxLinks(rootFileDir):
                             continue
                     try:
                         soup = BeautifulSoup(
-                            open(os.path.join(folder, f), encoding="utf8"), "html.parser"
+                            open(os.path.join(folder, f), encoding="utf8"),
+                            "html.parser",
                         )
                     except UnicodeDecodeError:
                         # If we have a Unicode error, skip the file.
