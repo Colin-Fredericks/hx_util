@@ -379,7 +379,7 @@ def getComponentInfo(folder, filename, child, args):
         # Old-style course exports have non-blank 'sub' attributes.
         if "sub" in root.attrib:
             if root.attrib["sub"] != "":
-                temp["sub"] = ["subs_" + root.attrib["sub"] + ".srt.sjson"]
+                temp["sub"] = ["subs_" + str(root.attrib["sub"]) + ".srt.sjson"]
 
         # New-style course exports (Aug 15 2018) have a different hierarchy.
         # Use this preferentially over the old-style formatting.
@@ -387,9 +387,9 @@ def getComponentInfo(folder, filename, child, args):
             for trs in va.iter("transcripts"):
                 for transcript in trs.iter("transcript"):
                     temp["sub"].append(
-                        root.attrib["edx_video_id"]
+                        str(root.attrib["edx_video_id"])
                         + "-"
-                        + transcript.attrib["language_code"]
+                        + str(transcript.attrib["language_code"])
                         + ".srt"
                     )
             # The download URL looks a lot like the cloudfront URL.
@@ -397,8 +397,8 @@ def getComponentInfo(folder, filename, child, args):
             for ev in va.iter("encoded_video"):
                 if ev.attrib["profile"] == "desktop_mp4":
                     cloudfront_url = ev.attrib["url"]
-                    cloudfront_filename = cloudfront_url.split(".net")[-1]
-                    temp["download_url"] = "https://edx-video.net" + cloudfront_filename
+                    cloudfront_filename = str(cloudfront_url).split(".net")[-1]
+                    temp["download_url"] = "https://edx-video.net" + str(cloudfront_filename)
 
         if len(temp["sub"]) == 0:
             temp["sub"] = ["No subtitles found."]
@@ -422,15 +422,12 @@ def getComponentInfo(folder, filename, child, args):
             if child.tag == "video_asset":
                 if "client_video_id" in child.attrib:
                     found_video_asset = True
-                    src = child.attrib["client_video_id"]
-                    # Stripping the host and folders
-                    src = src[src.rfind("/") + 1 :]
-                    # Stripping the extension, if there is one.
-                    if src.rfind(".") > 0:
-                        src = src[: src.rfind(".")]
+                    # Get just filename, without host, folders, and extension.
+                    src = os.path.basename(child.attrib["client_video_id"])
+                    src = str(os.path.splitext(src)[0])
                     if src == "":
                         temp["upload_name"] = (
-                            "No_Upload_Name_" + root.attrib["url_name"]
+                            "No_Upload_Name_" + str(root.attrib["url_name"])
                         )
                     temp["upload_name"] = src
 
@@ -441,7 +438,7 @@ def getComponentInfo(folder, filename, child, args):
 
         # Need a placeholder if there's no video_asset tag or if it's less than informative.
         if not found_video_asset:
-            temp["upload_name"] = "No_Upload_Name_" + root.attrib["url_name"]
+            temp["upload_name"] = "No_Upload_Name_" + str(root.attrib["url_name"])
             temp["duration"] = "unknown"
 
     # get problem information
@@ -467,14 +464,14 @@ def getComponentInfo(folder, filename, child, args):
             # In those cases, go open that file and get the links from it.
             if root.text is None:
                 innerfilepath = os.path.join(
-                    os.path.dirname(folder), "html", (root.attrib["filename"] + ".html")
+                    os.path.dirname(folder), "html", (str(root.attrib["filename"]) + ".html")
                 )
                 soup = BeautifulSoup(
                     open(innerfilepath, encoding="utf8"), "html.parser"
                 )
             # If it's declared inline, just get the links right away.
             else:
-                soup = BeautifulSoup("".join(root.itertext()), "html.parser")
+                soup = BeautifulSoup("".join(str(e) for e in root.itertext()), "html.parser")
             if args.links:
                 temp["links"] = getHTMLLinks(soup)
             if args.alttext:
