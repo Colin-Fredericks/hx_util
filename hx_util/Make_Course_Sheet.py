@@ -1,20 +1,16 @@
-import sys
-
-if sys.version_info <= (3, 0):
-    sys.exit("I am a Python 3 script. Run me with python3.")
-
 import os
-import argparse
-from bs4 import BeautifulSoup
-from lxml import etree
+import sys
+import csv
 import glob
 import json
-import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
+import argparse
+from lxml import etree
+from bs4 import BeautifulSoup
 
-import GetWordLinks
-import GetExcelLinks
-import GetPPTLinks
-import GetPDFLinks
+from hx_util import GetWordLinks
+from hx_util import GetExcelLinks
+from hx_util import GetPPTLinks
+from hx_util import GetPDFLinks
 
 if __package__ is None:
     version = "unknown version"
@@ -208,10 +204,9 @@ def getAuxAltText(rootFileDir):
 
                 if file_temp["type"] == "html" or file_temp["type"] == "htm":
                     try:
-                        soup = BeautifulSoup(
-                            open(os.path.join(folder, f), encoding="utf8"),
-                            "html.parser",
-                        )
+                        with open(os.path.join(folder, f), encoding="utf8") as file:
+                            text = file.read()
+                            soup = BeautifulSoup(text, "html.parser")
                     except UnicodeDecodeError:
                         # If we have a Unicode error, skip the file.
                         print(
@@ -229,9 +224,9 @@ def getAuxAltText(rootFileDir):
                         # If we have broken XML, tell us and skip the file.
                         print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
-                    soup = BeautifulSoup(
-                        open(os.path.join(folder, f), encoding="utf8"), "lxml"
-                    )
+                    with open(os.path.join(folder, f), encoding="utf8") as file:
+                        text = file.read()
+                        soup = BeautifulSoup(text, "lxml")
                     file_temp["images"] = getAltText(soup)
                     folder_temp["contents"].append(file_temp)
 
@@ -293,10 +288,9 @@ def getAuxLinks(rootFileDir):
                         if os.path.basename(f) not in tab_files:
                             continue
                     try:
-                        soup = BeautifulSoup(
-                            open(os.path.join(folder, f), encoding="utf8"),
-                            "html.parser",
-                        )
+                        with open(os.path.join(folder, f), encoding="utf8") as file:
+                            text = file.read()
+                            soup = BeautifulSoup(text, "html.parser")
                     except UnicodeDecodeError:
                         # If we have a Unicode error, skip the file.
                         print(
@@ -314,9 +308,9 @@ def getAuxLinks(rootFileDir):
                         # If we have broken XML, tell us and skip the file.
                         print("Broken XML in file " + folder + "/" + f + ", skipping.")
                         continue
-                    soup = BeautifulSoup(
-                        open(os.path.join(folder, f), encoding="utf8"), "lxml"
-                    )
+                    with open(os.path.join(folder, f), encoding="utf8") as file:
+                        text = file.read()
+                        soup = BeautifulSoup(text, "lxml")
                     file_temp["links"] = getHTMLLinks(soup)
                     folder_temp["contents"].append(file_temp)
                 if file_temp["type"] == "docx":
@@ -466,9 +460,9 @@ def getComponentInfo(folder, filename, child, args):
                 innerfilepath = os.path.join(
                     os.path.dirname(folder), "html", (str(root.attrib["filename"]) + ".html")
                 )
-                soup = BeautifulSoup(
-                    open(innerfilepath, encoding="utf8"), "html.parser"
-                )
+                with open(innerfilepath, encoding="utf8") as file:
+                    text = file.read()
+                    soup = BeautifulSoup(text, "html.parser")
             # If it's declared inline, just get the links right away.
             else:
                 soup = BeautifulSoup("".join(str(e) for e in root.itertext()), "html.parser")
@@ -756,7 +750,7 @@ def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
     outFileName = args.o if args.o else course_name
 
     # Create a "csv" file with tabs as delimiters
-    with open(os.path.join(rootFileDir, outFileName), "wb") as outputfile:
+    with open(os.path.join(rootFileDir, outFileName), "w", newline="", encoding="utf-8") as outputfile:
         fieldnames = [
             "chapter",
             "sequential",

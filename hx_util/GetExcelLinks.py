@@ -53,7 +53,7 @@ def getHyperlinks(soup):
             # try/except because some hyperlinks have no id.
             try:
                 link_refs[tag["ref"]] = tag["r:id"]
-            except:
+            except KeyError:
                 pass
 
     # Go through every cell and find the ones that have hyperlinks.
@@ -146,7 +146,8 @@ def getLinks(filename, args, dirpath):
 
     # Read bytes from archive for the workbook to get the sheets.
     workbook_data = archive.read("xl/workbook.xml")
-    workbook_soup = BeautifulSoup(workbook_data, "xml")
+    workbook_text = workbook_data.decode("utf-8")
+    workbook_soup = BeautifulSoup(workbook_text, "xml")
     sheets = getSheets(workbook_soup)
 
     complete_links = []
@@ -158,13 +159,15 @@ def getLinks(filename, args, dirpath):
             sheet_data = archive.read("xl/worksheets/" + sheet + ".xml")
         except KeyError:
             continue
-        sheet_soup = BeautifulSoup(sheet_data, "xml")
+        sheet_text = sheet_data.decode("utf-8")
+        sheet_soup = BeautifulSoup(sheet_text, "xml")
         links = getHyperlinks(sheet_soup)
 
         # URLs are stored in a different file. Cross-reference for each sheet.
         try:
             url_data = archive.read("xl/worksheets/_rels/" + sheet + ".xml.rels")
-            url_soup = BeautifulSoup(url_data, "xml")
+            url_text = url_data.decode("utf-8")
+            url_soup = BeautifulSoup(url_text, "xml")
             links_with_urls = getURLs(url_soup, links)
         except KeyError:
             # If there's no .xml.rels file, there are no links on that sheet.
@@ -183,7 +186,8 @@ def getLinks(filename, args, dirpath):
         # If that file doesn't exist, just skip it and move on.
         return complete_links
 
-    string_soup = BeautifulSoup(string_data, "xml")
+    string_text = string_data.decode("utf-8")
+    string_soup = BeautifulSoup(string_text, "xml")
     complete_links = getLinkText(string_soup, complete_links)
 
     # Mark each line with the filename in case we're processing more than one.
@@ -285,6 +289,7 @@ def getExcelLinks(args):
                             filecount += 1
             # Non-recursive version breaks os.walk after the first level.
             else:
+                dirpath = ""
                 topfiles = []
                 for (dirpath, dirnames, files) in os.walk(name):
                     topfiles.extend(files)

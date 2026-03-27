@@ -38,7 +38,7 @@ def getLinkedText(soup):
         # try/except because some hyperlinks have no id.
         try:
             links.append({"id": tag["r:id"], "text": tag.text})
-        except:
+        except KeyError:
             pass
 
     # This kind does not.
@@ -100,34 +100,40 @@ def getLinks(filename, args, dirpath):
 
     # read bytes from archive for the file text and get link text
     file_data = archive.read("word/document.xml")
-    doc_soup = BeautifulSoup(file_data, "xml")
+    file_text = file_data.decode("utf-8")
+    doc_soup = BeautifulSoup(file_text, "xml")
     linked_text = getLinkedText(doc_soup)
 
     # URLs are often stored in a different file. Cross-reference.
     url_data = archive.read("word/_rels/document.xml.rels")
-    url_soup = BeautifulSoup(url_data, "xml")
+    url_text = url_data.decode("utf-8")
+    url_soup = BeautifulSoup(url_text, "xml")
     links_with_urls = getURLs(url_soup, linked_text)
 
     # read bytes from archive for the footnote text (if any) and get link text
+    footnote_linked_text = []
+    footnote_links_with_urls = []
     try:
         footnote_file_data = archive.read("word/footnotes.xml")
-        footnote_doc_soup = BeautifulSoup(footnote_file_data, "xml")
+        footnote_file_text = footnote_file_data.decode("utf-8")
+        footnote_doc_soup = BeautifulSoup(footnote_file_text, "xml")
         footnote_linked_text = getLinkedText(footnote_doc_soup)
-    except:
+    except KeyError:
         pass
 
     # URLs for footnotes are stored in a different file. Cross-reference.
     try:
         footnote_url_data = archive.read("word/_rels/footnotes.xml.rels")
-        footnote_url_soup = BeautifulSoup(footnote_url_data, "xml")
+        footnote_url_text = footnote_url_data.decode("utf-8")
+        footnote_url_soup = BeautifulSoup(footnote_url_text, "xml")
         footnote_links_with_urls = getURLs(footnote_url_soup, footnote_linked_text)
-    except:
+    except KeyError:
         pass
 
     try:
         linked_text += footnote_linked_text
         links_with_urls += footnote_links_with_urls
-    except:
+    except NameError:
         pass
 
     # Mark each line with the filename in case we're processing more than one.
@@ -203,6 +209,7 @@ def getWordLinks(args):
             # Non-recursive version breaks os.walk after the first level.
             else:
                 topfiles = []
+                dirpath = ""
                 for (dirpath, dirnames, files) in os.walk(name):
                     topfiles.extend(files)
                     break

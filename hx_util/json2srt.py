@@ -84,7 +84,7 @@ def ConvertToSRT(filename, args, dirpath):
         # Read in the JSON as a dictionary.
         try:
             jdata = json.load(inputfile)
-        except:
+        except json.JSONDecodeError:
             print("Skipping " + filename + ": possible invalid JSON")
             return
 
@@ -93,7 +93,7 @@ def ConvertToSRT(filename, args, dirpath):
             startList = jdata["start"]
             endList = jdata["end"]
             textList = jdata["text"]
-        except:
+        except KeyError:
             print("Skipping " + filename + ": file is missing needed data.")
             return
 
@@ -188,6 +188,7 @@ def json2srt(args):
             # Non-recursive version breaks os.walk after the first level.
             else:
                 topfiles = []
+                dirpath = ""
                 for (dirpath, dirnames, files) in os.walk(name):
                     topfiles.extend(files)
                     break

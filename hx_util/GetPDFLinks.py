@@ -4,7 +4,9 @@ import subprocess
 import argparse
 import logging
 import glob
-import pdfrw
+import pypdf
+from pypdf.generic import DictionaryObject
+from typing import cast
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
 instructions = """
@@ -35,11 +37,12 @@ def getLinks(filename, args, dirpath):
     fil = os.path.basename(filename)
     href = "Unknown error opening this file."
     page = "n/a"
+    pages = []
     text = ""
 
     try:
-        PDF = pdfrw.PdfReader(fullname)
-        pages = PDF.Root.Pages.Kids
+        PDF = pypdf.PdfReader(fullname)
+        pages = PDF.pages
     except ValueError:
         # This might be an encrypted file. Try decrypting it.
         try:
@@ -50,29 +53,29 @@ def getLinks(filename, args, dirpath):
             return [{"filename": fil, "href": href, "page": page, "text": text}]
 
         # Read in and then delete the new unencrypted file
-        PDF = pdfrw.PdfReader(fullname + ".new")
+        PDF = pypdf.PdfReader(fullname + ".new")
         os.remove(fullname + ".new")
 
-        if not PDF.Encrypt:
-            pages = PDF.Root.Pages.Kids
+        if not PDF.is_encrypted:
+            pages = PDF.pages
             print("Temporarily decrypted " + filename)
 
-    except:
-        print("Unknown error opening " + os.path.basename(filename))
+    except Exception as e:
+        print("Unknown error opening " + os.path.basename(filename) + ": " + str(e))
         return [{"filename": fil, "href": href, "page": page, "text": text}]
 
-    if PDF.Encrypt:
+    if PDF.is_encrypted:
         print("Could not decrypt " + filename)
         href = "Cannot get URLs from encrypted file."
         return [{"filename": fil, "href": href, "page": page, "text": text}]
 
     for index, page in enumerate(pages):
         if "/Annots" in page:
-            ann = page["/Annots"]
-            for a in ann:
+            for annotation in cast(DictionaryObject, page["/Annots"]):
+                a = annotation.get_object()
                 if "/A" in a:
                     if "/URI" in a["/A"]:
-                        if not PDF.Encrypt:
+                        if not PDF.is_encrypted:
                             links.append(
                                 {
                                     "filename": os.path.basename(filename),
@@ -163,6 +166,7 @@ def getPDFLinks(args):
             # Non-recursive version breaks os.walk after the first level.
             else:
                 topfiles = []
+                dirpath = ""
                 for (dirpath, dirnames, files) in os.walk(name):
                     topfiles.extend(files)
                     break

@@ -57,14 +57,14 @@ def getHyperlinks(soup):
         else:
             lastParent = groupTag
 
-        text = type = ""
+        text = ""
         # Linked text
         if groupTag.name == "p":
             # try/except because some hyperlinks have no id
             try:
                 text = groupTag.get_text()
                 links.append({"id": tag["r:id"], "type": "text", "text": text})
-            except:
+            except KeyError:
                 pass
         # Linked images
         elif groupTag.name == "pic":
@@ -72,7 +72,7 @@ def getHyperlinks(soup):
                 links.append(
                     {"id": tag["r:id"], "type": "image", "text": "(image link)"}
                 )
-            except:
+            except KeyError:
                 pass
         # Linked ...something?
         else:
@@ -84,12 +84,12 @@ def getHyperlinks(soup):
                 else:
                     try:
                         id = tag["r:id"]
-                    except:
+                    except KeyError:
                         id = ""
                     links.append(
                         {"id": id, "type": "unknown", "text": groupTag.get_text()}
                     )
-            except:
+            except KeyError:
                 links.append({"id": "", "type": "unknown", "text": groupTag.get_text()})
     return links
 
@@ -107,7 +107,7 @@ def getURLs(soup, links):
                         link["href"] = rel["Target"]
                     else:
                         link["href"] = "Another slide"
-                except:
+                except KeyError:
                     link["href"] = "Probably another slide"
             if link["type"] == "PPT Action":
                 link["href"] = "unknown"
@@ -129,7 +129,8 @@ def getLinks(filename, args, dirpath):
 
     # Read bytes from archive for the workbook to get the sheets.
     presentation_data = archive.read("ppt/presentation.xml")
-    presentation_soup = BeautifulSoup(presentation_data, "xml")
+    presentation_text = presentation_data.decode("utf-8")
+    presentation_soup = BeautifulSoup(presentation_text, "xml")
     slides = getSlides(presentation_soup)
 
     complete_links = []
@@ -137,12 +138,14 @@ def getLinks(filename, args, dirpath):
     for index, slide in enumerate(slides):
         # Open each slide and get the hyperlinks.
         slide_data = archive.read("ppt/slides/" + slide + ".xml")
-        slide_soup = BeautifulSoup(slide_data, "xml")
+        slide_text = slide_data.decode("utf-8")
+        slide_soup = BeautifulSoup(slide_text, "xml")
         links = getHyperlinks(slide_soup)
 
         # URLs are stored in a different file. Cross-reference for each slide.
         url_data = archive.read("ppt/slides/_rels/" + slide + ".xml.rels")
-        url_soup = BeautifulSoup(url_data, "xml")
+        url_text = url_data.decode("utf-8")
+        url_soup = BeautifulSoup(url_text, "xml")
         links_with_urls = getURLs(url_soup, links)
 
         for link in links_with_urls:
@@ -248,6 +251,7 @@ def getPPTLinks(args):
             # Non-recursive version breaks os.walk after the first level.
             else:
                 topfiles = []
+                dirpath = ""
                 for (dirpath, dirnames, files) in os.walk(name):
                     topfiles.extend(files)
                     break
