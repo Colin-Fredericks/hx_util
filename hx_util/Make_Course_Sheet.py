@@ -5,6 +5,7 @@ import glob
 import json
 import argparse
 from lxml import etree
+from typing import Union
 from bs4 import BeautifulSoup
 
 from hx_util import GetWordLinks
@@ -73,7 +74,7 @@ canon_leaf = {
 
 # Converts from seconds to hh:mm:ss,msec format
 # Used to convert duration
-def secToHMS(time):
+def secToHMS(time: Union[float, int]) -> str:
     # Round it to an integer.
     time = int(round(float(time), 0))
 
@@ -103,7 +104,7 @@ def secToHMS(time):
 
 
 # Adds notes to links based on file type
-def describeLinkData(newlink):
+def describeLinkData(newlink: dict) -> dict:
     image_types = [
         ".png",
         ".gif",
@@ -136,7 +137,7 @@ def describeLinkData(newlink):
 
 # get list of links from HTML pages, with href and link text
 # "soup" is a BeautifulSoup object
-def getHTMLLinks(soup):
+def getHTMLLinks(soup: BeautifulSoup) -> list[dict]:
     links = []
 
     all_links = soup.find_all(["a", "iframe"])
@@ -160,7 +161,7 @@ def getHTMLLinks(soup):
 
 # get list of all images from HTML pages, with alt text
 # "soup" is a BeautifulSoup object
-def getAltText(soup):
+def getAltText(soup: BeautifulSoup) -> list[dict]:
     image_list = []
 
     all_images = soup.find_all(["img", "drag_and_drop_input"])
@@ -182,7 +183,7 @@ def getAltText(soup):
 
 
 # Gets alt text that isn't in the courseware
-def getAuxAltText(rootFileDir):
+def getAuxAltText(rootFileDir: str) -> list[dict]:
     # Folders to check:
     aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
@@ -238,7 +239,7 @@ def getAuxAltText(rootFileDir):
 
 
 # Gets links that aren't in the courseware
-def getAuxLinks(rootFileDir):
+def getAuxLinks(rootFileDir: str) -> list[dict]:
     # Folders to check:
     aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
@@ -344,7 +345,7 @@ def getAuxLinks(rootFileDir):
 
 # Always gets the display name.
 # For video and problem files, gets other info too
-def getComponentInfo(folder, filename, child, args):
+def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace) -> dict:
     # Try to open file.
     try:
         tree = etree.parse(folder + "/" + filename + ".xml")
@@ -427,8 +428,11 @@ def getComponentInfo(folder, filename, child, args):
 
                 if "duration" in child.attrib:
                     # Get duration in seconds
-                    duration = child.attrib["duration"]
-                    temp["duration"] = secToHMS(duration)
+                    try:
+                        duration = float(child.attrib["duration"])
+                        temp["duration"] = secToHMS(duration)
+                    except ValueError:
+                        temp["duration"] = "unknown"
 
         # Need a placeholder if there's no video_asset tag or if it's less than informative.
         if not found_video_asset:
@@ -488,7 +492,7 @@ def getComponentInfo(folder, filename, child, args):
 
 
 # Recursion function for outline-declared xml files
-def drillDown(folder, filename, root, args):
+def drillDown(folder: str, filename: str, root, args: argparse.Namespace) -> dict:
     # Try to open file.
     try:
         tree = etree.parse(os.path.join(folder, (filename + ".xml")))
@@ -508,7 +512,7 @@ def drillDown(folder, filename, root, args):
     return getXMLInfo(folder, root, args)
 
 
-def getXMLInfo(folder, root, args):
+def getXMLInfo(folder: str, root, args: argparse.Namespace) -> dict:
     # We need lists of container nodes and leaf nodes so we can tell
     # whether we have to do more recursion.
     leaf_nodes = [
@@ -578,10 +582,10 @@ def getXMLInfo(folder, root, args):
         # In the future: check to see whether this child is a pointer tag or inline XML.
         nextFile = os.path.join(os.path.dirname(folder), child.tag)
         if child.tag in branch_nodes:
-            child_info = drillDown(nextFile, temp["url"], child, args)
+            child_info = drillDown(nextFile, str(temp["url"]), child, args)
             temp["contents"] = child_info["contents"]
         elif child.tag in leaf_nodes:
-            child_info = getComponentInfo(nextFile, temp["url"], child, args)
+            child_info = getComponentInfo(nextFile, str(temp["url"]), child, args)
             # For leaf nodes, add item info to the dict
             # instead of adding a new contents entry
             temp.update(child_info["contents"])
@@ -607,7 +611,7 @@ def getXMLInfo(folder, root, args):
 
 # Gets the full set of data headers for the course.
 # flat_course is a list of dictionaries.
-def getAllKeys(flat_course, key_set=set()):
+def getAllKeys(flat_course: list[dict], key_set: set = set()) -> set:
     for row in flat_course:
         for key in row:
             key_set.add(key)
@@ -617,7 +621,7 @@ def getAllKeys(flat_course, key_set=set()):
 
 # Ensure that all dicts have the same entries, adding blanks if needed.
 # flat_course is a list of dictionaries.
-def fillInRows(flat_course):
+def fillInRows(flat_course: list[dict]) -> list[dict]:
     # Get a list of all dict keys from the entire nested structure and store it in a set.
     key_set = getAllKeys(flat_course)
 
@@ -631,7 +635,7 @@ def fillInRows(flat_course):
 
 
 # Returns a usable URL for verticals and components, and just filenames for other types.
-def makeURL(component_type, filename, parent_url, org, nickname, run):
+def makeURL(component_type: str, filename: str, parent_url: str, org: str, nickname: str, run: str) -> str:
     if component_type in ["course", "chapter", "sequential", "vertical", "wiki", run]:
         return filename
 
@@ -668,7 +672,7 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
 
 # Takes a nested structure of lists and dicts that represents the course
 # and returns a single list of dicts where each dict is a component
-def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
+def courseFlattener(course_dict: dict, parent_url: str, org: str, nickname: str, run: str, new_row: dict = {}) -> list[dict]:
     flat_course = []
     temp_row = new_row.copy()
 
@@ -737,9 +741,11 @@ def courseFlattener(course_dict, parent_url, org, nickname, run, new_row={}):
                 return img_rows
             else:
                 return [temp_row]
+        else:
+            return []
 
 
-def writeCourseSheet(rootFileDir, rootFileName, course_dict, args):
+def writeCourseSheet(rootFileDir: str, rootFileName: str, course_dict: dict, args: argparse.Namespace):
     course_name = course_dict["name"]
     if args.links:
         course_name += " Links"
