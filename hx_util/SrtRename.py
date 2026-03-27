@@ -1,10 +1,10 @@
-import sys
 import os
 import csv
+import sys
+import glob
 import shutil
 import argparse
 import xml.etree.ElementTree as ET
-import glob
 
 instructions = """
 To use:
@@ -24,8 +24,19 @@ Valid options:
 Last update: April 25th 2022
 """
 
-# Make a dictionary that shows which srt files match which original upload names
 def getOriginalNames(course_folder: str, args: argparse.Namespace) -> tuple[dict, str]:
+    """
+    Make a dictionary that shows which srt files match which original upload names
+
+    Args:
+        course_folder (str): The path to the course folder containing the course.xml and course outline .tsv files.
+        args (argparse.Namespace): The command line arguments passed to the script.
+
+    Returns:
+        A tuple containing:
+        - A dictionary mapping srt filenames to their original upload names.
+        - The course title
+    """
 
     nameDict = {}
 
@@ -58,10 +69,17 @@ def getOriginalNames(course_folder: str, args: argparse.Namespace) -> tuple[dict
     return nameDict, course_title
 
 
-# Set all the srt filenames to be the upload names
-# TODO: What happens when two transcripts have the same upload name?
-#       Can we pull the language identifier and append to the name?
-def setNewNames(course_folder: str, nameDict: dict, args: argparse.Namespace, course_title: str) -> None:
+def setNewNames(course_folder: str, nameDict: dict[str,str], args: argparse.Namespace, course_title: str) -> None:
+    """
+    Rename the srt files in the static folder to match the original upload names.
+    TODO: What happens when two transcripts have the same upload name? Can we pull the language identifier and append to the name?
+
+    Args:
+        course_folder (str): The path to the course folder containing the course.xml and course outline .tsv files.
+        nameDict (dict): A dictionary mapping srt filenames to their original upload names.
+        args (argparse.Namespace): The command line arguments passed to the script.
+        course_title (str): The title of the course, used for naming the zip file if -z is specified.
+    """
     static_folder = os.path.join(os.path.abspath(course_folder), "static")
 
     if args.n or args.z:

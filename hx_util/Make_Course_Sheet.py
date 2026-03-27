@@ -40,7 +40,7 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 
-Last update: March 26th 2026, Version """
+Last update: March 27th 2026, Version """
     + version
 )
 
@@ -72,9 +72,8 @@ canon_leaf = {
 }
 
 
-# Converts from seconds to hh:mm:ss,msec format
-# Used to convert duration
 def secToHMS(time: Union[float, int]) -> str:
+    """Converts from seconds to hh:mm:ss format"""
     # Round it to an integer.
     time = int(round(float(time), 0))
 
@@ -103,8 +102,8 @@ def secToHMS(time: Union[float, int]) -> str:
     return str(hours) + ":" + str(minutes) + ":" + str(seconds)
 
 
-# Adds notes to links based on file type
 def describeLinkData(newlink: dict) -> dict:
+    """Adds notes to links based on file type, like (image link) or (PDF file)."""
     image_types = [
         ".png",
         ".gif",
@@ -135,9 +134,8 @@ def describeLinkData(newlink: dict) -> dict:
     return newlink
 
 
-# get list of links from HTML pages, with href and link text
-# "soup" is a BeautifulSoup object
 def getHTMLLinks(soup: BeautifulSoup) -> list[dict]:
+    """Gets a list of links from HTML pages, with href and link text."""
     links = []
 
     all_links = soup.find_all(["a", "iframe"])
@@ -159,9 +157,8 @@ def getHTMLLinks(soup: BeautifulSoup) -> list[dict]:
     return betterlinks
 
 
-# get list of all images from HTML pages, with alt text
-# "soup" is a BeautifulSoup object
 def getAltText(soup: BeautifulSoup) -> list[dict]:
+    """Gets a list of images from HTML pages, with src and alt text."""
     image_list = []
 
     all_images = soup.find_all(["img", "drag_and_drop_input"])
@@ -182,8 +179,8 @@ def getAltText(soup: BeautifulSoup) -> list[dict]:
     return image_list
 
 
-# Gets alt text that isn't in the courseware
 def getAuxAltText(rootFileDir: str) -> list[dict]:
+    """Gets alt text from auxiliary folders like tabs, info, and static."""
     # Folders to check:
     aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
@@ -238,8 +235,8 @@ def getAuxAltText(rootFileDir: str) -> list[dict]:
     return aux_images
 
 
-# Gets links that aren't in the courseware
 def getAuxLinks(rootFileDir: str) -> list[dict]:
+    """Gets links from auxiliary folders like tabs, info, and static."""
     # Folders to check:
     aux_folders = ["tabs", "info", "static"]
     aux_paths = [os.path.join(rootFileDir, x) for x in aux_folders]
@@ -343,9 +340,22 @@ def getAuxLinks(rootFileDir: str) -> list[dict]:
     return aux_links
 
 
-# Always gets the display name.
-# For video and problem files, gets other info too
-def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace) -> dict:
+def getComponentInfo(
+    folder: str, filename: str, child, args: argparse.Namespace
+) -> dict:
+    """
+    Gets component information from XML files. Always gets display name.
+    For video and problem files, gets other info too, like video subtitles and problem XML.
+
+    Args:
+        folder (str): The folder where the XML file is located.
+        filename (str): The name of the XML file, without the .xml extension.
+        child (etree.Element): The XML element that we're trying to get info from. This is used if we can't open the file, like with inline components.
+        args (argparse.Namespace): The command line arguments passed to the script.
+
+    Returns:
+        A dictionary containing the component information.
+    """
     # Try to open file.
     try:
         tree = etree.parse(folder + "/" + filename + ".xml")
@@ -393,7 +403,9 @@ def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace
                 if ev.attrib["profile"] == "desktop_mp4":
                     cloudfront_url = ev.attrib["url"]
                     cloudfront_filename = str(cloudfront_url).split(".net")[-1]
-                    temp["download_url"] = "https://edx-video.net" + str(cloudfront_filename)
+                    temp["download_url"] = "https://edx-video.net" + str(
+                        cloudfront_filename
+                    )
 
         if len(temp["sub"]) == 0:
             temp["sub"] = ["No subtitles found."]
@@ -421,8 +433,8 @@ def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace
                     src = os.path.basename(child.attrib["client_video_id"])
                     src = str(os.path.splitext(src)[0])
                     if src == "":
-                        temp["upload_name"] = (
-                            "No_Upload_Name_" + str(root.attrib["url_name"])
+                        temp["upload_name"] = "No_Upload_Name_" + str(
+                            root.attrib["url_name"]
                         )
                     temp["upload_name"] = src
 
@@ -462,14 +474,18 @@ def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace
             # In those cases, go open that file and get the links from it.
             if root.text is None:
                 innerfilepath = os.path.join(
-                    os.path.dirname(folder), "html", (str(root.attrib["filename"]) + ".html")
+                    os.path.dirname(folder),
+                    "html",
+                    (str(root.attrib["filename"]) + ".html"),
                 )
                 with open(innerfilepath, encoding="utf8") as file:
                     text = file.read()
                     soup = BeautifulSoup(text, "html.parser")
             # If it's declared inline, just get the links right away.
             else:
-                soup = BeautifulSoup("".join(str(e) for e in root.itertext()), "html.parser")
+                soup = BeautifulSoup(
+                    "".join(str(e) for e in root.itertext()), "html.parser"
+                )
             if args.links:
                 temp["links"] = getHTMLLinks(soup)
             if args.alttext:
@@ -491,8 +507,22 @@ def getComponentInfo(folder: str, filename: str, child, args: argparse.Namespace
     return {"contents": temp, "parent_name": temp["name"]}
 
 
-# Recursion function for outline-declared xml files
-def drillDown(folder: str, filename: str, root, args: argparse.Namespace) -> dict:
+def drillDown(
+    folder: str, filename: str, root: etree._Element, args: argparse.Namespace
+) -> dict:
+    """
+    Recursion function for outline-declared xml files (not inline)
+
+    Args:
+        folder (str): The folder where the XML file is located.
+        filename (str): The name of the XML file, without the .xml extension.
+        root (etree._Element): The XML element that we're trying to get info from. This is used if we can't open the file, like with inline components.
+        args (argparse.Namespace): The command line arguments passed to the script.
+
+    Returns:
+        dict: A dictionary containing the component information.
+
+    """
     # Try to open file.
     try:
         tree = etree.parse(os.path.join(folder, (filename + ".xml")))
@@ -512,7 +542,7 @@ def drillDown(folder: str, filename: str, root, args: argparse.Namespace) -> dic
     return getXMLInfo(folder, root, args)
 
 
-def getXMLInfo(folder: str, root, args: argparse.Namespace) -> dict:
+def getXMLInfo(folder: str, root: etree._Element, args: argparse.Namespace) -> dict:
     # We need lists of container nodes and leaf nodes so we can tell
     # whether we have to do more recursion.
     leaf_nodes = [
@@ -634,8 +664,15 @@ def fillInRows(flat_course: list[dict]) -> list[dict]:
     return flat_course
 
 
-# Returns a usable URL for verticals and components, and just filenames for other types.
-def makeURL(component_type: str, filename: str, parent_url: str, org: str, nickname: str, run: str) -> str:
+def makeURL(
+    component_type: str,
+    filename: str,
+    parent_url: str,
+    org: str,
+    nickname: str,
+    run: str,
+) -> str:
+    """Returns a usable URL for verticals and components, and just filenames for other types."""
     if component_type in ["course", "chapter", "sequential", "vertical", "wiki", run]:
         return filename
 
@@ -670,9 +707,30 @@ def makeURL(component_type: str, filename: str, parent_url: str, org: str, nickn
     return url
 
 
-# Takes a nested structure of lists and dicts that represents the course
-# and returns a single list of dicts where each dict is a component
-def courseFlattener(course_dict: dict, parent_url: str, org: str, nickname: str, run: str, new_row: dict = {}) -> list[dict]:
+def courseFlattener(
+    course_dict: dict,
+    parent_url: str,
+    org: str,
+    nickname: str,
+    run: str,
+    new_row: dict = {},
+) -> list[dict]:
+    """
+    Flattens a nested course structure into a list of dictionaries.
+    Each dictionary is a single component, with the order of the list
+    matching the order of the courseware.
+
+    Args:
+        course_dict (dict): A dictionary representing the course structure at the current level of recursion.
+        parent_url (str): The URL of the parent component, used for constructing URLs for verticals and components.
+        org (str): The organization code for the course, like HarvardX
+        nickname (str): The course nickname, like CS109x
+        run (str): The course run, like 1T2025
+        new_row (dict, optional): A dictionary representing the current row of data being built up through recursion.
+    
+    Returns:
+        list[dict]: A list of dictionaries, where each dictionary represents a single component in the course.
+    """
     flat_course = []
     temp_row = new_row.copy()
 
@@ -745,7 +803,18 @@ def courseFlattener(course_dict: dict, parent_url: str, org: str, nickname: str,
             return []
 
 
-def writeCourseSheet(rootFileDir: str, rootFileName: str, course_dict: dict, args: argparse.Namespace):
+def writeCourseSheet(
+    rootFileDir: str, rootFileName: str, course_dict: dict, args: argparse.Namespace
+):
+    """
+    Takes in a course structure, flattens it, and writes it to a TSV file.
+
+    Args:
+        rootFileDir (str): The directory where the course.xml file is located.
+        rootFileName (str): The name of the course.xml file (which can theoretically be something else)
+        course_dict (dict): A dictionary representing the course structure.
+        args (argparse.Namespace): The command line arguments passed to the script.
+    """
     course_name = course_dict["name"]
     if args.links:
         course_name += " Links"
@@ -756,7 +825,9 @@ def writeCourseSheet(rootFileDir: str, rootFileName: str, course_dict: dict, arg
     outFileName = args.o if args.o else course_name
 
     # Create a "csv" file with tabs as delimiters
-    with open(os.path.join(rootFileDir, outFileName), "w", newline="", encoding="utf-8") as outputfile:
+    with open(
+        os.path.join(rootFileDir, outFileName), "w", newline="", encoding="utf-8"
+    ) as outputfile:
         fieldnames = [
             "chapter",
             "sequential",
