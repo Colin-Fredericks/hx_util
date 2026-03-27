@@ -1,9 +1,10 @@
-import sys
 import os
-import json
-import html
-import argparse
+import sys
 import glob
+import html
+import json
+import argparse
+from typing import Union
 
 instructions = """
 To use:
@@ -20,8 +21,9 @@ Valid options:
 Last update: September 26th 2018
 """
 
+
 # Split long lines on a space near the middle.
-def splitString(line):
+def splitString(line: str) -> tuple[str, str]:
 
     words = line.split(" ")
 
@@ -41,7 +43,7 @@ def splitString(line):
     return line[:breakpoint], line[breakpoint + 1 :]
 
 
-def msecToHMS(time):
+def msecToHMS(time: Union[int, float]) -> str:
     # Make sure it's an integer.
     time = int(float(time))
 
@@ -78,7 +80,7 @@ def msecToHMS(time):
     return str(hours) + ":" + str(minutes) + ":" + str(seconds) + "," + str(msec)
 
 
-def ConvertToSRT(filename, args, dirpath):
+def ConvertToSRT(filename: str, args: argparse.Namespace, dirpath: str = "") -> None:
     # Open the SJSON file
     with open(os.path.join(dirpath or "", filename), "r", encoding="utf8") as inputfile:
         # Read in the JSON as a dictionary.
@@ -102,7 +104,7 @@ def ConvertToSRT(filename, args, dirpath):
         newEndList = [msecToHMS(time) for time in endList]
 
         # Throw out any null entries.
-        textWithoutNull = [x if type(x) is type('string') else "" for x in textList]
+        textWithoutNull = [x if type(x) is type("string") else "" for x in textList]
         # EdX escapes HTML entities like quotes and unicode in sjson files. Unescape them.
         # SRT files handle unicode just fine.
         newTextList = [html.unescape(text) for text in textWithoutNull]
@@ -164,6 +166,7 @@ def json2srt(args):
     filecount = 0
 
     for name in file_names:
+        dirpath = ""
         # Make sure single files exist.
         assert os.path.exists(name), "File or directory not found."
 
@@ -172,7 +175,7 @@ def json2srt(args):
             # Make sure this is an sjson file (just check extension)
             if name.lower().endswith(".sjson"):
                 # Convert it to an SRT file
-                ConvertToSRT(name, args, False)
+                ConvertToSRT(name, args, dirpath)
                 filecount += 1
 
         # If it's a directory:
@@ -189,7 +192,7 @@ def json2srt(args):
             else:
                 topfiles = []
                 dirpath = ""
-                for (dirpath, dirnames, files) in os.walk(name):
+                for dirpath, dirnames, files in os.walk(name):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:

@@ -25,7 +25,7 @@ Last update: April 25th 2022
 """
 
 # Make a dictionary that shows which srt files match which original upload names
-def getOriginalNames(course_folder, args):
+def getOriginalNames(course_folder: str, args: argparse.Namespace) -> tuple[dict, str]:
 
     nameDict = {}
 
@@ -61,7 +61,7 @@ def getOriginalNames(course_folder, args):
 # Set all the srt filenames to be the upload names
 # TODO: What happens when two transcripts have the same upload name?
 #       Can we pull the language identifier and append to the name?
-def setNewNames(course_folder, nameDict, args, course_title):
+def setNewNames(course_folder: str, nameDict: dict, args: argparse.Namespace, course_title: str) -> None:
     static_folder = os.path.join(os.path.abspath(course_folder), "static")
 
     if args.n or args.z:
@@ -116,7 +116,7 @@ def setNewNames(course_folder, nameDict, args, course_title):
 
 
 # Main function.
-def SrtRename(args):
+def SrtRename(arguments) -> None:
 
     print("Renaming SRT files")
 
@@ -130,7 +130,7 @@ def SrtRename(args):
     parser.add_argument("-o", action="store")
     parser.add_argument("file_names", nargs="*")
 
-    args = parser.parse_args(args)
+    args = parser.parse_args(arguments)
 
     # Replace arguments with wildcards with their expansion.
     # If a string does not contain a wildcard, glob will return it as is.
