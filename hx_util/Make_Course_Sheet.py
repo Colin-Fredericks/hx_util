@@ -653,14 +653,11 @@ def makeURL(component_type, filename, parent_url, org, nickname, run):
         return filename
 
     course_id = org + "+" + nickname + "+" + run
-    print(component_type + ": " + filename)
     # Strip the extension and folders off the filename if it has them.
     no_extension = ".".join(filename.split("/")[-1].split(".")[0:-1])
     if no_extension == "":
         #  For filenames without extensions, we need the vertical's filename instead.
         no_extension = filename
-    print("Parent URL: " + parent_url)
-    print("Filename: " + no_extension)
     if filename.startswith("tabs"):
         url = (
             "https://courses.edx.org/courses/course-v1:"
