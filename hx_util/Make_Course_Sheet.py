@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import glob
+import html
 import json
 import argparse
 from lxml import etree
@@ -500,6 +501,18 @@ def getComponentInfo(
                 "alt": "¡Check manually for alt text!",
             }
         ]
+    
+    if root.tag == "freetextresponse":
+        if args.links or args.alttext:
+            # Text is stored HTML-escaped in the prompt attribute.
+            soup_text = html.unescape(root.attrib["prompt"])
+            soup = BeautifulSoup(soup_text, "html.parser")
+            if args.links:
+                temp["links"] = getHTMLLinks(soup)
+            if args.alttext:
+                temp["images"] = getAltText(soup)
+
+        
 
     # Label all of them as components regardless of type.
     temp["component"] = temp["name"]
@@ -549,6 +562,7 @@ def getXMLInfo(folder: str, root: etree._Element, args: argparse.Namespace) -> d
         "discussion",
         "done",
         "drag-and-drop-v2",
+        "freetextresponse",
         "html",
         "imageannotation",
         "library_content",
