@@ -5,6 +5,9 @@ import argparse
 import glob
 from bs4 import BeautifulSoup
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
+import __init__  # This is just to get the version number from the __init__.py file.
+
+version = __init__.__version__
 
 
 instructions = """
@@ -24,8 +27,10 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Last update: April 3rd 2019
-"""
+
+Version:
+""" + version
+
 
 # Get the text that is the source for the hyperlink.
 # Not sure what this will do with image links.
@@ -210,7 +215,7 @@ def getWordLinks(args):
             else:
                 topfiles = []
                 dirpath = ""
-                for (dirpath, dirnames, files) in os.walk(name):
+                for dirpath, dirnames, files in os.walk(name):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:

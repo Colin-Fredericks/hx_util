@@ -1,0 +1,17 @@
+[project]
+name = "hx-util"
+version = "1.4.3"
+description = "Gathers spreadsheets to generate output files."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4==4.15.0",
+    "bs4==0.0.2",
+    "lxml==6.1.0",
+    "lxml-stubs==0.5.1",
+    "pypdf==6.13.3",
+    "unicodecsv==0.14.1",
+]
+
+[project.scripts]
+hx_util = "hx_util.HXLiveTools:main"

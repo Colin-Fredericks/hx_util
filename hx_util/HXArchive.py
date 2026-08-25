@@ -3,9 +3,10 @@ if sys.version_info <= (3, 0):
     sys.exit('I am a Python 3 script. Run me with python3.')
 
 import os
-from hx_util import Make_Course_Sheet
-from hx_util import json2srt
-from hx_util import SrtRename
+import Make_Course_Sheet
+import json2srt
+import SrtRename
+
 
 ######################################
 # HarvardX Archive Prep Script

@@ -9,15 +9,14 @@ from lxml import etree
 from typing import Union
 from bs4 import BeautifulSoup
 
-from hx_util import GetWordLinks
-from hx_util import GetExcelLinks
-from hx_util import GetPPTLinks
-from hx_util import GetPDFLinks
+import GetWordLinks
+import GetExcelLinks
+import GetPPTLinks
+import GetPDFLinks
+import __init__  # This is just to get the version number from the __init__.py file.
 
-if __package__ is None:
-    version = "unknown version"
-else:
-    version = sys.modules[__package__].__version__
+version = __init__.__version__
+
 instructions = (
     """
 To use:
@@ -505,7 +504,7 @@ def getComponentInfo(
     if root.tag == "freetextresponse":
         if args.links or args.alttext:
             # Text is stored HTML-escaped in the prompt attribute.
-            soup_text = html.unescape(root.attrib["prompt"])
+            soup_text = html.unescape(str(root.attrib["prompt"]))
             soup = BeautifulSoup(soup_text, "html.parser")
             if args.links:
                 temp["links"] = getHTMLLinks(soup)
