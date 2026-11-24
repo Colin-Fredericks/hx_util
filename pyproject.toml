@@ -10,6 +10,8 @@ dependencies = [
     "lxml==6.1.0",
     "lxml-stubs==0.5.1",
     "pypdf==6.13.3",
+    "soupsieve==2.9.2",
+    "typing-extensions==4.16.0",
     "unicodecsv==0.14.1",
 ]
 

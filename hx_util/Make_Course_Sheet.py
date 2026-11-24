@@ -9,13 +9,10 @@ from lxml import etree
 from typing import Union
 from bs4 import BeautifulSoup
 
-import GetWordLinks
-import GetExcelLinks
-import GetPPTLinks
-import GetPDFLinks
-import __init__  # This is just to get the version number from the __init__.py file.
-
-version = __init__.__version__
+from hx_util import GetWordLinks
+from hx_util import GetExcelLinks
+from hx_util import GetPPTLinks
+from hx_util import GetPDFLinks
 
 instructions = (
     """
@@ -39,9 +36,7 @@ You can specify the following options:
     -o         Sets the output filename to the next argument.
 
 This script may fail on courses with empty containers.
-
-Last update: March 27th 2026, Version """
-    + version
+"""
 )
 
 

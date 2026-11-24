@@ -2,4 +2,4 @@
 
 __author__ = "Colin Fredericks"
 __email__ = "colin_frederecks"
-__version__ = "1.4.3"  # Typing and docstrings
+__version__ = "1.4.4"  # Proper imports for uv

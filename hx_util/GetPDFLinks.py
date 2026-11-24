@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import subprocess
 import argparse
 import logging
@@ -8,9 +8,6 @@ import pypdf
 from pypdf.generic import DictionaryObject
 from typing import cast
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
-import __init__  # This is just to get the version number from the __init__.py file.
-
-version = __init__.__version__
 
 instructions = """
 Usage:
@@ -29,9 +26,7 @@ Options:Í
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-
-Version:
-""" + version
+"""
 
 
 def getLinks(filename, args, dirpath):

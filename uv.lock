@@ -37,6 +37,8 @@ dependencies = [
     { name = "lxml" },
     { name = "lxml-stubs" },
     { name = "pypdf" },
+    { name = "soupsieve" },
+    { name = "typing-extensions" },
     { name = "unicodecsv" },
 ]
 
@@ -47,6 +49,8 @@ requires-dist = [
     { name = "lxml", specifier = "==6.1.0" },
     { name = "lxml-stubs", specifier = "==0.5.1" },
     { name = "pypdf", specifier = "==6.13.3" },
+    { name = "soupsieve", specifier = "==2.9.2" },
+    { name = "typing-extensions", specifier = "==4.16.0" },
     { name = "unicodecsv", specifier = "==0.14.1" },
 ]
 

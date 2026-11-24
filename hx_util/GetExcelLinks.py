@@ -1,14 +1,10 @@
-import sys
 import os
+import sys
 import zipfile
 import argparse
 import glob
 from bs4 import BeautifulSoup
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
-import __init__  # This is just to get the version number from the __init__.py file.
-
-version = __init__.__version__
-
 
 instructions = """
 Usage:
@@ -27,8 +23,7 @@ Options:
   -o  Set an output filename as the next argument.
   -l  Returns a Python list. Used when called by other scripts.
 
-Version:
-""" + version
+"""
 
 # Returns a dictionary of all the sheets.
 # Form: {'filename1':'name1', 'filename2':'name2'}

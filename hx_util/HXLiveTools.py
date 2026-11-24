@@ -3,9 +3,9 @@
 import sys
 import os
 
-import Make_Course_Sheet
-import json2srt
-import SrtRename
+from hx_util import Make_Course_Sheet
+from hx_util import json2srt
+from hx_util import SrtRename
 
 ######################################
 # HarvardX Live Tools
