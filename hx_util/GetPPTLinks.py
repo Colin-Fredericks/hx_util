@@ -6,7 +6,6 @@ from glob import glob
 from bs4 import BeautifulSoup
 import unicodecsv as csv  # https://pypi.python.org/pypi/unicodecsv/0.14.1
 
-
 instructions = """
 Usage:
 
@@ -25,6 +24,7 @@ Options:
   -l  Returns a Python list. Used when called by other scripts.
 
 """
+
 
 # Returns a dictionary of all the slides.
 # Form: {'filename1':'rIdN', 'filename2':'rIdM'}
@@ -251,7 +251,7 @@ def getPPTLinks(args):
             else:
                 topfiles = []
                 dirpath = ""
-                for (dirpath, dirnames, files) in os.walk(name):
+                for dirpath, dirnames, files in os.walk(name):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:

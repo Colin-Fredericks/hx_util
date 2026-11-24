@@ -24,6 +24,7 @@ Valid options:
 Last update: April 25th 2022
 """
 
+
 def getOriginalNames(course_folder: str, args: argparse.Namespace) -> tuple[dict, str]:
     """
     Make a dictionary that shows which srt files match which original upload names
@@ -69,7 +70,12 @@ def getOriginalNames(course_folder: str, args: argparse.Namespace) -> tuple[dict
     return nameDict, course_title
 
 
-def setNewNames(course_folder: str, nameDict: dict[str,str], args: argparse.Namespace, course_title: str) -> None:
+def setNewNames(
+    course_folder: str,
+    nameDict: dict[str, str],
+    args: argparse.Namespace,
+    course_title: str,
+) -> None:
     """
     Rename the srt files in the static folder to match the original upload names.
     TODO: What happens when two transcripts have the same upload name? Can we pull the language identifier and append to the name?

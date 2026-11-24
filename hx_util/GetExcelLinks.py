@@ -25,6 +25,7 @@ Options:
 
 """
 
+
 # Returns a dictionary of all the sheets.
 # Form: {'filename1':'name1', 'filename2':'name2'}
 def getSheets(soup):
@@ -140,7 +141,6 @@ def getLinks(filename, args, dirpath):
     except zipfile.BadZipFile:
         print("'Bad zip' for Excel file: " + fullname)
         return []
-    
 
     # Read bytes from archive for the workbook to get the sheets.
     workbook_data = archive.read("xl/workbook.xml")
@@ -289,7 +289,7 @@ def getExcelLinks(args):
             else:
                 dirpath = ""
                 topfiles = []
-                for (dirpath, dirnames, files) in os.walk(name):
+                for dirpath, dirnames, files in os.walk(name):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:

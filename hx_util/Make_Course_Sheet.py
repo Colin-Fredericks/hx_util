@@ -14,8 +14,7 @@ from hx_util import GetExcelLinks
 from hx_util import GetPPTLinks
 from hx_util import GetPDFLinks
 
-instructions = (
-    """
+instructions = """
 To use:
 python3 Make_Course_Sheet.py path/to/course.xml (options)
 
@@ -37,7 +36,6 @@ You can specify the following options:
 
 This script may fail on courses with empty containers.
 """
-)
 
 
 # Many of these are being skipped because they're currently expressed in inline XML
@@ -495,7 +493,7 @@ def getComponentInfo(
                 "alt": "¡Check manually for alt text!",
             }
         ]
-    
+
     if root.tag == "freetextresponse":
         if args.links or args.alttext:
             # Text is stored HTML-escaped in the prompt attribute.
@@ -505,8 +503,6 @@ def getComponentInfo(
                 temp["links"] = getHTMLLinks(soup)
             if args.alttext:
                 temp["images"] = getAltText(soup)
-
-        
 
     # Label all of them as components regardless of type.
     temp["component"] = temp["name"]
@@ -735,7 +731,7 @@ def courseFlattener(
         nickname (str): The course nickname, like CS109x
         run (str): The course run, like 1T2025
         new_row (dict, optional): A dictionary representing the current row of data being built up through recursion.
-    
+
     Returns:
         list[dict]: A list of dictionaries, where each dictionary represents a single component in the course.
     """

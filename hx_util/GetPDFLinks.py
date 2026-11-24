@@ -166,7 +166,7 @@ def getPDFLinks(args):
             else:
                 topfiles = []
                 dirpath = ""
-                for (dirpath, dirnames, files) in os.walk(name):
+                for dirpath, dirnames, files in os.walk(name):
                     topfiles.extend(files)
                     break
                 for eachfile in topfiles:
