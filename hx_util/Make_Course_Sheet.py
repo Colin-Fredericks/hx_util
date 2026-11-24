@@ -6,7 +6,6 @@ import html
 import json
 import argparse
 from lxml import etree
-from typing import Union
 from bs4 import BeautifulSoup
 
 from hx_util import GetWordLinks
@@ -65,7 +64,7 @@ canon_leaf = {
 }
 
 
-def secToHMS(time: Union[float, int]) -> str:
+def secToHMS(time: float | int) -> str:
     """Converts from seconds to hh:mm:ss format"""
     # Round it to an integer.
     time = int(round(float(time), 0))

@@ -4,7 +4,6 @@ import glob
 import html
 import json
 import argparse
-from typing import Union
 
 instructions = """
 To use:
@@ -43,7 +42,7 @@ def splitString(line: str) -> tuple[str, str]:
     return line[:breakpoint], line[breakpoint + 1 :]
 
 
-def msecToHMS(time: Union[int, float]) -> str:
+def msecToHMS(time: int | float) -> str:
     # Make sure it's an integer.
     time = int(float(time))
 
